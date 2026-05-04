@@ -140,7 +140,9 @@ input,button,textarea,select{font-family:var(--font)}
 .mini-bar{flex:1;height:3px;background:var(--bg5);border-radius:2px;overflow:hidden;min-width:32px}
 .mini-bar-fill{height:100%;background:var(--teal)}
 .mini-label{font-size:9px;color:var(--text3);font-family:var(--mono);white-space:nowrap}
-.no-leads{padding:16px;font-size:12px;color:var(--text3);text-align:center}
+.bulk-action-bar{display:flex;align-items:center;gap:10px;padding:8px 16px;background:rgba(42,191,170,.06);border-top:1px solid rgba(42,191,170,.2);border-bottom-left-radius:var(--r);border-bottom-right-radius:var(--r)}
+.bulk-count{font-size:11px;font-weight:700;color:var(--teal);min-width:80px}
+.lead-row.selected td{background:rgba(42,191,170,.04)}
 .add-lead-section{padding:12px 16px;background:var(--bg3);border-top:1px solid var(--border)}
 .add-lead-form{display:none;margin-top:10px}
 .add-lead-form.open{display:block}
@@ -270,12 +272,11 @@ input,button,textarea,select{font-family:var(--font)}
       </button>
     </div>
 
-    <div id="sync-badge" style="font-size:10px;color:#555;padding:4px 14px 8px;letter-spacing:.03em">Connecting…</div>
-
     <input type="file" id="import-file-input" accept=".csv" style="display:none" onchange="importCSV(this)" />
     <input type="file" id="import-json-input" accept=".json" style="display:none" onchange="importJSON(this)" />
 
     <div class="sidebar-bottom">
+      <div id="sync-badge" style="font-size:10px;color:#555;letter-spacing:.03em;margin-bottom:6px">Connecting…</div>
       <div class="sidebar-meta">
         TGK Motorsport<br>
         <span id="sb-count" style="color:var(--teal)">0 leads tracked</span>
@@ -289,6 +290,9 @@ input,button,textarea,select{font-family:var(--font)}
       <div style="display:flex;flex-direction:column;gap:1px">
         <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3)">TGK Motorsport</div>
         <div style="font-size:14px;font-weight:700;color:var(--text)">Social Media Lead Tracker</div>
+      </div>
+      <div style="margin-left:16px;padding-left:16px;border-left:1px solid var(--border)">
+        <div class="topbar-title" id="topbar-title" style="font-size:12px;color:var(--text3)">By Product</div>
       </div>
       <div class="topbar-right">
         <button class="btn" onclick="exportCSV()" title="Export CSV">⬇ CSV</button>
@@ -465,7 +469,7 @@ async function _sbSet(id, payload) {
 
 function _sbToast(msg, ok) {
   var el = document.getElementById('_sb_toast');
-  if (!el) { el = document.createElement('div'); el.id = '_sb_toast'; el.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:8px 14px;border-radius:7px;font-size:11px;font-weight:700;z-index:9999;transition:opacity .4s;font-family:inherit'; document.body.appendChild(el); }
+  if (!el) { el = document.createElement('div'); el.id = '_sb_toast'; el.style.cssText = 'position:fixed;bottom:16px;left:16px;padding:8px 14px;border-radius:7px;font-size:11px;font-weight:700;z-index:9999;transition:opacity .4s;font-family:inherit'; document.body.appendChild(el); }
   el.textContent = msg;
   el.style.background = ok ? 'rgba(42,191,170,.9)' : 'rgba(224,85,85,.9)';
   el.style.color = '#fff'; el.style.opacity = '1';
@@ -725,6 +729,7 @@ function renderProducts(){
       <div class="product-body">
         <table class="lead-table">
           <thead><tr>
+            <th style="width:28px"><input type="checkbox" class="bulk-check-all" data-pid="${p.id}" onchange="toggleSelectAll('${p.id}',this.checked)" style="cursor:pointer;accent-color:var(--teal)"/></th>
             <th style="width:32px"></th>
             <th>Name</th>
             <th>Facebook</th>
@@ -732,12 +737,13 @@ function renderProducts(){
             <th>Checklist</th>
             <th style="width:32px"></th>
           </tr></thead>
-          <tbody>
-            ${!leads.length?`<tr><td colspan="6"><div class="no-leads">No leads yet — add one below</div></td></tr>`:''}
+          <tbody id="lead-tbody-${p.id}">
+            ${!leads.length?`<tr><td colspan="7"><div class="no-leads">No leads yet — add one below</div></td></tr>`:''}
             ${leads.map(l=>{
               const done=l.checklist.filter(c=>c.done).length,total=l.checklist.length,pct=total?Math.round(done/total*100):0;
               const cls=contactCls(l.lastContact),ago=daysAgo(l.lastContact);
-              return `<tr class="lead-row">
+              return `<tr class="lead-row" data-lid="${l.id}" data-pid="${p.id}">
+                <td><input type="checkbox" class="bulk-check" data-lid="${l.id}" data-pid="${p.id}" onchange="onLeadCheck('${p.id}')" style="cursor:pointer;accent-color:var(--teal)"/></td>
                 <td><div class="avatar">${initials(l.name)}</div></td>
                 <td><button class="lead-name-btn" onclick="openLeadModal('${l.id}')">${esc(l.name)}</button></td>
                 <td>${l.link?`<a class="fb-link" href="${l.link}" target="_blank" rel="noopener">↗ PROFILE</a>`:`<span style="color:var(--text3)">—</span>`}</td>
@@ -748,6 +754,11 @@ function renderProducts(){
             }).join('')}
           </tbody>
         </table>
+        <div class="bulk-action-bar" id="bulk-bar-${p.id}" style="display:none">
+          <span class="bulk-count" id="bulk-count-${p.id}">0 selected</span>
+          <button class="btn btn-green" onclick="markContactedBulk('${p.id}')">✓ Mark contacted today</button>
+          <button class="btn" onclick="clearSelection('${p.id}')">Clear</button>
+        </div>
         <div class="add-lead-section">
           <button class="btn btn-teal" id="alb-${p.id}" onclick="toggleAddLead('${p.id}')">+ Add lead</button>
           <div class="add-lead-form" id="alf-${p.id}">
@@ -898,34 +909,182 @@ function scanDuplicates(){
       <div style="font-size:12px;margin-top:4px">${data.leads.length} leads scanned</div>
     </div>`;
   } else {
-    el.innerHTML=`<div style="font-size:11px;color:var(--text3);margin-bottom:12px">${groups.length} duplicate group${groups.length!==1?'s':''} found across ${data.leads.length} leads</div>`+
-    groups.map(g=>{
-      const pp=data.products.find(p=>p.id===g.primary.productId);
+    el.innerHTML=`<div style="font-size:11px;color:var(--text3);margin-bottom:12px">${groups.length} duplicate group${groups.length!==1?'s':''} found — ${data.leads.length} leads scanned</div>`+
+    groups.map((g,gi)=>{
       const allLeads=[g.primary,...g.matches.map(m=>m.lead)];
-      return `<div style="background:var(--card);border:1px solid rgba(248,113,113,.25);border-radius:8px;padding:12px;margin-bottom:10px">
-        <div style="font-size:10px;font-weight:700;color:#f87171;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px">Duplicate group</div>
+      const ids=allLeads.map(l=>l.id).join(',');
+      return `<div id="dupe-group-${gi}" style="background:var(--bg2);border:1px solid rgba(248,113,113,.25);border-radius:10px;padding:14px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:10px;font-weight:700;color:#f87171;letter-spacing:.08em;text-transform:uppercase">⚑ Duplicate group · ${allLeads.length} leads</div>
+          <div style="display:flex;gap:6px">
+            <button onclick="mergeLeadGroup('${ids}',${gi})" style="font-size:10px;padding:4px 10px;border-radius:20px;border:1px solid rgba(42,191,170,.35);background:rgba(42,191,170,.1);color:var(--teal);cursor:pointer;font-family:var(--font);font-weight:700;transition:all .15s" onmouseover="this.style.background='rgba(42,191,170,.2)'" onmouseout="this.style.background='rgba(42,191,170,.1)'">↗ Merge into one</button>
+          </div>
+        </div>
         ${allLeads.map(l=>{
           const lp=data.products.find(p=>p.id===l.productId);
-          const reasons=[];
-          if(l.id!==g.primary.id){
-            const match=g.matches.find(m=>m.lead.id===l.id);
-            if(match) reasons.push(...match.reasons);
-          }
-          return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
-            <div style="width:30px;height:30px;border-radius:50%;background:rgba(248,113,113,.15);color:#f87171;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${initials(l.name)}</div>
+          const isMatch=l.id!==g.primary.id;
+          const match=isMatch?g.matches.find(m=>m.lead.id===l.id):null;
+          const reasons=match?match.reasons:[];
+          const done=(l.checklist||[]).filter(c=>c.done).length;
+          const total=(l.checklist||[]).length;
+          return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+            <div style="width:32px;height:32px;border-radius:50%;background:rgba(248,113,113,.12);color:#f87171;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;border:1px solid rgba(248,113,113,.2)">${initials(l.name)}</div>
             <div style="flex:1;min-width:0">
               <div style="font-size:12px;font-weight:600;color:var(--text)">${esc(l.name)}</div>
-              <div style="font-size:11px;color:var(--text3)">${lp?esc(lp.name):'Unknown product'}${l.link?` · <a href="${l.link}" target="_blank" style="color:var(--teal)">FB ↗</a>`:''}</div>
-              ${reasons.length?`<div style="font-size:10px;color:#f87171;margin-top:2px">${reasons.join(' & ')}</div>`:''}
+              <div style="font-size:11px;color:var(--text3);margin-top:1px">${lp?esc(lp.name):'?'}${l.link?` · <a href="${l.link}" target="_blank" style="color:var(--teal);font-size:10px">FB ↗</a>`:''}</div>
+              <div style="display:flex;gap:8px;margin-top:3px;flex-wrap:wrap">
+                ${reasons.length?`<span style="font-size:9px;color:#f87171;font-weight:700;text-transform:uppercase;letter-spacing:.06em">${reasons.join(' & ')}</span>`:'<span style="font-size:9px;color:var(--text3)">primary</span>'}
+                ${total?`<span style="font-size:9px;color:var(--text3)">${done}/${total} checklist</span>`:''}
+                ${l.lastContact?`<span style="font-size:9px;color:var(--text3)">contacted ${fmtDate(l.lastContact)}</span>`:''}
+                ${(l.contactHistory||[]).length?`<span style="font-size:9px;color:var(--text3)">${l.contactHistory.length} contact${l.contactHistory.length!==1?'s':''}</span>`:''}
+              </div>
             </div>
-            <button onclick="openLeadModal('${l.id}')" style="font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid var(--border);background:none;color:var(--text2);cursor:pointer;font-family:var(--font);flex-shrink:0">View</button>
+            <div style="display:flex;gap:5px;flex-shrink:0">
+              <button onclick="openLeadModal('${l.id}')" style="font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid var(--border);background:none;color:var(--text2);cursor:pointer;font-family:var(--font)">View</button>
+              <button onclick="deleteDupe('${l.id}',${gi})" style="font-size:10px;padding:3px 8px;border-radius:4px;border:1px solid rgba(224,85,85,.3);background:rgba(224,85,85,.08);color:#e05555;cursor:pointer;font-family:var(--font);font-weight:700" onmouseover="this.style.background='rgba(224,85,85,.18)'" onmouseout="this.style.background='rgba(224,85,85,.08)'">Delete</button>
+            </div>
           </div>`;
         }).join('')}
+        <div style="font-size:10px;color:var(--text3);margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">
+          <b style="color:var(--teal)">Merge</b> combines all contact history, checklist progress, and notes into one lead and removes the rest.<br>
+          <b style="color:#e05555">Delete</b> removes just that one entry.
+        </div>
       </div>`;
     }).join('');
   }
   document.getElementById('dupe-scan-modal').classList.add('open');
 }
+
+function deleteDupe(lid, groupIdx){
+  const now=new Date().toISOString();
+  if(!data.deleted) data.deleted=[];
+  data.deleted.push({id:lid,type:'lead',deletedAt:now});
+  data.leads=data.leads.filter(l=>l.id!==lid);
+  save();
+  // Remove the lead row from the modal UI
+  const group=document.getElementById('dupe-group-'+groupIdx);
+  if(group){
+    // Find and remove the row with this lead
+    const rows=group.querySelectorAll('[data-lid]');
+    // Fallback: just re-render
+    scanDuplicates();
+    document.getElementById('dupe-scan-modal').classList.add('open');
+  }
+  _sbToast('Lead deleted',true);
+}
+
+function mergeLeadGroup(idsStr, groupIdx){
+  const ids=idsStr.split(',');
+  const leads=ids.map(id=>data.leads.find(l=>l.id===id)).filter(Boolean);
+  if(leads.length<2) return;
+
+  // Pick the lead with most data as the base
+  const base=leads.reduce((best,l)=>{
+    const score=(l.contactHistory||[]).length*3+(l.checklist||[]).filter(c=>c.done).length*2+(l.note?1:0)+(l.lastContact?1:0);
+    const bscore=(best.contactHistory||[]).length*3+(best.checklist||[]).filter(c=>c.done).length*2+(best.note?1:0)+(best.lastContact?1:0);
+    return score>bscore?l:best;
+  },leads[0]);
+
+  // Merge all contact history (dedupe by timestamp)
+  const allHistory=[...new Set(leads.flatMap(l=>l.contactHistory||[]))].sort();
+  
+  // Merge checklists — if any lead has an item checked, keep it checked
+  const mergedChecklist=(base.checklist||[]).map(item=>{
+    const anyDone=leads.some(l=>(l.checklist||[]).find(c=>c.text===item.text&&c.done));
+    return {...item,done:anyDone||item.done};
+  });
+  // Add checklist items from other leads not in base
+  leads.forEach(l=>{
+    if(l.id===base.id) return;
+    (l.checklist||[]).forEach(item=>{
+      if(!mergedChecklist.find(c=>c.text===item.text)){
+        mergedChecklist.push(item);
+      }
+    });
+  });
+
+  // Merge notes
+  const notes=leads.map(l=>l.note).filter(Boolean).filter((n,i,a)=>a.indexOf(n)===i);
+  const mergedNote=notes.join('\n---\n');
+
+  // Most recent contact
+  const lastContact=allHistory.length?allHistory[allHistory.length-1]:base.lastContact;
+
+  // Build merged lead
+  const merged={
+    ...base,
+    contactHistory:allHistory,
+    checklist:mergedChecklist,
+    note:mergedNote,
+    lastContact,
+    updated:new Date().toISOString()
+  };
+
+  // Remove all leads in group, add merged one
+  const now=new Date().toISOString();
+  if(!data.deleted) data.deleted=[];
+  ids.filter(id=>id!==base.id).forEach(id=>data.deleted.push({id,type:'lead',deletedAt:now}));
+  data.leads=data.leads.filter(l=>!ids.includes(l.id));
+  data.leads.push(merged);
+
+  save();render();
+  _sbToast(`✓ Merged ${leads.length} leads into one`,true);
+  // Re-run scan to refresh modal
+  scanDuplicates();
+  document.getElementById('dupe-scan-modal').classList.add('open');
+}
+
+function onLeadCheck(pid){
+  const checks=[...document.querySelectorAll(`.bulk-check[data-pid="${pid}"]`)];
+  const checked=checks.filter(c=>c.checked);
+  const bar=document.getElementById('bulk-bar-'+pid);
+  const count=document.getElementById('bulk-count-'+pid);
+  const allCheck=document.querySelector(`.bulk-check-all[data-pid="${pid}"]`);
+  if(bar){bar.style.display=checked.length?'flex':'none';}
+  if(count){count.textContent=checked.length+' selected';}
+  if(allCheck){allCheck.checked=checked.length===checks.length;allCheck.indeterminate=checked.length>0&&checked.length<checks.length;}
+  // Highlight selected rows
+  checks.forEach(c=>{
+    const row=c.closest('tr');
+    if(row){row.classList.toggle('selected',c.checked);}
+  });
+}
+
+function toggleSelectAll(pid,checked){
+  document.querySelectorAll(`.bulk-check[data-pid="${pid}"]`).forEach(c=>{c.checked=checked;});
+  onLeadCheck(pid);
+}
+
+function clearSelection(pid){
+  document.querySelectorAll(`.bulk-check[data-pid="${pid}"]`).forEach(c=>{c.checked=false;});
+  const allCheck=document.querySelector(`.bulk-check-all[data-pid="${pid}"]`);
+  if(allCheck){allCheck.checked=false;allCheck.indeterminate=false;}
+  onLeadCheck(pid);
+}
+
+function markContactedBulk(pid){
+  const checked=[...document.querySelectorAll(`.bulk-check[data-pid="${pid}"]:checked`)];
+  if(!checked.length) return;
+  const now=new Date().toISOString();
+  let updated=0;
+  checked.forEach(c=>{
+    const lid=c.dataset.lid;
+    const l=data.leads.find(l=>l.id===lid);
+    if(!l) return;
+    l.lastContact=now;
+    if(!l.contactHistory) l.contactHistory=[];
+    l.contactHistory.push(now);
+    _touch(l);
+    updated++;
+  });
+  save();
+  clearSelection(pid);
+  render();
+  _sbToast(`✓ ${updated} lead${updated!==1?'s':''} marked contacted`,true);
+  // Re-open the product card
+  setTimeout(()=>{const c=document.getElementById('pc-'+pid);if(c&&!c.classList.contains('open'))c.classList.add('open');},10);
+}
+
 
 function openLeadModal(lid){
   openLeadId=lid;
