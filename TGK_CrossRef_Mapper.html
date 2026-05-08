@@ -39,34 +39,34 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .groups-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 
 /* INBOX PANEL */
-.panel{background:var(--card);border:1px solid var(--border2);border-radius:8px;overflow:hidden;}
-.ph{background:var(--card2);border-bottom:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;gap:8px;}
+.panel{background:#13151a;border:1px solid var(--border2);border-radius:8px;overflow:hidden;}
+.ph{background:#1a1d22;border-bottom:1px solid var(--border2);padding:11px 14px;display:flex;align-items:center;gap:8px;}
 .pt{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;}
-.pc{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--teal);background:rgba(78,205,196,.1);border:1px solid rgba(78,205,196,.2);border-radius:10px;padding:1px 7px;}
+.pc{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--teal);background:rgba(78,205,196,.2);border:1px solid rgba(78,205,196,.5);border-radius:10px;padding:1px 7px;}
 .pb{padding:12px;}
 
 /* PRODUCT ITEM IN INBOX */
-.prod{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:5px;border:1px solid transparent;margin-bottom:4px;cursor:grab;transition:all .12s;user-select:none;background:var(--card2);}
+.prod{display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:6px;border:1px solid var(--border2);margin-bottom:5px;cursor:grab;transition:all .12s;user-select:none;background:#1e2128;}
 .prod:hover{border-color:var(--border2);}
 .prod.dragging{opacity:.4;border-style:dashed;}
 .prod.over{border-color:var(--teal);background:rgba(78,205,196,.05);}
-.prod-name{flex:1;font-size:11px;color:var(--txt);}
+.prod-name{flex:1;font-size:13px;color:#e8eaf0;font-weight:500;letter-spacing:.01em;}
 .prod-grip{color:var(--txt3);font-size:12px;cursor:grab;}
 
 /* GROUP CARDS */
 .groups-area{display:flex;flex-direction:column;gap:12px;}
-.gc{background:var(--card);border:1px solid var(--border2);border-radius:8px;overflow:hidden;transition:border-color .15s;}
+.gc{background:#13151a;border:1px solid #2e323a;border-radius:8px;overflow:hidden;transition:border-color .15s;}
 .gc.drop-target{border-color:var(--teal);background:rgba(78,205,196,.03);}
-.gc.has-items{border-color:rgba(78,205,196,.25);}
-.gch{background:var(--card2);border-bottom:1px solid var(--border);padding:9px 12px;display:flex;align-items:center;gap:8px;}
-.gcn{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--teal);flex:1;}
+.gc.has-items{border-color:rgba(78,205,196,.6);}
+.gch{background:#1a1d22;border-bottom:1px solid var(--border2);padding:10px 12px;display:flex;align-items:center;gap:8px;}
+.gcn{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--teal);flex:1;letter-spacing:.02em;}
 .gcn[contenteditable=true]:focus{outline:1px solid var(--teal);border-radius:2px;}
-.gcd{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blue);min-width:0;}
+.gcd{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blue);min-width:0;font-weight:600;}
 .gcb{padding:10px 12px;min-height:48px;}
 .gcb.empty{display:flex;align-items:center;justify-content:center;color:var(--txt3);font-size:11px;font-style:italic;border:1px dashed var(--border2);border-radius:4px;min-height:44px;}
-.gp{display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--border);}
+.gp{display:flex;align-items:center;gap:7px;padding:7px 2px;border-bottom:1px solid var(--border);}
 .gp:last-child{border-bottom:none;}
-.gp-name{flex:1;font-size:11px;color:var(--txt2);}
+.gp-name{flex:1;font-size:13px;color:#e8eaf0;font-weight:500;}
 .gcf{padding:7px 12px;border-top:1px solid var(--border);display:flex;gap:6px;align-items:center;}
 .dim-inp{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blue);background:transparent;border:1px dashed var(--border2);border-radius:3px;padding:3px 8px;outline:none;width:160px;}
 .dim-inp:focus{border-color:var(--blue);}
@@ -105,7 +105,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 #toast.show{opacity:1;} #toast.err{border-color:var(--red);color:var(--red);} #toast.inf{border-color:var(--border2);color:var(--txt2);}
 
 /* API ROW */
-.api-row{display:flex;gap:8px;align-items:center;margin-bottom:14px;padding:9px 12px;background:var(--card2);border:1px solid var(--border);border-radius:6px;}
+.api-row{display:flex;gap:8px;align-items:center;margin-bottom:14px;}
 .api-row label{font-size:10px;color:var(--txt3);white-space:nowrap;}
 .api-row input{flex:1;background:transparent;border:1px solid var(--border2);border-radius:4px;padding:4px 9px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--txt2);outline:none;}
 .api-row input:focus{border-color:var(--teal);}
@@ -139,9 +139,10 @@ input[type=text]:focus,input[type=url]:focus{border-color:var(--teal);}
 
   <!-- API KEY -->
   <div class="api-row">
-    <label>Anthropic API Key (optional — for AI parse)</label>
-    <input type="password" id="apiKey" placeholder="sk-ant-..." oninput="saveKey()">
-    <span id="keyStatus" style="font-size:10px;color:var(--txt3);">Not set</span>
+    <button class="bs" id="apiKeyBtn" onclick="openApiKeyModal()" style="display:flex;align-items:center;gap:7px;font-size:12px;">
+      <span>🔑</span>
+      <span id="keyStatus">API Key: Not set</span>
+    </button>
   </div>
 
   <div class="cols" style="flex:1;min-height:0;">
@@ -283,17 +284,17 @@ function load(){
   // Migrate groups that don't have image field
   groups.forEach(g => { if(!('image' in g)) g.image = ''; });
   const k=localStorage.getItem('tgk_linkmap_key');
-  if(k){document.getElementById('apiKey').value=k;updateKeyStatus(k);}
+  if(k){updateKeyStatus(k);}
   render();
 }
-function saveKey(){const k=document.getElementById('apiKey').value.trim();if(k)localStorage.setItem('tgk_linkmap_key',k);updateKeyStatus(k);}
+function saveKey(){/* deprecated - using modal */}
 function updateKeyStatus(k){
   const el=document.getElementById('keyStatus');
-  if(!k){el.textContent='Not set';el.style.color='var(--txt3)';}
-  else if(k.startsWith('sk-ant-')){el.textContent='✓ Set';el.style.color='var(--green)';}
-  else{el.textContent='⚠ Check format';el.style.color='var(--amber)';}
+  if(!k){el.textContent='API Key: Not set';el.style.color='var(--txt3)';}
+  else if(k.startsWith('sk-ant-')){el.textContent='API Key: ✓ Set';el.style.color='var(--green)';}
+  else{el.textContent='API Key: ⚠ Check format';el.style.color='var(--amber)';}
 }
-function getKey(){return document.getElementById('apiKey').value.trim();}
+function getKey(){return localStorage.getItem('tgk_linkmap_key')||'';}
 function uid(){return nextId++;}
 
 // ── PARSE & ADD TO INBOX ──
@@ -527,7 +528,7 @@ function renderGroups(){
   area.innerHTML = groups.map(g => {
     const shared = g.items.length > 1;
     const badge = shared
-      ? `<span style="font-size:10px;font-weight:700;color:var(--teal);background:rgba(78,205,196,.1);border:1px solid rgba(78,205,196,.25);border-radius:3px;padding:1px 7px;white-space:nowrap;">🔗 ${g.items.length} vehicles</span>`
+      ? `<span style="font-size:10px;font-weight:700;color:var(--teal);background:rgba(78,205,196,.2);border:1px solid rgba(78,205,196,.5);border-radius:3px;padding:1px 7px;white-space:nowrap;">🔗 ${g.items.length} vehicles</span>`
       : `<span style="font-size:10px;color:var(--txt3);background:var(--card);border:1px solid var(--border);border-radius:3px;padding:1px 7px;">${g.items.length} item${g.items.length!==1?'s':''}</span>`;
 
     const items = g.items.length
@@ -842,6 +843,52 @@ function toast(msg,type){
 }
 
 _sbBoot().finally(function(){ load(); });
+
+function openApiKeyModal(){
+  const modal = document.getElementById('apiKeyModal');
+  const inp = document.getElementById('apiKeyInput');
+  const existing = getKey();
+  inp.value = existing || '';
+  modal.style.display = 'flex';
+  setTimeout(()=>inp.focus(),50);
+}
+function closeApiKeyModal(){
+  document.getElementById('apiKeyModal').style.display = 'none';
+}
+function saveApiKeyModal(){
+  const k = document.getElementById('apiKeyInput').value.trim();
+  if(k) localStorage.setItem('tgk_linkmap_key', k);
+  updateKeyStatus(k);
+  closeApiKeyModal();
+}
+function clearApiKey(){
+  localStorage.removeItem('tgk_linkmap_key');
+  document.getElementById('apiKeyInput').value = '';
+  updateKeyStatus('');
+  closeApiKeyModal();
+}
+// Close modal on backdrop click
+document.addEventListener('click', function(e){
+  const modal = document.getElementById('apiKeyModal');
+  if(e.target === modal) closeApiKeyModal();
+});
+
 </script>
+
+<!-- API KEY MODAL -->
+<div id="apiKeyModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#1a1d22;border:1px solid var(--border2);border-radius:10px;padding:24px;width:420px;max-width:90vw;">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;margin-bottom:6px;">Anthropic API Key</div>
+    <div style="font-size:11px;color:var(--txt3);margin-bottom:16px;">Required for AI Parse. Stored locally in your browser only.</div>
+    <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..." 
+      style="width:100%;background:var(--card2);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--txt);outline:none;margin-bottom:14px;"
+      onkeydown="if(event.key==='Enter')saveApiKeyModal()">
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="bs" onclick="closeApiKeyModal()">Cancel</button>
+      <button class="bs" onclick="clearApiKey()" style="color:var(--red);border-color:var(--red);">Clear</button>
+      <button class="bp" onclick="saveApiKeyModal()">Save Key</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
