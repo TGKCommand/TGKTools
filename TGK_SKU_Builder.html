@@ -60,6 +60,7 @@ input,button,textarea,select{font-family:var(--font)}
 .nav-all-btn.active{background:var(--teal-dim);color:var(--teal);border-color:rgba(42,191,170,.2)}
 .sidebar-footer{margin-top:auto;padding:10px 14px 14px;border-top:1px solid var(--border);flex-shrink:0}
 .sidebar-meta{font-size:10px;color:var(--text3);line-height:1.7}
+.sync-badge{font-size:10px;font-family:var(--mono);font-weight:600;color:var(--teal);display:block;margin-top:3px}
 /* ── MAIN ── */
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
 /* ── TOPBAR ── */
@@ -89,13 +90,13 @@ input,button,textarea,select{font-family:var(--font)}
 .btn-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
 /* ── CONTENT ── */
 .content-area{flex:1;overflow-y:auto;padding:20px 24px;position:relative}
-.watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:0;opacity:.08}
-.watermark img{width:480px;height:auto;object-fit:contain;display:block;}
+.watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:0;opacity:.04}
+.watermark img{width:480px;height:auto;object-fit:contain;display:block;filter:grayscale(1)}
 /* ── VIEWS ── */
 .view{display:none}.view.active{display:block}
 /* ── PANELS ── */
 .builder-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px}
 .panel-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)}
 /* ── STEPS ── */
 .steps{display:flex;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:16px}
@@ -147,7 +148,7 @@ select.form-input{cursor:pointer}
 .sku-legacy{color:var(--text3);font-size:11px;font-family:var(--mono)}
 .sku-desc{color:var(--text2);max-width:280px;font-size:12px}
 /* ── BADGES ── */
-.badge{display:inline-flex;align-items:center;height:18px;padding:0 7px;border-radius:3px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-family:var(--mono);border:1px solid;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.badge{display:inline-flex;align-items:center;height:18px;padding:0 7px;border-radius:3px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-family:var(--mono);border:1px solid}
 .badge-live{background:var(--green-dim);color:var(--green);border-color:rgba(76,175,125,.25)}
 .badge-no{background:var(--red-dim);color:var(--red);border-color:rgba(224,85,85,.2)}
 .badge-blank{background:var(--bg4);color:var(--text3);border-color:var(--border)}
@@ -159,7 +160,7 @@ select.form-input{cursor:pointer}
 .action-btn.del:hover{background:var(--red-dim);color:var(--red);border-color:rgba(224,85,85,.25)}
 /* ── STATS ── */
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:20px}
-.stat-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.stat-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r-lg);padding:14px}
 .stat-label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
 .stat-num{font-size:26px;font-weight:700;line-height:1;color:var(--text)}
 .stat-num.teal{color:var(--teal)}.stat-num.green{color:var(--green)}.stat-num.red{color:var(--red)}.stat-num.amber{color:var(--orange)}.stat-num.blue{color:var(--blue)}
@@ -175,7 +176,7 @@ select.form-input{cursor:pointer}
 /* ── MODAL ── */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center}
 .modal-bg.open{display:flex}
-.modal{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-lg);width:520px;max-width:calc(100vw - 32px);max-height:calc(100vh - 60px);overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.modal{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r-lg);width:520px;max-width:calc(100vw - 32px);max-height:calc(100vh - 60px);overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.6)}
 .modal-header{padding:18px 20px 14px;border-bottom:1px solid var(--border)}
 .modal-title{font-size:13px;font-weight:700;color:var(--text)}
 .modal-body{padding:18px 20px}
@@ -197,7 +198,7 @@ select.form-input{cursor:pointer}
     </div>
     <div class="sidebar" id="sidebar"></div>
     <div class="sidebar-footer">
-      <div class="sidebar-meta"><span id="sb-count" style="color:var(--teal)">201 SKUs tracked</span></div>
+      <div class="sidebar-meta"><span id="sb-count" style="color:var(--teal)">201 SKUs tracked</span><span class="sync-badge" id="sync-badge">↻ Connecting…</span></div>
     </div>
   </div>
 
@@ -217,6 +218,7 @@ select.form-input{cursor:pointer}
         <button class="export-btn" onclick="triggerImport()">⬆ Import CSV</button>
         <input type="file" id="csv-file-input" accept=".csv" style="display:none" onchange="importCSV(event)">
         <button class="export-btn" onclick="exportCSV()">⬇ Export CSV</button>
+        <button class="export-btn" onclick="saveWithMerge()" title="Sync to cloud">⟳ Sync</button>
         <div class="count-badge" id="total-count">201 SKUs</div>
       </div>
     </div>
@@ -578,7 +580,8 @@ function saveSku(){
     live:builder.live,
     cat:builder.cat,
     sub:builder.sub,
-    subsub:''
+    subsub:'',
+    updated:new Date().toISOString()
   };
   skus.push(entry);
   recentlyAdded.unshift(entry);
@@ -589,6 +592,8 @@ function saveSku(){
   showNotif('Saved: '+sku);
   resetBuilder();
   renderSidebar();
+  // Push to cloud
+  if (_sbReady) { var p=_skuPayload(); try{localStorage.setItem(SK_SKUS,JSON.stringify(p));}catch(e){} _sbSet(SK_SKUS,p).then(function(ok){_updateSyncBadge(ok?'ok':'offline');}); }
 }
 
 function resetBuilder(){
@@ -740,6 +745,7 @@ function deleteSku(id){
   document.getElementById('total-count').textContent = skus.length+' SKUs';
   renderTable();
   showNotif('Deleted: '+id);
+  if (_sbReady) { var p=_skuPayload(); try{localStorage.setItem(SK_SKUS,JSON.stringify(p));}catch(e){} _sbSet(SK_SKUS,p).then(function(ok){_updateSyncBadge(ok?'ok':'offline');}); }
 }
 
 function openEdit(id){
@@ -790,9 +796,12 @@ function saveEdit(id){
   s.cat = document.getElementById('e-cat').value.trim();
   s.sub = document.getElementById('e-sub').value.trim();
   s.live = document.getElementById('e-live').value;
+  s.updated = new Date().toISOString();
   closeModal();
   renderTable();
   showNotif('Updated: '+id);
+  // Push to cloud
+  if (_sbReady) { var p=_skuPayload(); try{localStorage.setItem(SK_SKUS,JSON.stringify(p));}catch(e){} _sbSet(SK_SKUS,p).then(function(ok){_updateSyncBadge(ok?'ok':'offline');}); }
 }
 
 function closeModal(e){
@@ -1089,12 +1098,184 @@ function parseCSVLine(line){
   return result;
 }
 
+// ── CLOUD SYNC (Supabase) ─────────────────────────────────────────────
+var TGK_SB_URL = 'https://piamamighqiielfztgic.supabase.co';
+var TGK_SB_KEY = 'sb_publishable_JHTuiKlkCD_EHoyDtWtKsQ_gyQ6kgfJ';
+var _sbReady = false;
+var _sbCache = null;
+var _syncInterval = null;
+const SK_SKUS = 'tgk_skus_v1';
+
+async function _sbGet(id) {
+  try {
+    var res = await fetch(TGK_SB_URL + '/rest/v1/workspace?id=eq.' + encodeURIComponent(id) + '&select=data&limit=1', {
+      headers: { 'apikey': TGK_SB_KEY, 'Authorization': 'Bearer ' + TGK_SB_KEY }
+    });
+    var rows = await res.json();
+    return (rows && rows[0]) ? rows[0].data : null;
+  } catch(e) { return null; }
+}
+
+async function _sbSet(id, payload) {
+  try {
+    var res = await fetch(TGK_SB_URL + '/rest/v1/workspace', {
+      method: 'POST',
+      headers: { 'apikey': TGK_SB_KEY, 'Authorization': 'Bearer ' + TGK_SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify({ id: id, data: payload, updated_at: new Date().toISOString() })
+    });
+    return res.ok;
+  } catch(e) { console.warn('Cloud save failed:', e); return false; }
+}
+
+function _sbToast(msg, ok) {
+  var el = document.getElementById('_sb_toast');
+  if (!el) { el = document.createElement('div'); el.id = '_sb_toast'; el.style.cssText = 'position:fixed;bottom:16px;left:16px;padding:8px 14px;border-radius:7px;font-size:11px;font-weight:700;z-index:9999;transition:opacity .4s;font-family:inherit'; document.body.appendChild(el); }
+  el.textContent = msg;
+  el.style.background = ok ? 'rgba(42,191,170,.9)' : 'rgba(224,85,85,.9)';
+  el.style.color = '#fff'; el.style.opacity = '1';
+  setTimeout(function(){ el.style.opacity = '0'; }, 3000);
+}
+
+function _updateSyncBadge(status) {
+  var el = document.getElementById('sync-badge');
+  if (!el) return;
+  if (status === 'syncing') { el.textContent = '↻ Syncing…'; el.style.color = '#888'; }
+  else if (status === 'ok') {
+    var now = new Date();
+    el.textContent = '✓ Synced ' + now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    el.style.color = '#2ABFAA';
+  }
+  else if (status === 'offline') { el.textContent = '⚠ Offline'; el.style.color = '#f87171'; }
+}
+
+function _skuPayload() {
+  return { skus: skus, taxonomy: TAXONOMY, updated_at: new Date().toISOString() };
+}
+
+function _mergeSkuData(local, cloud) {
+  // Merge taxonomy — cloud is authoritative for keys that exist, local adds new ones
+  var merged = {
+    taxonomy: JSON.parse(JSON.stringify(cloud.taxonomy || {})),
+    skus: [...(cloud.skus || [])]
+  };
+  // Add any local taxonomy categories/subs not in cloud
+  Object.keys(local.taxonomy || {}).forEach(function(cat) {
+    if (!merged.taxonomy[cat]) merged.taxonomy[cat] = local.taxonomy[cat];
+    else {
+      Object.keys(local.taxonomy[cat].subs || {}).forEach(function(sub) {
+        if (merged.taxonomy[cat].subs[sub] === undefined)
+          merged.taxonomy[cat].subs[sub] = local.taxonomy[cat].subs[sub];
+      });
+    }
+  });
+  // Merge SKUs — match by newSku, keep cloud version unless local is newer
+  (local.skus || []).forEach(function(ls) {
+    if (!ls.newSku) return;
+    var idx = merged.skus.findIndex(function(cs){ return cs.newSku === ls.newSku; });
+    if (idx > -1) {
+      // keep whichever was updated more recently; if no timestamp, prefer cloud
+      var cloudUpdated = new Date(merged.skus[idx].updated || 0);
+      var localUpdated = new Date(ls.updated || 0);
+      if (localUpdated > cloudUpdated) merged.skus[idx] = ls;
+    } else {
+      merged.skus.push(ls); // new local SKU
+    }
+  });
+  return merged;
+}
+
+async function _sbBoot() {
+  _updateSyncBadge('syncing');
+  try {
+    var cloud = await _sbGet(SK_SKUS);
+    if (cloud && ((cloud.skus || []).length > 0)) {
+      var merged = _mergeSkuData({ skus: skus, taxonomy: TAXONOMY }, cloud);
+      skus = merged.skus;
+      TAXONOMY = merged.taxonomy;
+      try { localStorage.setItem(SK_SKUS, JSON.stringify({ skus: skus, taxonomy: TAXONOMY })); } catch(e) {}
+    }
+    _sbReady = true;
+    _updateSyncBadge('ok');
+    _sbToast('✓ Synced — ' + skus.length + ' SKUs', true);
+    _syncInterval = setInterval(_backgroundSync, 300000);
+  } catch(e) {
+    _updateSyncBadge('offline');
+    _sbToast('⚠ Cloud offline — local only', false);
+  }
+}
+
+async function _backgroundSync() {
+  if (!_sbReady) return;
+  try {
+    var cloud = await _sbGet(SK_SKUS);
+    if (!cloud) return;
+    var cloudCount = (cloud.skus || []).length;
+    var localCount = skus.length;
+    var cloudNewest = (cloud.skus || []).reduce(function(max, s){ return (s.updated||'') > max ? (s.updated||'') : max; }, '');
+    var localNewest = skus.reduce(function(max, s){ return (s.updated||'') > max ? (s.updated||'') : max; }, '');
+    if (cloudCount !== localCount || cloudNewest > localNewest) {
+      var merged = _mergeSkuData({ skus: skus, taxonomy: TAXONOMY }, cloud);
+      skus = merged.skus;
+      TAXONOMY = merged.taxonomy;
+      try { localStorage.setItem(SK_SKUS, JSON.stringify({ skus: skus, taxonomy: TAXONOMY })); } catch(e) {}
+      renderSidebar();
+      renderTable();
+      document.getElementById('total-count').textContent = skus.length + ' SKUs';
+      document.getElementById('sb-count').textContent = skus.length + ' SKUs tracked';
+      _sbToast('↻ Updated from cloud', true);
+    }
+    _updateSyncBadge('ok');
+  } catch(e) { _updateSyncBadge('offline'); }
+}
+
+async function saveWithMerge() {
+  var btn = document.querySelector('.export-btn[onclick="saveWithMerge()"]');
+  if (btn) { var orig = btn.textContent; btn.textContent = '↻ Syncing…'; }
+  _updateSyncBadge('syncing');
+  try {
+    var cloud = await _sbGet(SK_SKUS);
+    if (cloud && (cloud.skus || []).length > 0) {
+      var merged = _mergeSkuData({ skus: skus, taxonomy: TAXONOMY }, cloud);
+      skus = merged.skus;
+      TAXONOMY = merged.taxonomy;
+    }
+    var payload = _skuPayload();
+    try { localStorage.setItem(SK_SKUS, JSON.stringify(payload)); } catch(e) {}
+    var ok = await _sbSet(SK_SKUS, payload);
+    _updateSyncBadge(ok ? 'ok' : 'offline');
+    _sbToast(ok ? '✓ Saved & synced' : '⚠ Save failed', ok);
+    renderSidebar();
+    renderTable();
+    document.getElementById('total-count').textContent = skus.length + ' SKUs';
+    document.getElementById('sb-count').textContent = skus.length + ' SKUs tracked';
+  } catch(e) {
+    _updateSyncBadge('offline');
+    _sbToast('⚠ Sync failed — ' + e.message, false);
+  }
+  if (btn) btn.textContent = orig;
+}
+
+// Load from localStorage as fallback before cloud boot
+(function() {
+  try {
+    var stored = localStorage.getItem(SK_SKUS);
+    if (stored) {
+      var parsed = JSON.parse(stored);
+      if (parsed.skus && parsed.skus.length > 0) {
+        skus = parsed.skus;
+        if (parsed.taxonomy) TAXONOMY = parsed.taxonomy;
+      }
+    }
+  } catch(e) {}
+})();
+
 // ── INIT ─────────────────────────────────────────────────────────────
 renderSidebar();
 renderStep();
 renderRecent();
 document.getElementById('total-count').textContent = skus.length+' SKUs';
 document.getElementById('sb-count').textContent = skus.length+' SKUs tracked';
+_sbBoot();
 </script>
 </body>
 </html>
