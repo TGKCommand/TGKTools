@@ -290,7 +290,7 @@ select.form-input{cursor:pointer}
           </button>
           <button id="imp-tab-odoo" onclick="setImportTab('odoo')" style="flex:1;padding:11px 16px;background:var(--bg3);border:none;cursor:pointer;text-align:left">
             <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.06em">ODOO PRODUCT EXPORT</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:2px">Inventory → Products → Action → Export</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">Import products + category + on hand + route</div>
           </button>
         </div>
 
@@ -333,8 +333,11 @@ select.form-input{cursor:pointer}
           <div class="panel-title">Upload Odoo Product Export</div>
           <p style="font-size:12px;color:var(--text2);margin-bottom:14px">
             Export from Odoo: <strong style="color:var(--text)">Inventory → Products → ⚙ Action → Export</strong><br>
-            Include: <span style="color:var(--teal);font-family:var(--mono);font-size:11px">Internal Reference · Name · Quantity On Hand · Reordering Min Qty · Reordering Max Qty · Routes</span>
+            Include: <span style="color:var(--teal);font-family:var(--mono);font-size:11px">Internal Reference · Name · Quantity On Hand · Reordering Min Qty · Reordering Max Qty · Routes · Product Category</span>
           </p>
+          <div style="padding:8px 12px;background:var(--teal-dim);border:1px solid rgba(42,191,170,.2);border-radius:var(--r);font-size:11px;color:var(--teal);margin-bottom:12px">
+            ✓ This is where you import your Odoo product export to get <strong>categories, on-hand quantities, and routes</strong> into the calculator.
+          </div>
           <div class="drop-zone" id="odoo-import-drop" onclick="document.getElementById('odoo-import-file').click()" ondragover="handleOdooImportDragOver(event)" ondragleave="handleOdooImportDragLeave(event)" ondrop="handleOdooImportDrop(event)">
             <div class="drop-zone-icon">🗂️</div>
             <div class="drop-zone-text">Click to upload Odoo product CSV</div>
@@ -351,7 +354,7 @@ select.form-input{cursor:pointer}
               <span>Reordering Min Qty</span> → Min On Hand (existing Odoo min)<br>
               <span>Reordering Max Qty</span> → Tgt On Hand (existing Odoo max)<br>
               <span>Routes</span> → Route (Buy / Manufacture)<br>
-              <span>Category / Internal Category</span> → Category (for filtering)<br>
+              <span>Product Category</span> → Category (for filtering &amp; sorting)<br>
               <span style="color:var(--text3)">Min Wks Ahead / Tgt Wks Ahead will use global defaults unless set in your spreadsheet</span>
             </div>
           </div>
@@ -737,8 +740,8 @@ select.form-input{cursor:pointer}
           <p style="font-size:12px;color:var(--text2);margin-bottom:16px">These apply to all SKUs unless overridden per-row in the calculator.</p>
           <div class="defaults-grid">
             <div class="form-group">
-              <label class="form-label">Default Lead Time (days)</label>
-              <input type="number" class="form-input" id="g-lead" value="14" min="1" max="365" oninput="saveSettings()">
+              <label class="form-label">Default Lead Time (weeks)</label>
+              <input type="number" class="form-input" id="g-lead" value="2" min="0.5" max="52" step="0.5" oninput="saveSettings()">
             </div>
             <div class="form-group">
               <label class="form-label">Default Min Weeks Cover</label>
@@ -836,8 +839,8 @@ select.form-input{cursor:pointer}
           <input type="number" class="form-input" id="m-tgtonhand" placeholder="e.g. 8.0" step="0.01" min="0">
         </div>
         <div class="form-group">
-          <label class="form-label">Lead Time (days) — blank = global</label>
-          <input type="number" class="form-input" id="m-lead" placeholder="Use global default" min="1">
+          <label class="form-label">Lead Time (weeks) — blank = global</label>
+          <input type="number" class="form-input" id="m-lead" placeholder="Use global default" min="0.5" step="0.5">
         </div>
         <div class="form-group">
           <label class="form-label">Min Weeks Cover — blank = global</label>
@@ -893,7 +896,7 @@ let sortDir = 1; // 1 = asc, -1 = desc
 const STORAGE_KEY = 'tgk_minmax_v1';
 
 let settings = {
-  leadDays: 14,
+  leadDays: 2,
   minWks: 2,
   tgtWks: 6,
   route: 'Buy',
@@ -1119,7 +1122,7 @@ function calcSKU(s) {
 
   if (avg > 0) {
     // Calculate from weekly average + weeks cover
-    const leadWks = leadDays / 7;
+    const leadWks = leadDays; // stored as weeks directly
     odooMin = Math.ceil(avg * (leadWks + minWks));
     odooMax = Math.ceil(avg * (leadWks + tgtWks));
   } else if (parseFloat(s.minOnHand) > 0 || parseFloat(s.tgtOnHand) > 0) {
@@ -1214,7 +1217,7 @@ const TABLE_COLS = [
   { key: 'avg24wk',    label: '24wk Avg',     sortable: true,  teal: false },
   { key: 'minOnHand',  label: 'Min On Hand',  sortable: true,  teal: false },
   { key: 'tgtOnHand',  label: 'Tgt On Hand',  sortable: true,  teal: false },
-  { key: 'leadDays',   label: 'Lead (days)',  sortable: true,  teal: false },
+  { key: 'leadDays',   label: 'Lead (wks)',   sortable: true,  teal: false },
   { key: 'minWks',     label: 'Min Wks',      sortable: true,  teal: false },
   { key: 'tgtWks',     label: 'Tgt Wks',      sortable: true,  teal: false },
   { key: 'moq',        label: 'MOQ',          sortable: true,  teal: false },
@@ -1311,7 +1314,7 @@ function renderTable(search='') {
       <td class="mono">${fmt(s.avg24wk)}</td>
       <td><input class="inline-input" type="number" value="${s.minOnHand||''}" placeholder="—" step="0.01" onchange="updateField('${s.id}','minOnHand',this.value);renderTable()"></td>
       <td><input class="inline-input" type="number" value="${s.tgtOnHand||''}" placeholder="—" step="0.01" onchange="updateField('${s.id}','tgtOnHand',this.value);renderTable()"></td>
-      <td><input class="inline-input" type="number" value="${leadVal}" placeholder="${settings.leadDays}" min="1" onchange="updateField('${s.id}','leadDays',this.value);renderTable()"></td>
+      <td><input class="inline-input" type="number" value="${leadVal}" placeholder="${settings.leadDays}" min="0.5" step="0.5" onchange="updateField('${s.id}','leadDays',this.value);renderTable()"></td>
       <td><input class="inline-input" type="number" value="${minWVal}" placeholder="${settings.minWks}" step="0.5" onchange="updateField('${s.id}','minWks',this.value);renderTable()"></td>
       <td><input class="inline-input" type="number" value="${tgtWVal}" placeholder="${settings.tgtWks}" step="0.5" onchange="updateField('${s.id}','tgtWks',this.value);renderTable()"></td>
       <td><input class="inline-input" type="number" value="${moqVal}" placeholder="${settings.moq}" min="1" onchange="updateField('${s.id}','moq',this.value);renderTable()"></td>
@@ -1482,9 +1485,11 @@ function parseAndImport(text) {
   const aliases = {
     sku:       ['pn','pnwrev','sku','internalreference','ref','productcode','partno','partnumber','itemnumber'],
     name:      ['description','productname','name','product','itemname','productdescription'],
+    weeklyAvg: ['avgsaleswk','avgsalesperweek','weeklysales','weeklyavg','weeklysalesavg','avgwkly','avgsales'],
     avg4wk:    ['4weeksaleswk','4wksaleswk','4wkavg','4weekavg','fourweekavg','avg4wk','4wksalesavg'],
     avg24wk:   ['24weeksaleswk','24wksaleswk','24wkavg','24weekavg','twentyfourweekavg','avg24wk','24wksalesavg'],
-    onHand:    ['totalassdonhand','totalassd','assdonhand','onhand','currentstock','stockonhand','soh'],
+    onHand:    ['totalassdonhand','totalassd','assdonhand','onhand','currentstock','stockonhand','soh','totalunpckgd','totalunpackaged'],
+    onHandFG:  ['totalinfgsubassembly','totalinfgsubassem','totalinfgsuba','totalinfg','totalinfgsub','fgonhand'],
     minOnHand: ['minassdonhand','minassd','minionhand','minonhand','minstock'],
     tgtOnHand: ['tgtassdonhand','tgtassd','tgtonhand','targetassdonhand','targetonhand','tgtstock'],
     avgOnHand: ['avgassdonhand','avgassd','avgonhand'],
@@ -1494,7 +1499,7 @@ function parseAndImport(text) {
     minWks:    ['minwksahead','minweeksahead','minwks','minweeks','weeksminimum'],
     tgtWks:    ['tgtwksahead','tgtweeksahead','tgtwks','tgtweeks','targetweeks','targetwksahead'],
     moq:       ['moq','minimumorderqty','minorderqty','ordermin'],
-    category:  ['category','productcategory','internalcategory','categoryname','categ','categid'],
+    category:  ['category','productcategory','internalcategory','categoryname','categ','categid','categname','productcategoryname','internalcategoryname','productinternalcategory','productcateg','productcategname'],
     route:     ['route','replenishmenttype','replenishment'],
     uom:       ['uom','unitofmeasure','unit'],
   };
@@ -1516,11 +1521,40 @@ function parseAndImport(text) {
   let added = 0, updated = 0, skipped = 0;
   const previewLines = [`<span class="ok">✓ Header mapped. Columns found: ${Object.keys(colMap).join(', ')}</span>`];
 
+  // Track current category from group header rows
+  let currentCategory = '';
+
   for (let i = 1; i < lines.length; i++) {
     const cols = parseLine(lines[i]);
     const get = k => colMap[k] !== undefined ? (cols[colMap[k]]||'').trim() : '';
     const sku = get('sku');
-    if (!sku) { skipped++; continue; }
+
+    // Detect category group header rows: no PN but has a name-like value in col 0 or 1
+    if (!sku) {
+      // Check if this looks like a category row (only 1-3 non-empty cells, first col has text)
+      const nonEmpty = cols.filter(c => c && c.trim()).length;
+      const firstVal = (cols[0]||'').trim() || (cols[1]||'').trim();
+      if (firstVal && nonEmpty <= 3) {
+        currentCategory = firstVal;
+      } else {
+        skipped++;
+      }
+      continue;
+    }
+
+    // Sum onHand + FG/SubAssembly if both columns present
+    let onHandVal = get('onHand');
+    const onHandFGVal = get('onHandFG');
+    if (onHandFGVal && onHandVal !== '') {
+      const sum = (parseFloat(onHandVal)||0) + (parseFloat(onHandFGVal)||0);
+      onHandVal = String(sum);
+    } else if (!onHandVal && onHandFGVal) {
+      onHandVal = onHandFGVal;
+    }
+
+    // Category: explicit column wins, else use group header
+    const explicitCat = get('category');
+    const category = explicitCat || currentCategory;
 
     const obj = {
       id:        uid(),
@@ -1529,7 +1563,7 @@ function parseAndImport(text) {
       weeklyAvg: get('weeklyAvg'),
       avg4wk:    get('avg4wk'),
       avg24wk:   get('avg24wk'),
-      onHand:    get('onHand'),
+      onHand:    onHandVal,
       minOnHand: get('minOnHand'),
       tgtOnHand: get('tgtOnHand'),
       avgOnHand: get('avgOnHand'),
@@ -1539,7 +1573,7 @@ function parseAndImport(text) {
       minWks:    get('minWks'),
       tgtWks:    get('tgtWks'),
       moq:       get('moq'),
-      category:  get('category'),
+      category,
       route:     get('route'),
       uom:       get('uom'),
     };
@@ -1552,7 +1586,7 @@ function parseAndImport(text) {
     } else {
       skus.push(obj);
       added++;
-      if (added <= 5) previewLines.push(`<span class="ok">+ Added: ${sku}${obj.name ? ' — '+obj.name : ''}</span>`);
+      if (added <= 5) previewLines.push(`<span class="ok">+ Added: ${sku}${obj.name ? ' — '+obj.name : ''}${category ? ' ['+category+']' : ''}</span>`);
     }
   }
 
@@ -1831,7 +1865,7 @@ function parseOdooProductImport(text) {
   const minIdx    = header.findIndex(h => ['reorderingminqty','reorderminqty','minqty','productminqty'].includes(h));
   const maxIdx    = header.findIndex(h => ['reorderingmaxqty','reordermaxqty','maxqty','productmaxqty'].includes(h));
   const routeIdx  = header.findIndex(h => ['routes','route'].includes(h));
-  const catIdx    = header.findIndex(h => ['category','productcategory','internalcategory','categ','categname','categid'].includes(h));
+  const catIdx    = header.findIndex(h => ['category','productcategory','internalcategory','categ','categname','categid','categoryname','productcategoryname','internalcategoryname','productinternalcategory','productcateg','productcategname'].includes(h));
   const uomIdx    = header.findIndex(h => ['unitofmeasure','uom','unit'].includes(h));
 
   if (refIdx === -1 && nameIdx === -1) {
@@ -1870,7 +1904,7 @@ function parseOdooProductImport(text) {
       if (minQty) existing.minOnHand = minQty;
       if (maxQty) existing.tgtOnHand = maxQty;
       if (route    && !existing.route)    existing.route    = route;
-      if (category && !existing.category) existing.category = category;
+      if (category) existing.category = category; // always update category from Odoo
       if (uom    && !existing.uom)    existing.uom    = uom;
       existing.updated = new Date().toISOString();
       updated++;
@@ -1912,7 +1946,8 @@ function parseOdooProductImport(text) {
     + `<span class="ok">✓ ${added} new SKUs created from Odoo</span><br>`
     + (updated ? `<span class="ok">✓ ${updated} existing SKUs updated with Odoo data</span><br>` : '')
     + (skipped ? `<span class="warn">⚠ ${skipped} rows skipped (no ref/name)</span><br>` : '')
-    + `<span style="color:var(--text3)">Columns mapped: ${[refIdx>=0?'Ref':'',nameIdx>=0?'Name':'',onHandIdx>=0?'On Hand':'',minIdx>=0?'Min Qty':'',maxIdx>=0?'Max Qty':'',routeIdx>=0?'Route':'',uomIdx>=0?'UOM':''].filter(Boolean).join(', ')}</span>`
+    + `<span style="color:var(--text3)">Columns mapped: ${[refIdx>=0?'Ref':'',nameIdx>=0?'Name':'',onHandIdx>=0?'On Hand':'',minIdx>=0?'Min Qty':'',maxIdx>=0?'Max Qty':'',routeIdx>=0?'Route':'',catIdx>=0?'Category':'',uomIdx>=0?'UOM':''].filter(Boolean).join(', ')}</span><br>`
+    + (catIdx===-1 ? '<span class="warn">⚠ Category column not found — headers: ' + header.slice(0,8).join(', ') + '</span>' : `<span class="ok">✓ Category column found: "${header[catIdx]}"</span>`)
     + '</div>';
 
   showNotif(`Odoo import: ${added} added, ${updated} updated`);
