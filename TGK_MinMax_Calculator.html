@@ -164,6 +164,11 @@ select.form-input{cursor:pointer}
 .empty-title{font-size:14px;font-weight:600;color:var(--text2);margin-bottom:6px}
 .empty-sub{font-size:12px}
 
+/* SORT HEADERS */
+.th-sort{cursor:pointer;user-select:none;white-space:nowrap}
+.th-sort:hover{color:var(--text)!important;background:var(--bg4)}
+.th-sort .sort-arrow{display:inline-block;margin-left:4px;font-size:9px;opacity:.35;transition:opacity .15s}
+.th-sort.sorted .sort-arrow{opacity:1;color:var(--teal)}
 /* FORMULA HINT */
 .formula-box{background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r);padding:10px 14px;font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:8px;line-height:1.7}
 .formula-box span{color:var(--teal)}
@@ -202,6 +207,10 @@ select.form-input{cursor:pointer}
       </button>
       <button class="nav-item" onclick="switchView('import')">
         <span class="nav-dot"></span><span class="nav-label">Import / Add SKUs</span>
+      </button>
+      <button class="nav-item" onclick="switchView('odoo-pns')">
+        <span class="nav-dot"></span><span class="nav-label">Odoo Part Numbers</span>
+        <span class="nav-count" id="nav-odoo-count">0</span>
       </button>
       <button class="nav-item" onclick="switchView('calculator')">
         <span class="nav-dot"></span><span class="nav-label">Calculator</span>
@@ -265,7 +274,7 @@ select.form-input{cursor:pointer}
           <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
             <div class="drop-zone-icon">📂</div>
             <div class="drop-zone-text">Click to upload or drag & drop</div>
-            <div class="drop-zone-sub">CSV or TSV — must include SKU column. Other columns auto-mapped.</div>
+            <div class="drop-zone-sub">Save Excel as <strong>CSV (comma)</strong> or <strong>Tab Separated (.txt/.tsv)</strong> first — then upload here.</div>
           </div>
           <input type="file" id="file-input" accept=".csv,.tsv,.txt,.xls,.xlsx" style="display:none" onchange="handleFileSelect(event)">
           <div id="import-preview" style="display:none"></div>
@@ -298,29 +307,17 @@ select.form-input{cursor:pointer}
             <input type="text" placeholder="Search SKU or name…" oninput="renderTable(this.value)">
           </div>
           <button class="btn btn-sm" onclick="recalcAll()">↻ Recalc All</button>
+          <div style="display:flex;gap:5px;margin-left:8px" id="filter-btns">
+            <button class="filter-btn on" id="f-all" onclick="setTableFilter('all')">All</button>
+            <button class="filter-btn" id="f-matched" onclick="setTableFilter('matched')">✓ In Odoo</button>
+            <button class="filter-btn" id="f-unmatched" onclick="setTableFilter('unmatched')">⚠ Not in Odoo</button>
+          </div>
           <button class="btn btn-sm" onclick="clearAll()" style="margin-left:auto">🗑 Clear All</button>
         </div>
         <div class="tbl-wrap">
           <table class="sku-table" id="main-table">
-            <thead>
-              <tr>
-                <th></th>
-                <th>SKU</th>
-                <th>Name</th>
-                <th>4wk Avg</th>
-                <th>24wk Avg</th>
-                <th>Min On Hand</th>
-                <th>Tgt On Hand</th>
-                <th>Lead (days)</th>
-                <th>Min Wks</th>
-                <th>Tgt Wks</th>
-                <th>MOQ</th>
-                <th>Route</th>
-                <th style="color:var(--teal)">▸ ODOO MIN</th>
-                <th style="color:var(--teal)">▸ ODOO MAX</th>
-                <th>QTY to Order</th>
-                <th></th>
-              </tr>
+            <thead id="table-head">
+              <tr></tr>
             </thead>
             <tbody id="table-body"></tbody>
           </table>
@@ -329,6 +326,35 @@ select.form-input{cursor:pointer}
           <div class="empty-icon">📊</div>
           <div class="empty-title">No SKUs loaded</div>
           <div class="empty-sub">Import a CSV or add SKUs manually to get started</div>
+        </div>
+      </div>
+
+      <!-- ODOO PNs -->
+      <div class="view" id="view-odoo-pns">
+        <div class="panel">
+          <div class="panel-title">Upload Odoo Product CSV</div>
+          <p style="font-size:12px;color:var(--text2);margin-bottom:14px">Export your products from Odoo: <strong style="color:var(--text)">Inventory → Products → ⋮ Export</strong> — needs at least an Internal Reference column.</p>
+          <div class="drop-zone" id="odoo-drop-zone" onclick="document.getElementById('odoo-file-input').click()" ondragover="handleOdooDragOver(event)" ondragleave="handleOdooDragLeave(event)" ondrop="handleOdooDrop(event)">
+            <div class="drop-zone-icon">🏷️</div>
+            <div class="drop-zone-text">Click to upload Odoo product CSV</div>
+            <div class="drop-zone-sub">Needs an <strong>Internal Reference</strong> column. CSV format.</div>
+          </div>
+          <input type="file" id="odoo-file-input" accept=".csv,.tsv,.txt" style="display:none" onchange="handleOdooFileSelect(event)">
+          <div id="odoo-upload-preview" style="display:none;margin-top:10px"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Or Paste Part Numbers</div>
+          <p style="font-size:12px;color:var(--text2);margin-bottom:10px">Paste one part number per line, or comma/tab separated.</p>
+          <textarea class="form-input" id="odoo-paste-input" style="min-height:120px;font-family:var(--mono);font-size:11px" placeholder="TGK-ACC-01&#10;TGK-ACC-02&#10;TGK-BOV-01&#10;..."></textarea>
+          <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+            <button class="btn btn-primary" onclick="importOdooPaste()">Import Pasted PNs</button>
+            <button class="btn" onclick="clearOdooPNs()">🗑 Clear All Odoo PNs</button>
+            <span id="odoo-pn-count" style="font-size:11px;font-family:var(--mono);color:var(--text3);margin-left:4px"></span>
+          </div>
+        </div>
+        <div class="panel" id="odoo-pn-list-panel" style="display:none">
+          <div class="panel-title">Loaded Odoo Part Numbers</div>
+          <div id="odoo-pn-list" style="font-size:11px;font-family:var(--mono);color:var(--text2);line-height:2;max-height:300px;overflow-y:auto;columns:3;gap:16px"></div>
         </div>
       </div>
 
@@ -514,6 +540,10 @@ select.form-input{cursor:pointer}
 // ── STATE ─────────────────────────────────────────────────────────────
 let skus = [];
 let editingId = null;
+let odooPNs = new Set(); // Odoo reference part numbers
+let tableFilter = 'all'; // 'all' | 'matched' | 'unmatched'
+let sortCol = 'sku';
+let sortDir = 1; // 1 = asc, -1 = desc
 const STORAGE_KEY = 'tgk_minmax_v1';
 
 let settings = {
@@ -595,6 +625,10 @@ function _mergeData(local, cloud) {
   if (local.settings && Object.keys(local.settings).length) {
     merged.settings = Object.assign({}, cloud.settings || {}, local.settings);
   }
+  // Merge odooPNs — union of both sets
+  const cloudPNs = cloud.odooPNs || [];
+  const localPNs = local.odooPNs || [];
+  merged.odooPNs = [...new Set([...cloudPNs, ...localPNs])];
   return merged;
 }
 
@@ -630,6 +664,7 @@ async function _backgroundSync() {
       var merged = _mergeData({ skus, settings }, cloud);
       skus = merged.skus;
       if (merged.settings) Object.assign(settings, merged.settings);
+      if (merged.odooPNs) odooPNs = new Set(merged.odooPNs);
       _sbCache = merged;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
       renderTable();
@@ -651,10 +686,11 @@ async function saveWithMerge() {
       var merged = _mergeData({ skus, settings }, cloud);
       skus = merged.skus;
       if (merged.settings) Object.assign(settings, merged.settings);
+      if (merged.odooPNs) odooPNs = new Set(merged.odooPNs);
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ skus, settings }));
     _sbCache = { skus, settings };
-    var ok = await _sbSet('tgk_minmax_v1', { skus, settings });
+    var ok = await _sbSet('tgk_minmax_v1', { skus, settings, odooPNs: [...odooPNs] });
     _updateSyncBadge(ok ? 'ok' : 'offline');
     _sbToast(ok ? '✓ Saved & synced' : '⚠ Save failed', ok);
     renderTable();
@@ -671,9 +707,9 @@ async function saveWithMerge() {
 function persist() {
   // Stamp updated time on changed SKUs
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ skus, settings }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ skus, settings, odooPNs: [...odooPNs] }));
     _sbCache = { skus, settings };
-    _sbSet('tgk_minmax_v1', { skus, settings });
+    _sbSet('tgk_minmax_v1', { skus, settings, odooPNs: [...odooPNs] });
   } catch(e) {}
 }
 function loadPersist() {
@@ -682,6 +718,7 @@ function loadPersist() {
     if (d) {
       if (d.skus) skus = d.skus;
       if (d.settings) Object.assign(settings, d.settings);
+      if (d.odooPNs) odooPNs = new Set(d.odooPNs);
     }
   } catch(e) {}
 }
@@ -766,6 +803,7 @@ const viewTitles = {
   dashboard: 'Dashboard',
   import: 'Import / Add SKUs',
   calculator: 'Min/Max Calculator',
+  'odoo-pns': 'Odoo Part Numbers',
   export: 'Export to Odoo',
   settings: 'Global Settings'
 };
@@ -817,10 +855,69 @@ function renderDashboard() {
 }
 
 // ── TABLE ─────────────────────────────────────────────────────────────
-function renderTable(search='') {
-  const q = (search||'').toLowerCase();
-  const filtered = q ? skus.filter(s => (s.sku||'').toLowerCase().includes(q) || (s.name||'').toLowerCase().includes(q)) : skus;
+// Column definitions for sortable header
+const TABLE_COLS = [
+  { key: null,         label: '',             sortable: false, teal: false },
+  { key: 'sku',        label: 'SKU',          sortable: true,  teal: false },
+  { key: 'name',       label: 'Name',         sortable: true,  teal: false },
+  { key: 'avg4wk',     label: '4wk Avg',      sortable: true,  teal: false },
+  { key: 'avg24wk',    label: '24wk Avg',     sortable: true,  teal: false },
+  { key: 'minOnHand',  label: 'Min On Hand',  sortable: true,  teal: false },
+  { key: 'tgtOnHand',  label: 'Tgt On Hand',  sortable: true,  teal: false },
+  { key: 'leadDays',   label: 'Lead (days)',  sortable: true,  teal: false },
+  { key: 'minWks',     label: 'Min Wks',      sortable: true,  teal: false },
+  { key: 'tgtWks',     label: 'Tgt Wks',      sortable: true,  teal: false },
+  { key: 'moq',        label: 'MOQ',          sortable: true,  teal: false },
+  { key: 'route',      label: 'Route',        sortable: true,  teal: false },
+  { key: '_odooMin',   label: '▸ ODOO MIN',   sortable: true,  teal: true  },
+  { key: '_odooMax',   label: '▸ ODOO MAX',   sortable: true,  teal: true  },
+  { key: '_qtyOrder',  label: 'QTY to Order', sortable: true,  teal: false },
+  { key: null,         label: '',             sortable: false, teal: false },
+];
 
+function renderHeader() {
+  const tr = document.querySelector('#table-head tr');
+  tr.innerHTML = TABLE_COLS.map(col => {
+    if (!col.sortable) return `<th></th>`;
+    const isSorted = sortCol === col.key;
+    const arrow = isSorted ? (sortDir === 1 ? '▲' : '▼') : '⇅';
+    const color = col.teal ? 'color:var(--teal)' : '';
+    return `<th class="th-sort${isSorted?' sorted':''}" style="${color}" onclick="setSort('${col.key}')">${col.label} <span class="sort-arrow">${arrow}</span></th>`;
+  }).join('');
+}
+
+function setSort(key) {
+  if (sortCol === key) { sortDir *= -1; } else { sortCol = key; sortDir = 1; }
+  renderTable(_lastSearch);
+}
+
+let _lastSearch = '';
+
+function getSortVal(s, key) {
+  if (key === '_odooMin')   return calcSKU(s).odooMin;
+  if (key === '_odooMax')   return calcSKU(s).odooMax;
+  if (key === '_qtyOrder')  return calcSKU(s).qtyOrder;
+  const v = s[key];
+  const n = parseFloat(v);
+  return isNaN(n) ? (v||'').toLowerCase() : n;
+}
+
+function renderTable(search='') {
+  _lastSearch = search;
+  const q = (search||'').toLowerCase();
+  let filtered = q ? skus.filter(s => (s.sku||'').toLowerCase().includes(q) || (s.name||'').toLowerCase().includes(q)) : [...skus];
+  if (tableFilter === 'matched'   && odooPNs.size > 0) filtered = filtered.filter(s => odooPNs.has(s.sku));
+  if (tableFilter === 'unmatched' && odooPNs.size > 0) filtered = filtered.filter(s => !odooPNs.has(s.sku));
+
+  // Sort
+  filtered.sort((a, b) => {
+    const av = getSortVal(a, sortCol), bv = getSortVal(b, sortCol);
+    if (av < bv) return -sortDir;
+    if (av > bv) return  sortDir;
+    return 0;
+  });
+
+  renderHeader();
   updateCounts();
 
   const tbody = document.getElementById('table-body');
@@ -838,15 +935,17 @@ function renderTable(search='') {
     const oh = parseFloat(s.onHand)||0;
     const hasAvg = c.hasData;
     const belowMin = hasAvg && oh < c.odooMin;
-    const flagClass = !hasAvg ? 'flag-warn' : belowMin ? 'flag-err' : 'flag-ok';
+    const inOdoo = odooPNs.size === 0 || odooPNs.has(s.sku);
+    const flagClass = !inOdoo ? 'flag-err' : !hasAvg ? 'flag-warn' : belowMin ? 'flag-err' : 'flag-ok';
+    const rowStyle = !inOdoo && odooPNs.size > 0 ? 'opacity:0.45' : '';
     const leadVal = s.leadDays || '';
     const minWVal = s.minWks  || '';
     const tgtWVal = s.tgtWks  || '';
     const moqVal  = s.moq     || '';
     const routeVal= s.route   || '';
 
-    return `<tr>
-      <td><span class="flag ${flagClass}"></span></td>
+    return `<tr style="${rowStyle}">
+      <td title="${!inOdoo && odooPNs.size > 0 ? 'Not in Odoo' : ''}"><span class="flag ${flagClass}"></span></td>
       <td class="mono" style="color:var(--text);font-weight:500">${s.sku}</td>
       <td style="color:var(--text2);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name||'—'}</td>
       <td class="mono">${fmt(s.avg4wk)}</td>
@@ -1006,11 +1105,11 @@ function processFile(file) {
 }
 
 function parseAndImport(text) {
-  text = text.replace(/^\uFEFF/, ''); // strip Excel BOM
+  text = text.replace(/^[\uFEFF\u200B\u00BB\u00BF]+/, ''); // strip Excel BOM and zero-width chars
   const lines = text.split(/\r?\n/).filter(l => l.trim());
   if (lines.length < 2) { showNotif('File appears empty'); return; }
 
-  const header = parseLine(lines[0]).map(h => h.trim().toLowerCase().replace(/[^a-z0-9]/g,''));
+  const header = parseLine(lines[0]).map(h => h.replace(/^[\uFEFF\s]+|[\s]+$/g,'').toLowerCase().replace(/[^a-z0-9]/g,''));
 
   // Column mapping — matched to TGK Excel headers:
   // PN | Rev (LTR) | Rev (NBR) | PN w/Rev | Description | Total To Package |
@@ -1041,7 +1140,13 @@ function parseAndImport(text) {
     if (idx >= 0) colMap[key] = idx;
   });
 
-  if (colMap.sku === undefined) { showNotif('SKU column not found. Detected headers: ' + header.slice(0,5).join(', ')); return; }
+  if (colMap.sku === undefined) {
+    const prev = document.getElementById('import-preview');
+    prev.style.display = 'block';
+    prev.innerHTML = '<div class="import-preview"><span class="err">✗ Could not find SKU/PN column.</span><br><span style="color:var(--text3)">Headers detected (' + header.length + '):</span><br>' + header.map((h,i)=>'<span class="ok">['+i+']</span> <span style="color:var(--text2)">'+h+'</span>').join('<br>') + '</div>';
+    showNotif('SKU column not found — check header list below');
+    return;
+  }
 
   let added = 0, updated = 0, skipped = 0;
   const previewLines = [`<span class="ok">✓ Header mapped. Columns found: ${Object.keys(colMap).join(', ')}</span>`];
@@ -1177,6 +1282,103 @@ function downloadCSV(csv, filename) {
   a.click();
 }
 
+// ── ODOO PNs ──────────────────────────────────────────────────────────
+function handleOdooDragOver(e)  { e.preventDefault(); document.getElementById('odoo-drop-zone').classList.add('drag'); }
+function handleOdooDragLeave()  { document.getElementById('odoo-drop-zone').classList.remove('drag'); }
+function handleOdooDrop(e) {
+  e.preventDefault();
+  document.getElementById('odoo-drop-zone').classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file) processOdooFile(file);
+}
+function handleOdooFileSelect(e) { const f = e.target.files[0]; if (f) processOdooFile(f); }
+
+function processOdooFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => parseOdooCSV(e.target.result);
+  reader.readAsText(file);
+}
+
+function parseOdooCSV(text) {
+  text = text.replace(/^[﻿​]+/, '');
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) { showNotif('File appears empty'); return; }
+  const header = parseLine(lines[0]).map(h => h.trim().toLowerCase().replace(/[^a-z0-9]/g,''));
+  // Find internal reference / SKU column
+  const skuAliases = ['internalreference','internreference','ref','sku','productcode','partno','partnumber','pn','referenceinterne'];
+  const skuIdx = header.findIndex(h => skuAliases.includes(h));
+  if (skuIdx === -1) {
+    showNotif('Could not find Internal Reference column. Headers: ' + header.slice(0,6).join(', '));
+    return;
+  }
+  let added = 0;
+  for (let i = 1; i < lines.length; i++) {
+    const cols = parseLine(lines[i]);
+    const pn = (cols[skuIdx]||'').trim();
+    if (pn) { odooPNs.add(pn); added++; }
+  }
+  persist();
+  updateOdooPNDisplay();
+  renderTable(_lastSearch);
+  const prev = document.getElementById('odoo-upload-preview');
+  prev.style.display = 'block';
+  prev.innerHTML = `<div class="import-preview"><span class="ok">✓ Loaded ${added} part numbers from Odoo CSV (${odooPNs.size} total)</span></div>`;
+  showNotif(`${added} Odoo PNs loaded`);
+}
+
+function importOdooPaste() {
+  const raw = document.getElementById('odoo-paste-input').value.trim();
+  if (!raw) { showNotif('Nothing to import'); return; }
+  const pns = raw.split(/[\n\r,\t]+/).map(p => p.trim()).filter(Boolean);
+  pns.forEach(p => odooPNs.add(p));
+  document.getElementById('odoo-paste-input').value = '';
+  persist();
+  updateOdooPNDisplay();
+  renderTable(_lastSearch);
+  showNotif(`${pns.length} PNs added (${odooPNs.size} total)`);
+}
+
+function clearOdooPNs() {
+  if (!confirm('Clear all ' + odooPNs.size + ' Odoo part numbers?')) return;
+  odooPNs = new Set();
+  persist();
+  updateOdooPNDisplay();
+  renderTable(_lastSearch);
+  showNotif('Odoo PNs cleared');
+}
+
+function setTableFilter(f) {
+  tableFilter = f;
+  ['all','matched','unmatched'].forEach(k => {
+    document.getElementById('f-'+k).classList.toggle('on', k === f);
+  });
+  renderTable(_lastSearch);
+}
+
+function updateOdooPNDisplay() {
+  const count = odooPNs.size;
+  document.getElementById('nav-odoo-count').textContent = count;
+  const countEl = document.getElementById('odoo-pn-count');
+  if (countEl) countEl.textContent = count ? count + ' PNs loaded' : '';
+  const panel = document.getElementById('odoo-pn-list-panel');
+  const list  = document.getElementById('odoo-pn-list');
+  if (panel && list) {
+    if (count > 0) {
+      panel.style.display = 'block';
+      const sorted = [...odooPNs].sort();
+      list.innerHTML = sorted.map(p => {
+        const matched = skus.some(s => s.sku === p);
+        return `<span style="color:${matched?'var(--teal)':'var(--text3)'}">${p}</span>`;
+      }).join('<br>');
+    } else {
+      panel.style.display = 'none';
+    }
+  }
+  // Update filter button visibility
+  const filterBtns = document.getElementById('filter-btns');
+  if (filterBtns) filterBtns.style.display = count > 0 ? 'flex' : 'none';
+}
+
 // ── UTILS ─────────────────────────────────────────────────────────────
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 function dateStr() { return new Date().toISOString().slice(0,10); }
@@ -1195,7 +1397,8 @@ loadPersist();
 applySettingsToUI();
 renderDashboard();
 updateCounts();
-_sbBoot().finally(function(){ loadPersist(); applySettingsToUI(); renderDashboard(); updateCounts(); });
+updateOdooPNDisplay();
+_sbBoot().finally(function(){ loadPersist(); applySettingsToUI(); renderDashboard(); updateCounts(); updateOdooPNDisplay(); });
 </script>
 </body>
 </html>
