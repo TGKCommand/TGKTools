@@ -381,8 +381,7 @@ select.form-input{cursor:pointer}
             <button class="filter-btn"    id="f-unmatched" onclick="setTableFilter('unmatched')">⚠ Not in Odoo</button>
           </div>
           <div style="margin-left:auto;display:flex;gap:6px;align-items:center">
-            <button id="btn-delete-selected" class="btn btn-sm btn-red" onclick="deleteSelected()" style="display:none;gap:6px">🗑 Delete 0 Selected</button>
-            <button class="btn btn-sm" onclick="recalcAll()">↻ Recalc All</button>
+<button class="btn btn-sm" onclick="recalcAll()">↻ Recalc All</button>
             <button class="btn btn-sm" onclick="clearAll()">🗑 Clear All</button>
           </div>
         </div>
@@ -562,7 +561,7 @@ select.form-input{cursor:pointer}
         <!-- Category filter -->
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px 14px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r)">
           <span style="font-size:12px;color:var(--text2);white-space:nowrap;font-weight:600">Filter by Category:</span>
-          <select id="export-cat-filter" onchange="updateExportCounts()" style="flex:1;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);padding:6px 10px;font-size:12px;font-family:var(--font);cursor:pointer;outline:none">
+          <select id="export-cat-filter" onchange="updateExportSummary()" style="flex:1;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);padding:6px 10px;font-size:12px;font-family:var(--font);cursor:pointer;outline:none">
             <option value="">All Categories</option>
           </select>
           <span id="export-cat-badge" style="font-size:11px;color:var(--teal);font-family:var(--mono);white-space:nowrap"></span>
@@ -919,6 +918,7 @@ select.form-input{cursor:pointer}
 <script>
 // ── STATE ─────────────────────────────────────────────────────────────
 let skus = [];
+let selectedIds = new Set();
 let editingId = null;
 let odooPNs = new Set();
 let odooProducts = []; // [{id, name, ref}] from Odoo product export
@@ -1243,7 +1243,7 @@ function renderDashboard() {
 // ── TABLE ─────────────────────────────────────────────────────────────
 // Column definitions for sortable header
 const TABLE_COLS = [
-  { key: null,         label: '',             sortable: false, teal: false },
+  { key: '_check',     label: '',             sortable: false, teal: false },
   { key: 'sku',        label: 'SKU',          sortable: true,  teal: false },
   { key: 'category',   label: 'Category',     sortable: true,  teal: false },
   { key: 'name',       label: 'Name',         sortable: true,  teal: false },
@@ -1258,13 +1258,13 @@ const TABLE_COLS = [
   { key: 'route',      label: 'Route',        sortable: true,  teal: false },
   { key: '_odooMin',   label: '▸ ODOO MIN',   sortable: true,  teal: true  },
   { key: '_odooMax',   label: '▸ ODOO MAX',   sortable: true,  teal: true  },
-  { key: null,         label: '',             sortable: false, teal: false },
+  { key: '_check',     label: '',             sortable: false, teal: false },
 ];
 
 function renderHeader() {
   const tr = document.querySelector('#table-head tr');
   tr.innerHTML = TABLE_COLS.map(col => {
-    if (col.key === '_check') return `<th style="width:28px;padding:4px 6px"><input type="checkbox" id="chk-all" title="Select all visible" onchange="toggleSelectAll(this.checked)" style="cursor:pointer;accent-color:var(--teal)"></th>`;
+    if (col.key === '_check') return `<th style="width:32px;padding:4px 6px;text-align:center"><input type="checkbox" id="chk-all" title="Select all visible" onchange="toggleSelectAll(this.checked)" style="cursor:pointer;accent-color:var(--teal)"></th>`;
     if (!col.sortable) return `<th></th>`;
     const isSorted = sortCol === col.key;
     const arrow = isSorted ? (sortDir === 1 ? '▲' : '▼') : '⇅';
@@ -1340,10 +1340,11 @@ function renderTable(search='') {
     const moqVal  = s.moq     || '';
     const routeVal= s.route   || '';
 
-    const isSelected = selectedIds.has(s.id);
-    return `<tr style="${rowStyle}${isSelected?' background:rgba(42,191,170,.07)':''}" data-id="${s.id}">
-      <td style="padding:4px 6px;text-align:center"><input type="checkbox" class="row-chk" data-id="${s.id}" ${isSelected?'checked':''} onchange="toggleSelect('${s.id}',this.checked)" style="cursor:pointer;accent-color:var(--teal)"></td>
-      <td title="${!inOdoo && odooPNs.size > 0 ? 'Not in Odoo' : ''}"><span class="flag ${flagClass}"></span></td>
+    const isSelected = selectedIds ? selectedIds.has(s.id) : false;
+    const rowBg = isSelected ? 'background:rgba(42,191,170,.07);' : '';
+    const chkd = isSelected ? 'checked' : '';
+    return `<tr style="${rowStyle}${rowBg}">
+      <td style="padding:4px 6px;text-align:center"><input type="checkbox" class="row-chk" data-id="${s.id}" ${chkd} onchange="toggleSelect('${s.id}',this.checked)" style="cursor:pointer;accent-color:var(--teal)"></td>
       <td class="mono" style="color:var(--text);font-weight:500">${s.sku}</td>
       <td style="color:var(--text3);font-size:11px;white-space:nowrap">${s.category||'—'}</td>
       <td style="color:var(--text2);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name||'—'}</td>
@@ -1984,34 +1985,10 @@ function previewExport() {
 }
 
 function downloadCSV(csv, filename) {
-  // UTF-8 BOM prefix fixes Odoo "ascii decoding" error
-  const bom = '\uFEFF';
-  const content = bom + csv;
-  try {
-    // Method 1: Blob + object URL (best, works in most browsers)
-    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 2000);
-  } catch(e) {
-    // Method 2: Open in new tab so user can save manually
-    const win = window.open('', '_blank');
-    if (win) {
-      win.document.write('<pre style="font-family:monospace;font-size:12px;white-space:pre-wrap">' + content.replace(/</g,'&lt;') + '</pre>');
-      win.document.title = filename;
-      win.document.close();
-      win.focus();
-      showNotif('CSV opened in new tab — use File → Save As → choose CSV format', 5000);
-    } else {
-      // Method 3: Fallback — show in modal so user can copy
-      showCSVModal(content, filename);
-    }
-  }
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = filename;
+  a.click();
 }
 
 
@@ -2571,7 +2548,7 @@ function clearOdooRules() {
     dz.querySelector('.drop-zone-text').textContent = 'Click to upload existing reorder rules CSV';
     dz.querySelector('.drop-zone-sub').textContent  = 'The ID column is required to update existing rules';
   }
-  updateExportCounts();
+  updateExportSummary();
   showNotif('Existing rules cleared');
 }
 
