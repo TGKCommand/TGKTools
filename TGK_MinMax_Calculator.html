@@ -216,6 +216,14 @@ select.form-input{cursor:pointer}
         <span class="nav-dot"></span><span class="nav-label">Calculator</span>
         <span class="nav-count" id="nav-sku-count">0</span>
       </button>
+      <button class="nav-item" onclick="switchView('product-matcher')">
+        <span class="nav-dot"></span><span class="nav-label">Product Matcher</span>
+        <span class="nav-count" id="nav-matcher-count">0</span>
+      </button>
+      <button class="nav-item" onclick="switchView('odoo-rules-import')">
+        <span class="nav-dot"></span><span class="nav-label">Existing Rules</span>
+        <span class="nav-count" id="nav-rules-count">0</span>
+      </button>
       <button class="nav-item" onclick="switchView('export')">
         <span class="nav-dot"></span><span class="nav-label">Export to Odoo</span>
       </button>
@@ -269,6 +277,21 @@ select.form-input{cursor:pointer}
 
       <!-- IMPORT -->
       <div class="view" id="view-import">
+
+        <!-- Two import tabs -->
+        <div style="display:flex;gap:0;margin-bottom:16px;border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden">
+          <button id="imp-tab-excel" onclick="setImportTab('excel')" style="flex:1;padding:11px 16px;background:var(--teal-dim);border:none;cursor:pointer;text-align:left;border-right:1px solid var(--border)">
+            <div style="font-size:11px;font-weight:700;color:var(--teal);letter-spacing:.06em">YOUR SPREADSHEET</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px">TGK Excel / CSV with sales averages</div>
+          </button>
+          <button id="imp-tab-odoo" onclick="setImportTab('odoo')" style="flex:1;padding:11px 16px;background:var(--bg3);border:none;cursor:pointer;text-align:left">
+            <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.06em">ODOO PRODUCT EXPORT</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">Inventory → Products → Action → Export</div>
+          </button>
+        </div>
+
+        <!-- Tab: Your Spreadsheet -->
+        <div id="imp-panel-excel">
         <div class="panel">
           <div class="panel-title">Upload Spreadsheet / CSV</div>
           <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
@@ -297,6 +320,38 @@ select.form-input{cursor:pointer}
             </div>
           </div>
         </div>
+        </div><!-- /imp-panel-excel -->
+
+        <!-- Tab: Odoo Product Export -->
+        <div id="imp-panel-odoo" style="display:none">
+        <div class="panel">
+          <div class="panel-title">Upload Odoo Product Export</div>
+          <p style="font-size:12px;color:var(--text2);margin-bottom:14px">
+            Export from Odoo: <strong style="color:var(--text)">Inventory → Products → ⚙ Action → Export</strong><br>
+            Include: <span style="color:var(--teal);font-family:var(--mono);font-size:11px">Internal Reference · Name · Quantity On Hand · Reordering Min Qty · Reordering Max Qty · Routes</span>
+          </p>
+          <div class="drop-zone" id="odoo-import-drop" onclick="document.getElementById('odoo-import-file').click()" ondragover="handleOdooImportDragOver(event)" ondragleave="handleOdooImportDragLeave(event)" ondrop="handleOdooImportDrop(event)">
+            <div class="drop-zone-icon">🗂️</div>
+            <div class="drop-zone-text">Click to upload Odoo product CSV</div>
+            <div class="drop-zone-sub">Imports products as SKUs with on-hand, route, and existing min/max values pre-filled</div>
+          </div>
+          <input type="file" id="odoo-import-file" accept=".csv,.tsv,.txt" style="display:none" onchange="handleOdooImportSelect(event)">
+          <div id="odoo-import-preview" style="display:none;margin-top:10px"></div>
+          <div style="margin-top:14px">
+            <div class="panel-title" style="margin-bottom:8px">What gets imported</div>
+            <div class="formula-box">
+              <span>Internal Reference</span> → SKU<br>
+              <span>Name</span> → Product Name<br>
+              <span>Quantity On Hand</span> → On Hand (current stock)<br>
+              <span>Reordering Min Qty</span> → Min On Hand (existing Odoo min)<br>
+              <span>Reordering Max Qty</span> → Tgt On Hand (existing Odoo max)<br>
+              <span>Routes</span> → Route (Buy / Manufacture)<br>
+              <span style="color:var(--text3)">Min Wks Ahead / Tgt Wks Ahead will use global defaults unless set in your spreadsheet</span>
+            </div>
+          </div>
+        </div>
+        </div><!-- /imp-panel-odoo -->
+
       </div>
 
       <!-- CALCULATOR -->
@@ -358,6 +413,128 @@ select.form-input{cursor:pointer}
         </div>
       </div>
 
+      <!-- ODOO RULES IMPORT -->
+      <div class="view" id="view-odoo-rules-import">
+        <div class="panel">
+          <div class="panel-title">Upload Your Existing Odoo Reorder Rules</div>
+          <p style="font-size:12px;color:var(--text2);margin-bottom:14px">
+            In Odoo go to <strong style="color:var(--text)">Operations → Replenishment</strong>, select all rules,
+            then <strong style="color:var(--text)">⚙ Action → Export</strong>.<br>
+            Include these columns: <span style="color:var(--teal);font-family:var(--mono);font-size:11px">ID · Product · Min Qty · Max Qty · Route</span>
+          </p>
+          <div class="drop-zone" id="rules-drop-zone" onclick="document.getElementById('rules-file-input').click()" ondragover="handleRulesDragOver(event)" ondragleave="handleRulesDragLeave(event)" ondrop="handleRulesDrop(event)">
+            <div class="drop-zone-icon">📋</div>
+            <div class="drop-zone-text">Click to upload existing reorder rules CSV</div>
+            <div class="drop-zone-sub">The ID column is required to update existing rules</div>
+          </div>
+          <input type="file" id="rules-file-input" accept=".csv,.tsv,.txt" style="display:none" onchange="handleRulesFileSelect(event)">
+          <div id="rules-upload-preview" style="display:none;margin-top:10px"></div>
+        </div>
+        <div class="panel" id="rules-loaded-panel" style="display:none">
+          <div class="panel-title" style="margin-bottom:10px">Loaded Rules</div>
+          <div id="rules-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px"></div>
+          <div class="tbl-wrap" style="max-height:300px;overflow-y:auto">
+            <table class="sku-table">
+              <thead><tr>
+                <th>Odoo ID</th><th>Product / SKU</th><th>Current Min</th><th>Current Max</th><th>Route</th><th>In Calculator</th>
+              </tr></thead>
+              <tbody id="rules-tbody"></tbody>
+            </table>
+          </div>
+          <div style="margin-top:12px">
+            <button class="btn btn-primary" onclick="switchView('export')">→ Go to Export</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRODUCT MATCHER -->
+      <div class="view" id="view-product-matcher">
+
+        <!-- Step indicator -->
+        <div style="display:flex;gap:0;margin-bottom:20px;border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden">
+          <div id="step-ind-1" style="flex:1;padding:10px 14px;background:var(--teal-dim);border-right:1px solid var(--border);text-align:center">
+            <div style="font-size:10px;font-weight:700;color:var(--teal);letter-spacing:.08em">STEP 1</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px">Upload Odoo Products</div>
+          </div>
+          <div id="step-ind-2" style="flex:1;padding:10px 14px;background:var(--bg3);border-right:1px solid var(--border);text-align:center">
+            <div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em">STEP 2</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">Review Matches</div>
+          </div>
+          <div id="step-ind-3" style="flex:1;padding:10px 14px;background:var(--bg3);text-align:center">
+            <div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.08em">STEP 3</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">Download & Import</div>
+          </div>
+        </div>
+
+        <!-- Step 1: Upload -->
+        <div class="panel" id="matcher-step1">
+          <div class="panel-title">Upload Odoo Product Export</div>
+          <p style="font-size:12px;color:var(--text2);margin-bottom:12px">
+            In Odoo go to <strong style="color:var(--text)">Inventory → Products</strong>, click <strong style="color:var(--text)">⚙ Action → Export</strong> and export these columns:
+            <span style="color:var(--teal);font-family:var(--mono);font-size:11px">ID &nbsp;·&nbsp; Product Name &nbsp;·&nbsp; Internal Reference</span>
+          </p>
+          <div class="drop-zone" id="matcher-drop-zone" onclick="document.getElementById('matcher-file-input').click()" ondragover="handleMatcherDragOver(event)" ondragleave="handleMatcherDragLeave(event)" ondrop="handleMatcherDrop(event)">
+            <div class="drop-zone-icon">🏷️</div>
+            <div class="drop-zone-text">Click to upload Odoo product CSV</div>
+            <div class="drop-zone-sub">Needs <strong>ID</strong> and <strong>Product Name</strong> columns at minimum</div>
+          </div>
+          <input type="file" id="matcher-file-input" accept=".csv,.tsv,.txt" style="display:none" onchange="handleMatcherFileSelect(event)">
+          <div id="matcher-upload-status" style="display:none;margin-top:10px"></div>
+        </div>
+
+        <!-- Step 2: Review matches -->
+        <div class="panel" id="matcher-step2" style="display:none">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+            <div class="panel-title" style="margin-bottom:0">Review Matches</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="filter-btn on" id="mf-all"      onclick="setMatchFilter('all')">All</button>
+              <button class="filter-btn"    id="mf-matched"  onclick="setMatchFilter('matched')">✓ Matched</button>
+              <button class="filter-btn"    id="mf-review"   onclick="setMatchFilter('review')">⚠ Review</button>
+              <button class="filter-btn"    id="mf-unmatched" onclick="setMatchFilter('unmatched')">✗ No Match</button>
+            </div>
+          </div>
+          <div id="matcher-stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px"></div>
+          <div class="tbl-wrap">
+            <table class="sku-table" id="matcher-table">
+              <thead>
+                <tr>
+                  <th>Odoo Product Name</th>
+                  <th>Internal Reference</th>
+                  <th>On Hand</th>
+                  <th>Route</th>
+                  <th>Match Status</th>
+                  <th>Matched TGK SKU</th>
+                </tr>
+              </thead>
+              <tbody id="matcher-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Step 3: Download -->
+        <div class="panel" id="matcher-step3" style="display:none">
+          <div class="panel-title">Download & Import to Odoo</div>
+          <p style="font-size:12px;color:var(--text2);margin-bottom:14px">
+            Download the CSV below — it contains your Odoo product IDs with the matched Internal References filled in. Import it back into Odoo to bulk-update all products at once.
+          </p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+            <button class="btn btn-primary" onclick="downloadMatchCSV()">⬇ Download Internal References CSV</button>
+            <span id="matcher-download-count" style="font-size:11px;font-family:var(--mono);color:var(--text3);align-self:center"></span>
+          </div>
+          <ol style="font-size:12px;color:var(--text2);line-height:2.4;padding-left:18px">
+            <li>Download the CSV above</li>
+            <li>In Odoo go to <strong style="color:var(--text)">Inventory → Products</strong></li>
+            <li>Click <strong style="color:var(--text)">⚙ Action → Import</strong></li>
+            <li>Upload the CSV — Odoo uses the <strong style="color:var(--text)">ID</strong> column to match existing products and update their Internal Reference</li>
+            <li>Click <strong style="color:var(--text)">Import</strong></li>
+          </ol>
+          <div style="margin-top:10px;padding:10px 14px;background:var(--teal-dim);border:1px solid rgba(42,191,170,.2);border-radius:var(--r);font-size:11px;color:var(--teal)">
+            ✓ Once imported, come back to <strong>Export to Odoo</strong> and your reorder rules will map correctly.
+          </div>
+        </div>
+
+      </div>
+
       <!-- EXPORT -->
       <div class="view" id="view-export">
 
@@ -367,17 +544,32 @@ select.form-input{cursor:pointer}
         <!-- Export cards -->
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:20px">
 
-          <!-- Odoo — In Odoo only -->
+          <!-- Update existing rules -->
           <div class="panel" style="margin-bottom:0;border-color:rgba(42,191,170,.25)">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-              <span style="font-size:18px">✅</span>
+              <span style="font-size:18px">🔄</span>
               <div>
-                <div style="font-size:12px;font-weight:700;color:var(--text)">Odoo Reorder Rules</div>
-                <div style="font-size:10px;color:var(--text3);margin-top:1px">SKUs matched in Odoo · ready to import</div>
+                <div style="font-size:12px;font-weight:700;color:var(--text)">Update Existing Rules</div>
+                <div style="font-size:10px;color:var(--text3);margin-top:1px">SKUs that already have rules in Odoo</div>
               </div>
             </div>
-            <div id="export-card-odoo-count" style="font-size:11px;color:var(--teal);font-family:var(--mono);margin-bottom:12px"></div>
-            <button class="btn btn-teal" style="width:100%" onclick="exportFiltered('odoo')">⬇ Download for Odoo</button>
+            <div id="export-card-update-count" style="font-size:11px;color:var(--teal);font-family:var(--mono);margin-bottom:8px"></div>
+            <div id="export-card-norules" style="font-size:10px;color:var(--amber);margin-bottom:8px;display:none">⚠ Upload existing rules first</div>
+            <button class="btn btn-teal" style="width:100%;margin-bottom:6px" onclick="exportFiltered('update-rules')">⬇ Download Update CSV</button>
+            <button class="btn btn-sm" style="width:100%;font-size:10px" onclick="switchView('odoo-rules-import')">⬆ Upload Existing Rules First</button>
+          </div>
+
+          <!-- Create new rules -->
+          <div class="panel" style="margin-bottom:0;border-color:rgba(76,175,125,.25)">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <span style="font-size:18px">✨</span>
+              <div>
+                <div style="font-size:12px;font-weight:700;color:var(--text)">Create New Rules</div>
+                <div style="font-size:10px;color:var(--text3);margin-top:1px">SKUs in Odoo without any reorder rule yet</div>
+              </div>
+            </div>
+            <div id="export-card-create-count" style="font-size:11px;color:var(--green);font-family:var(--mono);margin-bottom:12px"></div>
+            <button class="btn" style="width:100%;border-color:rgba(76,175,125,.3);color:var(--green)" onclick="exportFiltered('create-rules')">⬇ Download Create CSV</button>
           </div>
 
           <!-- Not in Odoo — review list -->
@@ -421,18 +613,116 @@ select.form-input{cursor:pointer}
 
         </div>
 
+        <!-- Automation checklist -->
+        <div class="panel" style="border-color:rgba(42,191,170,.2)">
+          <div class="panel-title">Replenishment Automation Checklist</div>
+          <p style="font-size:12px;color:var(--text2);margin-bottom:14px">Before your reorder rules will trigger automatically, verify these are set up in Odoo:</p>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+
+            <div style="background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r);padding:11px 14px">
+              <div style="display:flex;align-items:flex-start;gap:10px">
+                <span style="font-size:14px;margin-top:1px">⚙️</span>
+                <div>
+                  <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px">Enable the Odoo Scheduler</div>
+                  <div style="font-size:11px;color:var(--text2);line-height:1.7">
+                    <strong style="color:var(--text)">Inventory → Configuration → Settings → Advanced</strong><br>
+                    Enable <strong style="color:var(--teal)">Scheduled Actions</strong>. This runs daily and checks all reorder rules automatically.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r);padding:11px 14px">
+              <div style="display:flex;align-items:flex-start;gap:10px">
+                <span style="font-size:14px;margin-top:1px">🛣️</span>
+                <div>
+                  <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px">Every rule needs a Route</div>
+                  <div style="font-size:11px;color:var(--text2);line-height:1.7">
+                    Rules with no Route (<strong style="color:var(--text)">Buy</strong> or <strong style="color:var(--text)">Manufacture</strong>) won't trigger. 
+                    Your reorder rules export showed some blank routes — the tool's export now includes route on every rule.
+                  </div>
+                  <div id="blank-route-warning" style="margin-top:6px;font-size:11px;color:var(--amber)"></div>
+                </div>
+              </div>
+            </div>
+
+            <div style="background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r);padding:11px 14px">
+              <div style="display:flex;align-items:flex-start;gap:10px">
+                <span style="font-size:14px;margin-top:1px">📊</span>
+                <div>
+                  <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px">Min Qty must be greater than 0</div>
+                  <div style="font-size:11px;color:var(--text2);line-height:1.7">
+                    Rules with Min = 0 will never trigger a replenishment order. Your existing Odoo rules all showed 0.0 — 
+                    importing the new min/max values from this tool will fix that.
+                  </div>
+                  <div id="zero-min-warning" style="margin-top:6px;font-size:11px;color:var(--amber)"></div>
+                </div>
+              </div>
+            </div>
+
+            <div style="background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r);padding:11px 14px">
+              <div style="display:flex;align-items:flex-start;gap:10px">
+                <span style="font-size:14px;margin-top:1px">📦</span>
+                <div>
+                  <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px">Products need a Vendor / BOM set</div>
+                  <div style="font-size:11px;color:var(--text2);line-height:1.7">
+                    <strong style="color:var(--text)">Buy</strong> products need a vendor pricelist: <strong style="color:var(--text)">Product → Purchase tab → Vendors</strong><br>
+                    <strong style="color:var(--text)">Manufacture</strong> products need a Bill of Materials: <strong style="color:var(--text)">Manufacturing → Bills of Materials</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r);padding:11px 14px">
+              <div style="display:flex;align-items:flex-start;gap:10px">
+                <span style="font-size:14px;margin-top:1px">▶️</span>
+                <div>
+                  <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px">Run replenishment manually to test</div>
+                  <div style="font-size:11px;color:var(--text2);line-height:1.7">
+                    After importing, go to <strong style="color:var(--text)">Operations → Replenishment</strong> and click 
+                    <strong style="color:var(--teal)">Replenish</strong> to trigger all rules immediately — 
+                    good way to verify everything is set up before relying on the scheduler.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
         <!-- Odoo import instructions -->
         <div class="panel">
           <div class="panel-title">How to import into Odoo</div>
+          <div style="font-size:11px;color:var(--text3);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px">Find Reorder Rules in your version of Odoo:</div>
+          <div style="display:grid;gap:8px;margin-bottom:14px">
+            <div style="background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r);padding:10px 14px;font-size:12px">
+              <span style="color:var(--teal);font-weight:600">Odoo 16 / 17</span><br>
+              <span style="color:var(--text2)">Inventory → <strong style="color:var(--text)">Operations</strong> → Replenishment</span>
+            </div>
+            <div style="background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r);padding:10px 14px;font-size:12px">
+              <span style="color:var(--teal);font-weight:600">Odoo 14 / 15</span><br>
+              <span style="color:var(--text2)">Inventory → <strong style="color:var(--text)">Operations</strong> → Replenishment → Reorder Rules tab</span>
+            </div>
+            <div style="background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r);padding:10px 14px;font-size:12px">
+              <span style="color:var(--teal);font-weight:600">Odoo 13 and older</span><br>
+              <span style="color:var(--text2)">Inventory → Configuration → Reorder Rules</span>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--text3);font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px">Once you're on the Reorder Rules page:</div>
           <ol style="font-size:12px;color:var(--text2);line-height:2.4;padding-left:18px">
             <li>Download the <strong style="color:var(--teal)">Odoo Reorder Rules</strong> CSV above</li>
-            <li>In Odoo go to <strong style="color:var(--text)">Inventory → Configuration → Reorder Rules</strong></li>
-            <li>Click <strong style="color:var(--text)">Import</strong> in the top menu</li>
-            <li>Upload the CSV — columns should auto-match</li>
-            <li>Click <strong style="color:var(--text)">Import</strong> to apply</li>
+            <li>Click <strong style="color:var(--text)">Import</strong> in the top bar</li>
+            <li>Upload the CSV — columns will auto-map using Odoo technical field names</li>
+            <li>Click <strong style="color:var(--text)">Test</strong> first to check for errors, then <strong style="color:var(--text)">Import</strong></li>
           </ol>
-          <div style="margin-top:10px;padding:10px 14px;background:var(--orange-dim);border:1px solid rgba(224,123,40,.2);border-radius:var(--r);font-size:11px;color:var(--orange)">
-            ⚠ Existing reorder rules for matched SKUs will be overwritten. Export a backup from Odoo first if needed.
+          <div style="margin-top:10px;padding:10px 14px;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r);font-size:11px;color:var(--text2);line-height:1.9">
+            <strong style="color:var(--text)">If you see "already exist" errors:</strong> your products already have reorder rules in Odoo.
+            Export your existing reorder rules first (<strong style="color:var(--text)">⚙ Action → Export</strong>), 
+            then paste the <strong style="color:var(--text)">ID</strong> column from that export into this tool's SKU list — 
+            or simply delete the existing rules in Odoo before importing.
+          </div>
+          <div style="margin-top:8px;padding:10px 14px;background:var(--orange-dim);border:1px solid rgba(224,123,40,.2);border-radius:var(--r);font-size:11px;color:var(--orange)">
+            ⚠ Always test in Odoo before importing. Export a backup of existing rules first if needed.
           </div>
         </div>
 
@@ -587,7 +877,10 @@ select.form-input{cursor:pointer}
 // ── STATE ─────────────────────────────────────────────────────────────
 let skus = [];
 let editingId = null;
-let odooPNs = new Set(); // Odoo reference part numbers
+let odooPNs = new Set();
+let odooProducts = []; // [{id, name, ref}] from Odoo product export
+let odooRules    = []; // [{id, sku, minQty, maxQty, route}] from Odoo reorder rules export
+let matchResults  = []; // [{odooId, odooName, odooRef, tgkSku, tgkName, matched, confidence}] // Odoo reference part numbers
 let tableFilter = 'all'; // 'all' | 'matched' | 'unmatched'
 let sortCol = 'sku';
 let sortDir = 1; // 1 = asc, -1 = desc
@@ -851,6 +1144,8 @@ const viewTitles = {
   import: 'Import / Add SKUs',
   calculator: 'Min/Max Calculator',
   'odoo-pns': 'Odoo Part Numbers',
+  'product-matcher': 'Product Matcher',
+  'odoo-rules-import': 'Existing Odoo Reorder Rules',
   export: 'Export to Odoo',
   settings: 'Global Settings'
 };
@@ -1283,28 +1578,42 @@ function getOdooRows() {
     const lead   = parseFloat(s.leadDays) > 0 ? parseFloat(s.leadDays) : settings.leadDays;
     return {
       'Internal Reference': s.sku,
-      'Product': s.name || s.sku,
-      'Route': route,
-      'Min Qty': c.odooMin,
-      'Max Qty': c.odooMax,
-      'Qty Multiple': moq,
-      'UOM': uom,
-      'Lead Days': lead,
+      'Reordering Min Qty': c.odooMin,
+      'Reordering Max Qty': c.odooMax,
+      'Routes': route,
     };
   });
 }
 
 function updateExportSummary() {
+  // Automation warnings
+  const blankRoute = skus.filter(s => !(s.route || settings.route));
+  const zeroMin    = skus.filter(s => { const c = calcSKU(s); return c.hasData && c.odooMin === 0; });
+  const brEl = document.getElementById('blank-route-warning');
+  const zmEl = document.getElementById('zero-min-warning');
+  if (brEl) brEl.textContent = blankRoute.length ? '⚠ ' + blankRoute.length + ' SKUs have no route set — go to Global Settings to set a default' : '';
+  if (zmEl) zmEl.textContent = zeroMin.length    ? '⚠ ' + zeroMin.length    + ' SKUs will calculate to Min = 0 — check their sales averages or Min On Hand values' : '';
   const hasPNs = odooPNs.size > 0;
   const inOdoo     = hasPNs ? skus.filter(s => odooPNs.has(s.sku)) : skus;
   const notOdoo    = hasPNs ? skus.filter(s => !odooPNs.has(s.sku)) : [];
   const needReorder= inOdoo.filter(s => { const c = calcSKU(s); return c.hasData && (parseFloat(s.onHand)||0) < c.odooMin; });
 
-  const odooCount    = document.getElementById('export-card-odoo-count');
+  const ruleSkus     = new Set(odooRules.map(r => r.sku));
+  const canUpdate    = skus.filter(s => ruleSkus.has(s.sku));
+  const needCreate   = inOdoo.filter(s => !ruleSkus.has(s.sku));
+
+  const updateCount  = document.getElementById('export-card-update-count');
+  const createCount  = document.getElementById('export-card-create-count');
+  const noRulesWarn  = document.getElementById('export-card-norules');
   const notCount     = document.getElementById('export-card-notodoo-count');
   const allCount     = document.getElementById('export-card-all-count');
   const reorderCount = document.getElementById('export-card-reorder-count');
-  if (odooCount)    odooCount.textContent    = inOdoo.length + ' SKU' + (inOdoo.length !== 1 ? 's' : '');
+
+  if (updateCount)  updateCount.textContent  = canUpdate.length + ' SKU' + (canUpdate.length !== 1 ? 's' : '') + (odooRules.length ? ' ready' : '');
+  if (noRulesWarn)  noRulesWarn.style.display = odooRules.length ? 'none' : 'block';
+  if (createCount)  createCount.textContent  = odooRules.length
+    ? needCreate.length + ' SKU' + (needCreate.length !== 1 ? 's' : '') + ' need new rules'
+    : inOdoo.length + ' SKUs' + (hasPNs ? '' : ' — load Odoo PNs first');
   if (notCount)     notCount.textContent     = notOdoo.length + ' SKU' + (notOdoo.length !== 1 ? 's' : '') + (hasPNs ? '' : ' — load Odoo PNs first');
   if (allCount)     allCount.textContent     = skus.length + ' SKUs total';
   if (reorderCount) reorderCount.textContent = needReorder.length + ' SKU' + (needReorder.length !== 1 ? 's' : '') + ' below min';
@@ -1325,7 +1634,51 @@ function exportFiltered(type) {
 
   let subset, filename, useOdooFormat;
 
-  if (type === 'odoo') {
+  if (type === 'update-rules') {
+    // SKUs that have an existing Odoo rule with an ID
+    const ruleMap = {};
+    odooRules.forEach(r => { ruleMap[r.sku] = r.id; });
+    subset = skus.filter(s => ruleMap[s.sku]);
+    if (!subset.length) { showNotif(odooRules.length ? 'No matched SKUs to update' : 'Upload existing rules first'); return; }
+    // Use Odoo format with ID for update
+    const rows = subset.map(s => {
+      const c = calcSKU(s);
+      const rule = odooRules.find(r => r.sku === s.sku);
+      return {
+        'id':              ruleMap[s.sku],
+        'product_min_qty': c.odooMin,
+        'product_max_qty': c.odooMax,
+        'route_id':        s.route || settings.route || (rule ? rule.route : ''),
+      };
+    });
+    const headers = Object.keys(rows[0]);
+    const csv = [headers.join(','), ...rows.map(r => headers.map(h => `"${String(r[h]).replace(/"/g,'""')}"`).join(','))].join('\n');
+    downloadCSV(csv, 'TGK_Odoo_UpdateRules_' + dateStr() + '.csv');
+    showNotif('Downloaded update CSV for ' + subset.length + ' rules');
+    return;
+  } else if (type === 'create-rules') {
+    // SKUs in Odoo but without an existing rule
+    const ruleSkus = new Set(odooRules.map(r => r.sku));
+    const inOdoo = hasPNs ? skus.filter(s => odooPNs.has(s.sku)) : skus;
+    subset = inOdoo.filter(s => !ruleSkus.has(s.sku));
+    if (!subset.length) { showNotif('No SKUs need new rules'); return; }
+    // Create format — product looked up by internal reference
+    const rows = subset.map(s => {
+      const c = calcSKU(s);
+      return {
+        'product_id/default_code': s.sku,
+        'route_id/name': s.route || settings.route,
+        'product_min_qty': c.odooMin,
+        'product_max_qty': c.odooMax,
+        'qty_multiple': parseInt(s.moq) > 0 ? parseInt(s.moq) : settings.moq,
+      };
+    });
+    const headers = Object.keys(rows[0]);
+    const csv = [headers.join(','), ...rows.map(r => headers.map(h => `"${String(r[h]).replace(/"/g,'""')}"`).join(','))].join('\n');
+    downloadCSV(csv, 'TGK_Odoo_CreateRules_' + dateStr() + '.csv');
+    showNotif('Downloaded create CSV for ' + subset.length + ' new rules');
+    return;
+  } else if (type === 'odoo') {
     subset = hasPNs ? skus.filter(s => odooPNs.has(s.sku)) : skus;
     filename = 'TGK_Odoo_ReorderRules_' + dateStr() + '.csv';
     useOdooFormat = true;
@@ -1353,13 +1706,9 @@ function exportFiltered(type) {
       const c = calcSKU(s);
       return {
         'Internal Reference': s.sku,
-        'Product': s.name || s.sku,
-        'Route': s.route || settings.route,
-        'Min Qty': c.odooMin,
-        'Max Qty': c.odooMax,
-        'Qty Multiple': parseInt(s.moq) > 0 ? parseInt(s.moq) : settings.moq,
-        'UOM': s.uom || settings.uom,
-        'Lead Days': parseFloat(s.leadDays) > 0 ? parseFloat(s.leadDays) : settings.leadDays,
+        'Reordering Min Qty': c.odooMin,
+        'Reordering Max Qty': c.odooMax,
+        'Routes': s.route || settings.route,
       };
     });
     const headers = Object.keys(rows[0]);
@@ -1419,6 +1768,444 @@ function downloadCSV(csv, filename) {
   a.click();
 }
 
+// ── IMPORT TABS ──────────────────────────────────────────────────────
+function setImportTab(tab) {
+  const isExcel = tab === 'excel';
+  document.getElementById('imp-panel-excel').style.display = isExcel ? 'block' : 'none';
+  document.getElementById('imp-panel-odoo').style.display  = isExcel ? 'none'  : 'block';
+  const te = document.getElementById('imp-tab-excel');
+  const to = document.getElementById('imp-tab-odoo');
+  te.style.background = isExcel ? 'var(--teal-dim)' : 'var(--bg3)';
+  te.querySelector('div').style.color = isExcel ? 'var(--teal)' : 'var(--text3)';
+  te.querySelectorAll('div')[1].style.color = isExcel ? 'var(--text2)' : 'var(--text3)';
+  to.style.background = isExcel ? 'var(--bg3)' : 'var(--teal-dim)';
+  to.querySelector('div').style.color = isExcel ? 'var(--text3)' : 'var(--teal)';
+  to.querySelectorAll('div')[1].style.color = isExcel ? 'var(--text3)' : 'var(--text2)';
+}
+
+function handleOdooImportDragOver(e)  { e.preventDefault(); document.getElementById('odoo-import-drop').classList.add('drag'); }
+function handleOdooImportDragLeave()  { document.getElementById('odoo-import-drop').classList.remove('drag'); }
+function handleOdooImportDrop(e) {
+  e.preventDefault();
+  document.getElementById('odoo-import-drop').classList.remove('drag');
+  const f = e.dataTransfer.files[0]; if (f) processOdooImport(f);
+}
+function handleOdooImportSelect(e) {
+  const f = e.target.files[0]; if (f) processOdooImport(f);
+  e.target.value = '';
+}
+
+function processOdooImport(file) {
+  const reader = new FileReader();
+  reader.onload = e => parseOdooProductImport(e.target.result);
+  reader.readAsText(file);
+}
+
+function parseOdooProductImport(text) {
+  text = text.replace(/^[\uFEFF\u200B]+/, '');
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) { showNotif('File appears empty'); return; }
+
+  const header = parseLine(lines[0]).map(h => h.trim().toLowerCase().replace(/[^a-z0-9]/g,''));
+
+  const refIdx    = header.findIndex(h => ['internalreference','defaultcode','ref','sku','pn'].includes(h));
+  const nameIdx   = header.findIndex(h => ['name','productname','product','displayname'].includes(h));
+  const onHandIdx = header.findIndex(h => ['quantityonhand','qtyonhand','onhand','stockonhand'].includes(h));
+  const minIdx    = header.findIndex(h => ['reorderingminqty','reorderminqty','minqty','productminqty'].includes(h));
+  const maxIdx    = header.findIndex(h => ['reorderingmaxqty','reordermaxqty','maxqty','productmaxqty'].includes(h));
+  const routeIdx  = header.findIndex(h => ['routes','route'].includes(h));
+  const uomIdx    = header.findIndex(h => ['unitofmeasure','uom','unit'].includes(h));
+
+  if (refIdx === -1 && nameIdx === -1) {
+    const prev = document.getElementById('odoo-import-preview');
+    prev.style.display = 'block';
+    prev.innerHTML = '<div class="import-preview"><span class="err">✗ Could not find Internal Reference or Name column.</span><br>Headers: ' + header.join(', ') + '</div>';
+    return;
+  }
+
+  let added = 0, updated = 0, skipped = 0;
+
+  for (let i = 1; i < lines.length; i++) {
+    const cols = parseLine(lines[i]);
+    const get = idx => idx >= 0 ? (cols[idx]||'').trim() : '';
+
+    const ref    = get(refIdx);
+    const name   = get(nameIdx);
+    const onHand = get(onHandIdx);
+    const minQty = get(minIdx);
+    const maxQty = get(maxIdx);
+    const route  = get(routeIdx);
+    const uom    = get(uomIdx);
+
+    const sku = ref || name;
+    if (!sku) { skipped++; continue; }
+
+    // Also register as Odoo PN
+    if (ref) odooPNs.add(ref);
+
+    const existing = skus.find(s => s.sku === sku);
+    if (existing) {
+      // Update fields from Odoo data
+      if (name   && !existing.name)   existing.name   = name;
+      if (onHand) existing.onHand    = onHand;
+      if (minQty) existing.minOnHand = minQty;
+      if (maxQty) existing.tgtOnHand = maxQty;
+      if (route  && !existing.route)  existing.route  = route;
+      if (uom    && !existing.uom)    existing.uom    = uom;
+      existing.updated = new Date().toISOString();
+      updated++;
+    } else {
+      // Create new SKU from Odoo data
+      skus.push({
+        id:        uid(),
+        sku,
+        name,
+        weeklyAvg: '',
+        avg4wk:    '',
+        avg24wk:   '',
+        onHand,
+        minOnHand: minQty,
+        tgtOnHand: maxQty,
+        route,
+        uom,
+        leadDays:  '',
+        minWks:    '',
+        tgtWks:    '',
+        moq:       '',
+        updated:   new Date().toISOString(),
+      });
+      added++;
+    }
+  }
+
+  persist();
+  updateCounts();
+  updateOdooPNDisplay();
+  buildMatchReport();
+  renderTable(_lastSearch);
+  renderDashboard();
+
+  const prev = document.getElementById('odoo-import-preview');
+  prev.style.display = 'block';
+  prev.innerHTML = '<div class="import-preview">'
+    + `<span class="ok">✓ ${added} new SKUs created from Odoo</span><br>`
+    + (updated ? `<span class="ok">✓ ${updated} existing SKUs updated with Odoo data</span><br>` : '')
+    + (skipped ? `<span class="warn">⚠ ${skipped} rows skipped (no ref/name)</span><br>` : '')
+    + `<span style="color:var(--text3)">Columns mapped: ${[refIdx>=0?'Ref':'',nameIdx>=0?'Name':'',onHandIdx>=0?'On Hand':'',minIdx>=0?'Min Qty':'',maxIdx>=0?'Max Qty':'',routeIdx>=0?'Route':'',uomIdx>=0?'UOM':''].filter(Boolean).join(', ')}</span>`
+    + '</div>';
+
+  showNotif(`Odoo import: ${added} added, ${updated} updated`);
+}
+
+// ── ODOO RULES IMPORT ────────────────────────────────────────────────
+function handleRulesDragOver(e)  { e.preventDefault(); document.getElementById('rules-drop-zone').classList.add('drag'); }
+function handleRulesDragLeave()  { document.getElementById('rules-drop-zone').classList.remove('drag'); }
+function handleRulesDrop(e) {
+  e.preventDefault();
+  document.getElementById('rules-drop-zone').classList.remove('drag');
+  const f = e.dataTransfer.files[0]; if (f) processRulesFile(f);
+}
+function handleRulesFileSelect(e) {
+  const f = e.target.files[0]; if (f) processRulesFile(f);
+  e.target.value = '';
+}
+function processRulesFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => parseOdooRules(e.target.result);
+  reader.readAsText(file);
+}
+
+function parseOdooRules(text) {
+  text = text.replace(/^[﻿​]+/, '');
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) { showNotif('File appears empty'); return; }
+
+  const header = parseLine(lines[0]).map(h => h.trim().toLowerCase().replace(/[^a-z0-9]/g,''));
+
+  // Exact Odoo export columns: id, location_id, product_max_qty, product_min_qty, product_id, route_id, qty_to_order
+  // Note: 'id' appears twice in Odoo export — use first occurrence
+  const idIdx    = header.findIndex(h => h === 'id');
+  const skuIdx   = header.findIndex(h => ['productid','product','productinternalreference','internalreference','defaultcode'].includes(h));
+  const nameIdx  = -1; // name embedded in product_id as [SKU] Name format
+  const minIdx   = header.findIndex(h => ['productminqty','reorderingminqty','minqty','minimumquantity'].includes(h));
+  const maxIdx   = header.findIndex(h => ['productmaxqty','reorderingmaxqty','maxqty','maximumquantity'].includes(h));
+  const routeIdx = header.findIndex(h => ['routeid','route','routes','routeidname'].includes(h));
+
+  if (idIdx === -1) {
+    const prev = document.getElementById('rules-upload-preview');
+    prev.style.display = 'block';
+    prev.innerHTML = '<div class="import-preview">'
+      + '<span class="err">✗ No ID column found.</span><br><br>'
+      + '<span style="color:var(--text2)">When exporting from Odoo, make sure <strong style="color:var(--text)">ID</strong> is selected in the export fields.</span><br><br>'
+      + '<span style="color:var(--text3)">Headers detected: ' + header.join(', ') + '</span>'
+      + '</div>';
+    return;
+  }
+
+  odooRules = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = parseLine(lines[i]);
+    const id = (cols[idIdx]||'').trim();
+    if (!id) continue;
+    // Extract SKU — Odoo exports product as "[SKU] Name" format
+    let rawProduct = skuIdx >= 0 ? (cols[skuIdx]||'').trim() : '';
+    let sku = rawProduct;
+    let name = rawProduct;
+    const bracketMatch = rawProduct.match(/^\[([^\]]+)\]/);
+    if (bracketMatch) {
+      sku  = bracketMatch[1];
+      name = rawProduct.replace(/^\[[^\]]+\]\s*/, '').trim();
+    }
+    odooRules.push({
+      id,
+      sku,
+      name,
+      minQty: minIdx   >= 0 ? (cols[minIdx]||'').trim()   : '',
+      maxQty: maxIdx   >= 0 ? (cols[maxIdx]||'').trim()   : '',
+      route:  routeIdx >= 0 ? (cols[routeIdx]||'').trim() : '',
+    });
+  }
+
+  document.getElementById('nav-rules-count').textContent = odooRules.length;
+  renderRulesPanel();
+  updateExportSummary();
+
+  const prev = document.getElementById('rules-upload-preview');
+  prev.style.display = 'block';
+  const matched = odooRules.filter(r => skus.some(s => s.sku === r.sku)).length;
+  prev.innerHTML = '<div class="import-preview">'
+    + `<span class="ok">✓ ${odooRules.length} existing reorder rules loaded</span><br>`
+    + `<span class="ok">✓ ${matched} matched to your calculator SKUs</span><br>`
+    + (idIdx >= 0 ? '<span class="ok">✓ ID column found — update export ready</span>' : '<span class="warn">⚠ No ID column</span>')
+    + '</div>';
+  showNotif(`${odooRules.length} rules loaded, ${matched} matched`);
+}
+
+function renderRulesPanel() {
+  const panel = document.getElementById('rules-loaded-panel');
+  const tbody = document.getElementById('rules-tbody');
+  const stats = document.getElementById('rules-stats');
+  if (!panel || !tbody) return;
+  panel.style.display = 'block';
+
+  const matched   = odooRules.filter(r => skus.some(s => s.sku === r.sku));
+  const unmatched = odooRules.filter(r => !skus.some(s => s.sku === r.sku));
+  const inCalcNotOdoo = skus.filter(s => odooPNs.size === 0 || odooPNs.has(s.sku))
+                            .filter(s => !odooRules.some(r => r.sku === s.sku));
+
+  stats.innerHTML = [
+    { num: odooRules.length,     label: 'Existing Rules',  col: 'var(--teal)'   },
+    { num: matched.length,       label: 'Matched to SKUs', col: 'var(--green)'  },
+    { num: inCalcNotOdoo.length, label: 'Need New Rules',  col: 'var(--orange)' },
+  ].map(s => `<div class="stat-card" style="padding:10px 12px"><div class="stat-num" style="font-size:20px;color:${s.col}">${s.num}</div><div class="stat-label">${s.label}</div></div>`).join('');
+
+  tbody.innerHTML = odooRules.map(r => {
+    const inCalc = skus.some(s => s.sku === r.sku);
+    return `<tr>
+      <td class="mono" style="color:var(--text3);font-size:10px">${r.id}</td>
+      <td class="mono" style="color:var(--text);font-weight:500">${r.sku}</td>
+      <td class="mono" style="color:var(--text3)">${r.minQty||'—'}</td>
+      <td class="mono" style="color:var(--text3)">${r.maxQty||'—'}</td>
+      <td style="color:var(--text3);font-size:11px">${r.route||'—'}</td>
+      <td>${inCalc ? '<span class="badge badge-green">✓ Matched</span>' : '<span class="badge badge-amber">Not loaded</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── PRODUCT MATCHER ──────────────────────────────────────────────────
+function handleMatcherDragOver(e)  { e.preventDefault(); document.getElementById('matcher-drop-zone').classList.add('drag'); }
+function handleMatcherDragLeave()  { document.getElementById('matcher-drop-zone').classList.remove('drag'); }
+function handleMatcherDrop(e) {
+  e.preventDefault();
+  document.getElementById('matcher-drop-zone').classList.remove('drag');
+  const f = e.dataTransfer.files[0]; if (f) processMatcherFile(f);
+}
+function handleMatcherFileSelect(e) {
+  const f = e.target.files[0]; if (f) processMatcherFile(f);
+  e.target.value = '';
+}
+function processMatcherFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => parseOdooProductExport(e.target.result);
+  reader.readAsText(file);
+}
+
+function parseOdooProductExport(text) {
+  text = text.replace(/^[\uFEFF\u200B]+/, '');
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) { showNotif('File appears empty'); return; }
+  const header = parseLine(lines[0]).map(h => h.trim().toLowerCase().replace(/[^a-z0-9]/g,''));
+
+  // Find columns
+  const idIdx      = header.findIndex(h => ['id','externalid','databaseid'].includes(h));
+  const nameIdx    = header.findIndex(h => ['name','productname','product','producttemplatename','displayname'].includes(h));
+  const refIdx     = header.findIndex(h => ['internalreference','defaultcode','ref','sku','internreference'].includes(h));
+  const onHandIdx2 = header.findIndex(h => ['quantityonhand','qtyonhand','onhand','stockonhand'].includes(h));
+  const routeIdx2  = header.findIndex(h => ['routes','route'].includes(h));
+
+  if (nameIdx === -1) {
+    const status = document.getElementById('matcher-upload-status');
+    status.style.display = 'block';
+    status.innerHTML = '<div class="import-preview"><span class="err">✗ Could not find Product Name column.</span><br>Headers detected: ' + header.join(', ') + '</div>';
+    return;
+  }
+
+  odooProducts = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = parseLine(lines[i]);
+    const name = (cols[nameIdx]||'').trim();
+    if (!name) continue;
+    odooProducts.push({
+      id:     idIdx      >= 0 ? (cols[idIdx]||'').trim()      : '',
+      name:   name,
+      ref:    refIdx     >= 0 ? (cols[refIdx]||'').trim()     : '',
+      onHand: onHandIdx2 >= 0 ? (cols[onHandIdx2]||'').trim() : '',
+      route:  routeIdx2  >= 0 ? (cols[routeIdx2]||'').trim()  : '',
+    });
+  }
+
+  const hasRef = odooProducts.some(p => p.ref);
+  const status = document.getElementById('matcher-upload-status');
+  status.style.display = 'block';
+  status.innerHTML = '<div class="import-preview">'
+    + `<span class="ok">✓ Loaded ${odooProducts.length} Odoo products</span><br>`
+    + (hasRef ? '<span class="ok">✓ Internal References already present — matcher will show current refs</span>' : '<span class="warn">⚠ No Internal References found — use matcher to assign TGK SKUs</span>')
+    + (idIdx === -1 ? '<br><span class="warn">⚠ No ID column — export from Odoo with ID column for bulk update</span>' : '')
+    + '</div>';
+
+  // Auto-run matching
+  runMatching();
+}
+
+function normalise(str) {
+  return (str||'').toLowerCase()
+    .replace(/[^a-z0-9]+/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function matchScore(odooName, tgkSku, tgkName) {
+  const on = normalise(odooName);
+  const ts = normalise(tgkSku);
+  const tn = normalise(tgkName);
+  // Exact SKU match in name
+  if (on.includes(ts) && ts.length > 3) return { score: 100, label: 'Exact SKU' };
+  // Exact name match
+  if (on === tn && tn.length > 3) return { score: 95, label: 'Exact Name' };
+  // Name contains tgk name
+  if (tn.length > 4 && on.includes(tn)) return { score: 85, label: 'Name Match' };
+  // Word overlap score
+  const onWords = new Set(on.split(' ').filter(w => w.length > 2));
+  const tnWords = tn.split(' ').filter(w => w.length > 2);
+  if (tnWords.length === 0) return { score: 0, label: 'No Match' };
+  const overlap = tnWords.filter(w => onWords.has(w)).length;
+  const pct = Math.round((overlap / tnWords.length) * 100);
+  if (pct >= 60) return { score: pct, label: pct >= 80 ? 'Good Match' : 'Partial' };
+  return { score: pct, label: 'Weak' };
+}
+
+function runMatching() {
+  matchResults = odooProducts.map(op => {
+    // If already has a ref that matches a loaded SKU
+    if (op.ref) {
+      const exactMatch = skus.find(s => s.sku === op.ref);
+      return { ...op, tgkSku: op.ref, tgkName: exactMatch?.name||'', score: 100, label: 'Already Set', assignedRef: op.ref };
+    }
+    // Try to match against loaded SKUs
+    let best = null, bestScore = 0, bestLabel = 'No Match';
+    for (const s of skus) {
+      const { score, label } = matchScore(op.name, s.sku, s.name||'');
+      if (score > bestScore) { bestScore = score; bestLabel = label; best = s; }
+    }
+    return {
+      ...op,
+      tgkSku:      best ? best.sku  : '',
+      tgkName:     best ? best.name : '',
+      score:       bestScore,
+      label:       bestLabel,
+      assignedRef: bestScore >= 80 ? (best ? best.sku : '') : '',
+    };
+  });
+
+  document.getElementById('matcher-step2').style.display = 'block';
+  document.getElementById('matcher-step3').style.display = 'block';
+  setMatcherStepActive(2);
+  setMatchFilter('all');
+  updateMatcherStats();
+  document.getElementById('nav-matcher-count').textContent = odooProducts.length;
+}
+
+let matchFilter = 'all';
+function setMatchFilter(f) {
+  matchFilter = f;
+  ['all','matched','review','unmatched'].forEach(k => {
+    document.getElementById('mf-'+k)?.classList.toggle('on', k === f);
+  });
+  renderMatcherTable();
+}
+
+function updateMatcherStats() {
+  const total     = matchResults.length;
+  const alreadySet= matchResults.filter(r => r.label === 'Already Set').length;
+  const matched   = matchResults.filter(r => r.score >= 80 && r.label !== 'Already Set').length;
+  const review    = matchResults.filter(r => r.score > 0 && r.score < 80).length;
+  const none      = matchResults.filter(r => r.score === 0).length;
+  const assigned  = matchResults.filter(r => r.assignedRef).length;
+
+  const el = document.getElementById('matcher-stats');
+  if (el) el.innerHTML = [
+    { num: total,      label: 'Odoo Products', col: 'var(--text)'   },
+    { num: alreadySet+matched, label: 'Auto-matched',  col: 'var(--green)'  },
+    { num: review,     label: 'Need Review',   col: 'var(--amber)'  },
+    { num: none,       label: 'No Match',      col: 'var(--red)'    },
+  ].map(s => `<div class="stat-card" style="padding:10px 12px"><div class="stat-num" style="font-size:18px;color:${s.col}">${s.num}</div><div class="stat-label">${s.label}</div></div>`).join('');
+
+  const dl = document.getElementById('matcher-download-count');
+  if (dl) dl.textContent = assigned + ' products with Internal References assigned';
+}
+
+function renderMatcherTable() {
+  let rows = matchResults;
+  if (matchFilter === 'matched')   rows = matchResults.filter(r => r.score >= 80);
+  if (matchFilter === 'review')    rows = matchResults.filter(r => r.score > 0 && r.score < 80);
+  if (matchFilter === 'unmatched') rows = matchResults.filter(r => r.score === 0);
+
+  const tbody = document.getElementById('matcher-tbody');
+  tbody.innerHTML = rows.map((r, idx) => {
+    const realIdx = matchResults.indexOf(r);
+    const confColor = r.label === 'Already Set' ? 'var(--teal)' : r.score >= 80 ? 'var(--green)' : r.score >= 40 ? 'var(--amber)' : 'var(--red)';
+    const confBg    = r.label === 'Already Set' ? 'var(--teal-dim)' : r.score >= 80 ? 'var(--green-dim)' : r.score >= 40 ? 'var(--amber-dim)' : 'var(--red-dim)';
+    return `<tr>
+      <td style="color:var(--text);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.name}">${r.name}</td>
+      <td class="mono" style="color:var(--teal);font-size:11px">${r.ref||'—'}</td>
+      <td class="mono" style="color:var(--text3);font-size:10px">${r.onHand||'—'}</td>
+      <td class="mono" style="color:var(--text3);font-size:10px">${r.route||'—'}</td>
+      <td><span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;background:${confBg};color:${confColor}">${r.label} ${r.score > 0 && r.label !== 'Already Set' ? r.score+'%' : ''}</span></td>
+      <td class="mono" style="color:var(--text3);font-size:11px">${r.tgkSku||'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function setMatcherStepActive(step) {
+  [1,2,3].forEach(n => {
+    const el = document.getElementById('step-ind-'+n);
+    if (!el) return;
+    el.style.background = n === step ? 'var(--teal-dim)' : 'var(--bg3)';
+    el.querySelector('div').style.color = n === step ? 'var(--teal)' : 'var(--text3)';
+    el.querySelectorAll('div')[1].style.color = n === step ? 'var(--text2)' : 'var(--text3)';
+  });
+}
+
+function downloadMatchCSV() {
+  const toExport = matchResults.filter(r => r.assignedRef && r.label !== 'Already Set');
+  if (!toExport.length) { showNotif('No new references to export'); return; }
+  const headers = ['id','Internal Reference'];
+  const rows = toExport.map(r => [r.id, r.assignedRef]);
+  const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(','))].join('\n');
+  downloadCSV(csv, 'TGK_Odoo_InternalReferences_' + dateStr() + '.csv');
+  showNotif('Downloaded ' + toExport.length + ' Internal References');
+}
+
 // ── ODOO PNs ──────────────────────────────────────────────────────────
 function handleOdooDragOver(e)  { e.preventDefault(); document.getElementById('odoo-drop-zone').classList.add('drag'); }
 function handleOdooDragLeave()  { document.getElementById('odoo-drop-zone').classList.remove('drag'); }
@@ -1457,7 +2244,11 @@ function parseOdooCSV(text) {
     'code','artno','articlenumber','articleno',
     'externalid','externalreference'
   ];
-  const skuIdx = header.findIndex(h => skuAliases.includes(h));
+  const skuIdx    = header.findIndex(h => skuAliases.includes(h));
+  const onHandIdx = header.findIndex(h => ['quantityonhand','qtyonhand','onhand','stockonhand','soh'].includes(h));
+  const minQtyIdx = header.findIndex(h => ['reorderingminqty','reorderminqty','minqty','minimumquantity','productminqty'].includes(h));
+  const maxQtyIdx = header.findIndex(h => ['reorderingmaxqty','reordermaxqty','maxqty','maximumquantity','productmaxqty'].includes(h));
+  const routeIdx  = header.findIndex(h => ['routes','route','routeidname'].includes(h));
   if (skuIdx === -1) {
     const prev = document.getElementById('odoo-upload-preview');
     prev.style.display = 'block';
@@ -1470,19 +2261,35 @@ function parseOdooCSV(text) {
     showNotif('Column not found — see header list below');
     return;
   }
-  let added = 0;
+  let added = 0, enriched = 0;
   for (let i = 1; i < lines.length; i++) {
     const cols = parseLine(lines[i]);
     const pn = (cols[skuIdx]||'').trim();
-    if (pn) { odooPNs.add(pn); added++; }
+    if (!pn) continue;
+    odooPNs.add(pn);
+    added++;
+    // If this CSV has reorder/on-hand data, enrich matching SKUs
+    const existing = skus.find(s => s.sku === pn);
+    if (existing) {
+      if (onHandIdx  >= 0 && (cols[onHandIdx]||'').trim())  { existing.onHand   = (cols[onHandIdx]||'').trim();  }
+      if (minQtyIdx  >= 0 && (cols[minQtyIdx]||'').trim())  { existing.odooMinCurrent = (cols[minQtyIdx]||'').trim(); }
+      if (maxQtyIdx  >= 0 && (cols[maxQtyIdx]||'').trim())  { existing.odooMaxCurrent = (cols[maxQtyIdx]||'').trim(); }
+      if (routeIdx   >= 0 && (cols[routeIdx]||'').trim() && !existing.route) { existing.route = (cols[routeIdx]||'').trim(); }
+      enriched++;
+    }
   }
   persist();
   updateOdooPNDisplay();
+  buildMatchReport();
   renderTable(_lastSearch);
   const prev = document.getElementById('odoo-upload-preview');
   prev.style.display = 'block';
-  prev.innerHTML = `<div class="import-preview"><span class="ok">✓ Loaded ${added} part numbers from Odoo CSV (${odooPNs.size} total)</span></div>`;
-  showNotif(`${added} Odoo PNs loaded`);
+  prev.innerHTML = '<div class="import-preview">'
+    + `<span class="ok">✓ ${added} Odoo part numbers loaded</span><br>`
+    + (enriched ? `<span class="ok">✓ ${enriched} SKUs enriched with on-hand / route data from Odoo</span><br>` : '')
+    + (onHandIdx>=0||minQtyIdx>=0 ? `<span style="color:var(--text3)">Columns found: ${[onHandIdx>=0?'On Hand':'',minQtyIdx>=0?'Min Qty':'',maxQtyIdx>=0?'Max Qty':'',routeIdx>=0?'Route':''].filter(Boolean).join(', ')}</span>` : '')
+    + '</div>';
+  showNotif(enriched ? `${added} PNs + ${enriched} SKUs updated` : `${added} Odoo PNs loaded`);
 }
 
 function importOdooPaste() {
@@ -1512,6 +2319,109 @@ function setTableFilter(f) {
     document.getElementById('f-'+k).classList.toggle('on', k === f);
   });
   renderTable(_lastSearch);
+}
+
+// ── SKU MATCH REPORT ─────────────────────────────────────────────────
+let matchReportFilter = 'all';
+
+function skuSimilarity(a, b) {
+  // Normalise: lowercase, strip leading zeros from number segments
+  const norm = s => s.toLowerCase().replace(/-0+([1-9])/g, '-$1').replace(/[^a-z0-9-]/g,'');
+  const na = norm(a), nb = norm(b);
+  if (na === nb) return 1.0;
+  // Check if one contains the other
+  if (na.includes(nb) || nb.includes(na)) return 0.85;
+  // Segment comparison (TGK-ACC-01 → ['tgk','acc','01'])
+  const sa = na.split('-'), sb = nb.split('-');
+  let matches = 0;
+  const minLen = Math.min(sa.length, sb.length);
+  for (let i = 0; i < minLen; i++) {
+    if (sa[i] === sb[i]) matches++;
+    else if (sa[i].replace(/^0+/,'') === sb[i].replace(/^0+/,'')) matches += 0.9;
+  }
+  return matches / Math.max(sa.length, sb.length);
+}
+
+function buildMatchReport() {
+  if (!odooPNs.size || !skus.length) return;
+  const odooArr = [...odooPNs];
+  const report = skus.map(s => {
+    if (odooPNs.has(s.sku)) return { sku: s.sku, name: s.name, status: 'matched', closest: s.sku, score: 1 };
+    // Find closest Odoo PN
+    let best = null, bestScore = 0;
+    for (const op of odooArr) {
+      const score = skuSimilarity(s.sku, op);
+      if (score > bestScore) { bestScore = score; best = op; }
+    }
+    const status = bestScore >= 0.7 ? 'fuzzy' : 'missing';
+    return { sku: s.sku, name: s.name, status, closest: best, score: bestScore };
+  });
+
+  const matched = report.filter(r => r.status === 'matched').length;
+  const fuzzy   = report.filter(r => r.status === 'fuzzy').length;
+  const missing = report.filter(r => r.status === 'missing').length;
+
+  const statsEl = document.getElementById('odoo-match-stats');
+  if (statsEl) statsEl.innerHTML = [
+    { num: matched, label: 'Exact Match',  col: 'var(--green)'  },
+    { num: fuzzy,   label: 'Close Match',  col: 'var(--amber)'  },
+    { num: missing, label: 'Not in Odoo',  col: 'var(--red)'    },
+  ].map(s => `<div class="stat-card" style="padding:10px 12px"><div class="stat-num" style="font-size:20px;color:${s.col}">${s.num}</div><div class="stat-label">${s.label}</div></div>`).join('');
+
+  document.getElementById('odoo-match-panel').style.display = 'block';
+  window._matchReport = report;
+  renderMatchReport();
+}
+
+function setMatchReport(f) {
+  matchReportFilter = f;
+  ['all','matched','fuzzy','missing'].forEach(k => {
+    document.getElementById('mr-'+k)?.classList.toggle('on', k === f);
+  });
+  renderMatchReport();
+}
+
+function renderMatchReport() {
+  const report = window._matchReport || [];
+  let rows = report;
+  if (matchReportFilter === 'matched') rows = report.filter(r => r.status === 'matched');
+  if (matchReportFilter === 'fuzzy')   rows = report.filter(r => r.status === 'fuzzy');
+  if (matchReportFilter === 'missing') rows = report.filter(r => r.status === 'missing');
+
+  const tbody = document.getElementById('match-report-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = rows.map(r => {
+    const statusHtml =
+      r.status === 'matched' ? '<span class="badge badge-green">✓ Matched</span>' :
+      r.status === 'fuzzy'   ? `<span class="badge badge-amber">~ ${Math.round(r.score*100)}%</span>` :
+                               '<span class="badge badge-red">✗ Not Found</span>';
+    const closestHtml = r.status === 'matched' ? '' :
+      r.closest ? `<span class="mono" style="font-size:11px;color:var(--amber)">${r.closest}</span>` : '—';
+    const actionHtml = r.status === 'fuzzy' ?
+      `<button class="btn btn-sm" style="font-size:10px" onclick="remapSKU('${r.sku}','${r.closest}')">Use Odoo Ref</button>` :
+      r.status === 'missing' ? '<span style="font-size:10px;color:var(--text3)">Add to Odoo or update SKU</span>' : '';
+    return `<tr>
+      <td class="mono" style="color:var(--text);font-weight:500">${r.sku}</td>
+      <td style="color:var(--text2);font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name||'—'}</td>
+      <td>${statusHtml}</td>
+      <td>${closestHtml}</td>
+      <td>${actionHtml}</td>
+    </tr>`;
+  }).join('');
+}
+
+function remapSKU(oldSku, newSku) {
+  const s = skus.find(x => x.sku === oldSku);
+  if (!s) return;
+  if (!confirm('Update SKU from "' + oldSku + '" to "' + newSku + '"?')) return;
+  // Also update odooPNs
+  odooPNs.delete(oldSku);
+  odooPNs.add(newSku);
+  s.sku = newSku;
+  persist();
+  buildMatchReport();
+  renderTable(_lastSearch);
+  showNotif('SKU updated to ' + newSku);
 }
 
 function updateOdooPNDisplay() {
