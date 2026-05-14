@@ -315,6 +315,7 @@ select.form-input{cursor:pointer}
               <span>Tgt Weeks</span> · Target weeks of cover<br>
               <span>Lead Time</span> · Supplier lead time (days) — optional, falls back to global<br>
               <span>MOQ</span> · Minimum order qty — optional<br>
+              <span>Category</span> · Odoo product category — optional<br>
               <span>Route</span> · Buy / Manufacture — optional<br>
               <span>UOM</span> · Unit of measure — optional
             </div>
@@ -346,6 +347,7 @@ select.form-input{cursor:pointer}
               <span>Reordering Min Qty</span> → Min On Hand (existing Odoo min)<br>
               <span>Reordering Max Qty</span> → Tgt On Hand (existing Odoo max)<br>
               <span>Routes</span> → Route (Buy / Manufacture)<br>
+              <span>Category / Internal Category</span> → Category (for filtering)<br>
               <span style="color:var(--text3)">Min Wks Ahead / Tgt Wks Ahead will use global defaults unless set in your spreadsheet</span>
             </div>
           </div>
@@ -361,6 +363,9 @@ select.form-input{cursor:pointer}
             <span class="search-icon">🔍</span>
             <input type="text" placeholder="Search SKU or name…" oninput="renderTable(this.value)">
           </div>
+          <select class="form-input" id="category-filter" style="width:160px;font-size:11px;padding:6px 8px" onchange="renderTable(document.querySelector('.search-wrap input').value)">
+            <option value="">All Categories</option>
+          </select>
           <button class="btn btn-sm" onclick="recalcAll()">↻ Recalc All</button>
           <div style="display:flex;gap:5px;margin-left:8px" id="filter-btns">
             <button class="filter-btn on" id="f-all" onclick="setTableFilter('all')">All</button>
@@ -598,18 +603,7 @@ select.form-input{cursor:pointer}
             <button class="btn" style="width:100%" onclick="exportFiltered('all-raw')">⬇ Download All</button>
           </div>
 
-          <!-- Needs reorder -->
-          <div class="panel" style="margin-bottom:0;border-color:rgba(224,85,85,.2)">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-              <span style="font-size:18px">🔴</span>
-              <div>
-                <div style="font-size:12px;font-weight:700;color:var(--text)">Needs Reorder Now</div>
-                <div style="font-size:10px;color:var(--text3);margin-top:1px">In Odoo · currently below min qty</div>
-              </div>
-            </div>
-            <div id="export-card-reorder-count" style="font-size:11px;color:var(--red);font-family:var(--mono);margin-bottom:12px"></div>
-            <button class="btn btn-red" style="width:100%" onclick="exportFiltered('reorder')">⬇ Download Reorder List</button>
-          </div>
+
 
         </div>
 
@@ -848,6 +842,10 @@ select.form-input{cursor:pointer}
         <div class="form-group">
           <label class="form-label">MOQ — blank = global</label>
           <input type="number" class="form-input" id="m-moq" placeholder="Use global default" min="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category (Odoo)</label>
+          <input type="text" class="form-input" id="m-category" placeholder="e.g. All / Saleable">
         </div>
         <div class="form-group">
           <label class="form-label">Route</label>
@@ -1170,7 +1168,6 @@ function renderDashboard() {
   const total = skus.length;
   const ready = skus.filter(s => calcSKU(s).hasData).length;
   const noAvg = total - ready;
-  const totalOrderVal = skus.reduce((sum, s) => sum + calcSKU(s).qtyOrder, 0);
   const highReorder   = skus.filter(s => { const c = calcSKU(s); return c.hasData && (parseFloat(s.onHand)||0) < c.odooMin; }).length;
 
   document.getElementById('dash-stats').innerHTML = `
@@ -1178,7 +1175,6 @@ function renderDashboard() {
     <div class="stat-card"><div class="stat-num green">${ready}</div><div class="stat-label">Ready to Calculate</div></div>
     <div class="stat-card"><div class="stat-num amber">${noAvg}</div><div class="stat-label">Missing Avg Data</div></div>
     <div class="stat-card"><div class="stat-num red">${highReorder}</div><div class="stat-label">Below Min (need reorder)</div></div>
-    <div class="stat-card"><div class="stat-num orange">${totalOrderVal.toLocaleString()}</div><div class="stat-label">Total Units to Order</div></div>
   `;
 
   const recent = skus.slice(-10).reverse();
@@ -1204,6 +1200,7 @@ function renderDashboard() {
 const TABLE_COLS = [
   { key: null,         label: '',             sortable: false, teal: false },
   { key: 'sku',        label: 'SKU',          sortable: true,  teal: false },
+  { key: 'category',   label: 'Category',     sortable: true,  teal: false },
   { key: 'name',       label: 'Name',         sortable: true,  teal: false },
   { key: 'avg4wk',     label: '4wk Avg',      sortable: true,  teal: false },
   { key: 'avg24wk',    label: '24wk Avg',     sortable: true,  teal: false },
@@ -1216,7 +1213,6 @@ const TABLE_COLS = [
   { key: 'route',      label: 'Route',        sortable: true,  teal: false },
   { key: '_odooMin',   label: '▸ ODOO MIN',   sortable: true,  teal: true  },
   { key: '_odooMax',   label: '▸ ODOO MAX',   sortable: true,  teal: true  },
-  { key: '_qtyOrder',  label: 'QTY to Order', sortable: true,  teal: false },
   { key: null,         label: '',             sortable: false, teal: false },
 ];
 
@@ -1250,9 +1246,11 @@ function getSortVal(s, key) {
 function renderTable(search='') {
   _lastSearch = search;
   const q = (search||'').toLowerCase();
-  let filtered = q ? skus.filter(s => (s.sku||'').toLowerCase().includes(q) || (s.name||'').toLowerCase().includes(q)) : [...skus];
+  let filtered = q ? skus.filter(s => (s.sku||'').toLowerCase().includes(q) || (s.name||'').toLowerCase().includes(q) || (s.category||'').toLowerCase().includes(q)) : [...skus];
   if (tableFilter === 'matched'   && odooPNs.size > 0) filtered = filtered.filter(s => odooPNs.has(s.sku));
   if (tableFilter === 'unmatched' && odooPNs.size > 0) filtered = filtered.filter(s => !odooPNs.has(s.sku));
+  const catFilter = document.getElementById('category-filter');
+  if (catFilter && catFilter.value) filtered = filtered.filter(s => (s.category||'') === catFilter.value);
 
   // Sort
   filtered.sort((a, b) => {
@@ -1264,6 +1262,13 @@ function renderTable(search='') {
 
   renderHeader();
   updateCounts();
+  // Rebuild category dropdown
+  const catSel = document.getElementById('category-filter');
+  if (catSel) {
+    const current = catSel.value;
+    const cats = [...new Set(skus.map(s => s.category||'').filter(Boolean))].sort();
+    catSel.innerHTML = '<option value="">All Categories</option>' + cats.map(c => `<option value="${c}" ${c===current?'selected':''}>${c}</option>`).join('');
+  }
 
   const tbody = document.getElementById('table-body');
   const empty = document.getElementById('calc-empty');
@@ -1292,6 +1297,7 @@ function renderTable(search='') {
     return `<tr style="${rowStyle}">
       <td title="${!inOdoo && odooPNs.size > 0 ? 'Not in Odoo' : ''}"><span class="flag ${flagClass}"></span></td>
       <td class="mono" style="color:var(--text);font-weight:500">${s.sku}</td>
+      <td style="color:var(--text3);font-size:11px;white-space:nowrap">${s.category||'—'}</td>
       <td style="color:var(--text2);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name||'—'}</td>
       <td class="mono">${fmt(s.avg4wk)}</td>
       <td class="mono">${fmt(s.avg24wk)}</td>
@@ -1308,7 +1314,6 @@ function renderTable(search='') {
       </select></td>
       <td class="val" style="font-size:13px;font-weight:600">${hasAvg ? c.odooMin : '—'}</td>
       <td class="val" style="font-size:13px;font-weight:600">${hasAvg ? c.odooMax : '—'}</td>
-      <td class="${belowMin?'err':'ok'} mono">${hasAvg ? c.qtyOrder : '—'}</td>
       <td style="white-space:nowrap">
         <button class="btn btn-sm" onclick="openEditModal('${s.id}')">Edit</button>
         <button class="btn btn-sm btn-red" style="margin-left:4px" onclick="deleteSKU('${s.id}')">✕</button>
@@ -1338,7 +1343,7 @@ function updateCounts() {
 function openAddModal() {
   editingId = null;
   document.getElementById('modal-title').textContent = 'Add SKU';
-  ['sku','name','weekly','4wk','24wk','onhand','minonhand','tgtonhand','lead','minwks','tgtwks','moq','uom'].forEach(f => {
+  ['sku','name','weekly','4wk','24wk','onhand','minonhand','tgtonhand','lead','minwks','tgtwks','moq','category','uom'].forEach(f => {
     const el = document.getElementById('m-'+f);
     if (el) el.value = '';
   });
@@ -1363,7 +1368,8 @@ function openEditModal(id) {
   document.getElementById('m-minwks').value = s.minWks  || '';
   document.getElementById('m-tgtwks').value = s.tgtWks  || '';
   document.getElementById('m-moq').value    = s.moq     || '';
-  document.getElementById('m-route').value  = s.route   || '';
+  document.getElementById('m-category').value = s.category || '';
+  document.getElementById('m-route').value    = s.route    || '';
   document.getElementById('m-uom').value    = s.uom     || '';
   document.getElementById('sku-modal').classList.add('open');
 }
@@ -1387,6 +1393,7 @@ function saveModalSKU() {
     minWks:    document.getElementById('m-minwks').value,
     tgtWks:    document.getElementById('m-tgtwks').value,
     moq:       document.getElementById('m-moq').value,
+    category:  document.getElementById('m-category').value.trim(),
     route:     document.getElementById('m-route').value,
     uom:       document.getElementById('m-uom').value.trim(),
   };
@@ -1479,6 +1486,7 @@ function parseAndImport(text) {
     minWks:    ['minwksahead','minweeksahead','minwks','minweeks','weeksminimum'],
     tgtWks:    ['tgtwksahead','tgtweeksahead','tgtwks','tgtweeks','targetweeks','targetwksahead'],
     moq:       ['moq','minimumorderqty','minorderqty','ordermin'],
+    category:  ['category','productcategory','internalcategory','categoryname','categ','categid'],
     route:     ['route','replenishmenttype','replenishment'],
     uom:       ['uom','unitofmeasure','unit'],
   };
@@ -1523,6 +1531,7 @@ function parseAndImport(text) {
       minWks:    get('minWks'),
       tgtWks:    get('tgtWks'),
       moq:       get('moq'),
+      category:  get('category'),
       route:     get('route'),
       uom:       get('uom'),
     };
@@ -1714,14 +1723,14 @@ function exportFiltered(type) {
     const headers = Object.keys(rows[0]);
     csv = [headers.join(','), ...rows.map(r => headers.map(h => `"${String(r[h]).replace(/"/g,'""')}"`).join(','))].join('\n');
   } else {
-    const headers = ['SKU','Product Name','4wk Avg','24wk Avg','Min Ass\'d On Hand','Tgt Ass\'d On Hand','On Hand','Lead Days','Min Weeks','Tgt Weeks','MOQ','Route','UOM','Odoo Min','Odoo Max','Qty to Order','In Odoo'];
+    const headers = ['SKU','Category','Product Name','4wk Avg','24wk Avg','Min Ass\'d On Hand','Tgt Ass\'d On Hand','On Hand','Lead Days','Min Weeks','Tgt Weeks','MOQ','Route','UOM','Odoo Min','Odoo Max','In Odoo'];
     const rows = subset.map(s => {
       const c = calcSKU(s);
       const inOdoo = odooPNs.size > 0 ? (odooPNs.has(s.sku) ? 'Yes' : 'No') : '';
-      return [s.sku, s.name, s.avg4wk, s.avg24wk, s.minOnHand, s.tgtOnHand, s.onHand,
+      return [s.sku, s.category||'', s.name, s.avg4wk, s.avg24wk, s.minOnHand, s.tgtOnHand, s.onHand,
               s.leadDays||settings.leadDays, s.minWks||settings.minWks, s.tgtWks||settings.tgtWks,
               s.moq||settings.moq, s.route||settings.route, s.uom||settings.uom,
-              c.odooMin, c.odooMax, c.qtyOrder, inOdoo];
+              c.odooMin, c.odooMax, inOdoo];
     });
     csv = [headers.join(','), ...rows.map(r => r.map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(','))].join('\n');
   }
@@ -1814,6 +1823,7 @@ function parseOdooProductImport(text) {
   const minIdx    = header.findIndex(h => ['reorderingminqty','reorderminqty','minqty','productminqty'].includes(h));
   const maxIdx    = header.findIndex(h => ['reorderingmaxqty','reordermaxqty','maxqty','productmaxqty'].includes(h));
   const routeIdx  = header.findIndex(h => ['routes','route'].includes(h));
+  const catIdx    = header.findIndex(h => ['category','productcategory','internalcategory','categ','categname','categid'].includes(h));
   const uomIdx    = header.findIndex(h => ['unitofmeasure','uom','unit'].includes(h));
 
   if (refIdx === -1 && nameIdx === -1) {
@@ -1835,7 +1845,8 @@ function parseOdooProductImport(text) {
     const minQty = get(minIdx);
     const maxQty = get(maxIdx);
     const route  = get(routeIdx);
-    const uom    = get(uomIdx);
+    const uom      = get(uomIdx);
+    const category = get(catIdx);
 
     const sku = ref || name;
     if (!sku) { skipped++; continue; }
@@ -1850,7 +1861,8 @@ function parseOdooProductImport(text) {
       if (onHand) existing.onHand    = onHand;
       if (minQty) existing.minOnHand = minQty;
       if (maxQty) existing.tgtOnHand = maxQty;
-      if (route  && !existing.route)  existing.route  = route;
+      if (route    && !existing.route)    existing.route    = route;
+      if (category && !existing.category) existing.category = category;
       if (uom    && !existing.uom)    existing.uom    = uom;
       existing.updated = new Date().toISOString();
       updated++;
@@ -1867,6 +1879,7 @@ function parseOdooProductImport(text) {
         minOnHand: minQty,
         tgtOnHand: maxQty,
         route,
+        category,
         uom,
         leadDays:  '',
         minWks:    '',
