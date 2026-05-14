@@ -367,16 +367,20 @@ select.form-input{cursor:pointer}
             <span class="search-icon">🔍</span>
             <input type="text" placeholder="Search SKU or name…" oninput="renderTable(this.value)">
           </div>
-          <select class="form-input" id="category-filter" style="width:160px;font-size:11px;padding:6px 8px" onchange="renderTable(document.querySelector('.search-wrap input').value)">
+          <select id="category-filter" onchange="renderTable(document.querySelector('.search-wrap input').value)"
+            style="background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r);color:var(--text2);padding:6px 10px;font-size:11px;font-family:var(--font);cursor:pointer;outline:none;min-width:140px;transition:border-color .15s">
             <option value="">All Categories</option>
           </select>
-          <button class="btn btn-sm" onclick="recalcAll()">↻ Recalc All</button>
-          <div style="display:flex;gap:5px;margin-left:8px" id="filter-btns">
-            <button class="filter-btn on" id="f-all" onclick="setTableFilter('all')">All</button>
-            <button class="filter-btn" id="f-matched" onclick="setTableFilter('matched')">✓ In Odoo</button>
-            <button class="filter-btn" id="f-unmatched" onclick="setTableFilter('unmatched')">⚠ Not in Odoo</button>
+          <div style="width:1px;height:18px;background:var(--border2)"></div>
+          <div style="display:flex;gap:5px" id="filter-btns">
+            <button class="filter-btn on" id="f-all"       onclick="setTableFilter('all')">All</button>
+            <button class="filter-btn"    id="f-matched"   onclick="setTableFilter('matched')">✓ In Odoo</button>
+            <button class="filter-btn"    id="f-unmatched" onclick="setTableFilter('unmatched')">⚠ Not in Odoo</button>
           </div>
-          <button class="btn btn-sm" onclick="clearAll()" style="margin-left:auto">🗑 Clear All</button>
+          <div style="margin-left:auto;display:flex;gap:6px">
+            <button class="btn btn-sm" onclick="recalcAll()">↻ Recalc All</button>
+            <button class="btn btn-sm" onclick="clearAll()">🗑 Clear All</button>
+          </div>
         </div>
         <div class="tbl-wrap">
           <table class="sku-table" id="main-table">
