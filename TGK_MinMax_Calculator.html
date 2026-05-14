@@ -380,7 +380,8 @@ select.form-input{cursor:pointer}
             <button class="filter-btn"    id="f-matched"   onclick="setTableFilter('matched')">✓ In Odoo</button>
             <button class="filter-btn"    id="f-unmatched" onclick="setTableFilter('unmatched')">⚠ Not in Odoo</button>
           </div>
-          <div style="margin-left:auto;display:flex;gap:6px">
+          <div style="margin-left:auto;display:flex;gap:6px;align-items:center">
+            <button id="btn-delete-selected" class="btn btn-sm btn-red" onclick="deleteSelected()" style="display:none;gap:6px">🗑 Delete 0 Selected</button>
             <button class="btn btn-sm" onclick="recalcAll()">↻ Recalc All</button>
             <button class="btn btn-sm" onclick="clearAll()">🗑 Clear All</button>
           </div>
@@ -457,8 +458,9 @@ select.form-input{cursor:pointer}
               <tbody id="rules-tbody"></tbody>
             </table>
           </div>
-          <div style="margin-top:12px">
+          <div style="margin-top:12px;display:flex;gap:8px">
             <button class="btn btn-primary" onclick="switchView('export')">→ Go to Export</button>
+            <button class="btn btn-red" onclick="clearOdooRules()">🗑 Clear Rules</button>
           </div>
         </div>
       </div>
@@ -557,6 +559,15 @@ select.form-input{cursor:pointer}
         <!-- Summary bar -->
         <div id="export-summary-bar" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px"></div>
 
+        <!-- Category filter -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:10px 14px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r)">
+          <span style="font-size:12px;color:var(--text2);white-space:nowrap;font-weight:600">Filter by Category:</span>
+          <select id="export-cat-filter" onchange="updateExportCounts()" style="flex:1;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);padding:6px 10px;font-size:12px;font-family:var(--font);cursor:pointer;outline:none">
+            <option value="">All Categories</option>
+          </select>
+          <span id="export-cat-badge" style="font-size:11px;color:var(--teal);font-family:var(--mono);white-space:nowrap"></span>
+        </div>
+
         <!-- Export cards -->
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:20px">
 
@@ -570,9 +581,27 @@ select.form-input{cursor:pointer}
               </div>
             </div>
             <div id="export-card-update-count" style="font-size:11px;color:var(--teal);font-family:var(--mono);margin-bottom:8px"></div>
-            <div id="export-card-norules" style="font-size:10px;color:var(--amber);margin-bottom:8px;display:none">⚠ Upload existing rules first</div>
+            <div id="export-card-norules" style="font-size:10px;color:var(--amber);margin-bottom:8px;display:none">No rule IDs loaded — will export by <strong>Internal Reference</strong> instead. This still works in Odoo but cannot match existing rules automatically. <a href="#" onclick="switchView('odoo-rules-import');return false" style="color:var(--teal)">Upload rules</a> for ID-based update.</div>
             <button class="btn btn-teal" style="width:100%;margin-bottom:6px" onclick="exportFiltered('update-rules')">⬇ Download Update CSV</button>
             <button class="btn btn-sm" style="width:100%;font-size:10px" onclick="switchView('odoo-rules-import')">⬆ Upload Existing Rules First</button>
+          </div>
+
+          <!-- Automate All Rules -->
+          <div class="panel" style="margin-bottom:0;border-color:rgba(150,100,255,.3)">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+              <span style="font-size:18px">⚡</span>
+              <div>
+                <div style="font-size:12px;font-weight:700;color:var(--text)">Automate All Rules</div>
+                <div style="font-size:10px;color:var(--text3);margin-top:1px">Set trigger = Automatic on every rule</div>
+              </div>
+            </div>
+            <div id="export-card-automate-count" style="font-size:11px;color:#a078f0;font-family:var(--mono);margin-bottom:12px"></div>
+            <button class="btn" style="width:100%;border-color:rgba(150,100,255,.4);color:#a078f0;margin-bottom:8px" onclick="exportFiltered('automate-rules')">⬇ Download Automate CSV</button>
+            <div style="padding:8px 10px;background:var(--bg4);border-radius:var(--r);font-size:10px;color:var(--text3);line-height:1.7">
+              <strong style="color:var(--text2)">What this does:</strong> Sets the <code style="color:#a078f0">trigger</code> field to <code style="color:#a078f0">automatic</code> on all rules so Odoo orders automatically when stock hits min.<br>
+              <strong style="color:var(--text2)">Requires:</strong> Upload your existing rules first (for IDs) — or Odoo will match by Internal Reference.<br>
+              <strong style="color:var(--text2)">Import path:</strong> Replenishment → ⚙ Action → Import
+            </div>
           </div>
 
           <!-- Create new rules -->
@@ -586,6 +615,11 @@ select.form-input{cursor:pointer}
             </div>
             <div id="export-card-create-count" style="font-size:11px;color:var(--green);font-family:var(--mono);margin-bottom:12px"></div>
             <button class="btn" style="width:100%;border-color:rgba(76,175,125,.3);color:var(--green)" onclick="exportFiltered('create-rules')">⬇ Download Create CSV</button>
+            <div style="margin-top:10px;padding:8px 10px;background:var(--bg4);border-radius:var(--r);font-size:10px;color:var(--text3);line-height:1.7">
+              <strong style="color:var(--text2)">Import path:</strong> Inventory → Operations → Replenishment → ⚙ Action → Import<br>
+              <strong style="color:var(--text2)">If "No matching record" error:</strong> Products must have their <strong style="color:var(--teal)">Internal Reference</strong> set in Odoo. Check Inventory → Products → open product → set Internal Reference field.<br>
+              <strong style="color:var(--text2)">If "already exist" error:</strong> Rules already exist — use <strong style="color:var(--orange)">🔄 Update Existing Rules</strong> instead.
+            </div>
           </div>
 
           <!-- Not in Odoo — review list -->
@@ -1230,6 +1264,7 @@ const TABLE_COLS = [
 function renderHeader() {
   const tr = document.querySelector('#table-head tr');
   tr.innerHTML = TABLE_COLS.map(col => {
+    if (col.key === '_check') return `<th style="width:28px;padding:4px 6px"><input type="checkbox" id="chk-all" title="Select all visible" onchange="toggleSelectAll(this.checked)" style="cursor:pointer;accent-color:var(--teal)"></th>`;
     if (!col.sortable) return `<th></th>`;
     const isSorted = sortCol === col.key;
     const arrow = isSorted ? (sortDir === 1 ? '▲' : '▼') : '⇅';
@@ -1305,7 +1340,9 @@ function renderTable(search='') {
     const moqVal  = s.moq     || '';
     const routeVal= s.route   || '';
 
-    return `<tr style="${rowStyle}">
+    const isSelected = selectedIds.has(s.id);
+    return `<tr style="${rowStyle}${isSelected?' background:rgba(42,191,170,.07)':''}" data-id="${s.id}">
+      <td style="padding:4px 6px;text-align:center"><input type="checkbox" class="row-chk" data-id="${s.id}" ${isSelected?'checked':''} onchange="toggleSelect('${s.id}',this.checked)" style="cursor:pointer;accent-color:var(--teal)"></td>
       <td title="${!inOdoo && odooPNs.size > 0 ? 'Not in Odoo' : ''}"><span class="flag ${flagClass}"></span></td>
       <td class="mono" style="color:var(--text);font-weight:500">${s.sku}</td>
       <td style="color:var(--text3);font-size:11px;white-space:nowrap">${s.category||'—'}</td>
@@ -1423,6 +1460,51 @@ function saveModalSKU() {
   showNotif(editingId ? 'SKU updated' : 'SKU added');
 }
 
+function toggleSelect(id, checked) {
+  if (checked) selectedIds.add(id); else selectedIds.delete(id);
+  updateDeleteBtn();
+  // update select-all checkbox state
+  const allChk = document.getElementById('chk-all');
+  if (allChk) {
+    const visible = [...document.querySelectorAll('.row-chk')].map(c => c.dataset.id);
+    allChk.indeterminate = visible.some(id => selectedIds.has(id)) && !visible.every(id => selectedIds.has(id));
+    allChk.checked = visible.length > 0 && visible.every(id => selectedIds.has(id));
+  }
+}
+
+function toggleSelectAll(checked) {
+  document.querySelectorAll('.row-chk').forEach(c => {
+    if (checked) selectedIds.add(c.dataset.id); else selectedIds.delete(c.dataset.id);
+    c.checked = checked;
+  });
+  updateDeleteBtn();
+  renderTable(_lastSearch);
+}
+
+function updateDeleteBtn() {
+  const btn = document.getElementById('btn-delete-selected');
+  if (!btn) return;
+  const n = selectedIds.size;
+  if (n > 0) {
+    btn.style.display = 'inline-flex';
+    btn.textContent = `🗑 Delete ${n} Selected`;
+  } else {
+    btn.style.display = 'none';
+  }
+}
+
+function deleteSelected() {
+  const n = selectedIds.size;
+  if (!n) return;
+  if (!confirm(`Delete ${n} selected SKU${n>1?'s':''}? This cannot be undone.`)) return;
+  skus = skus.filter(s => !selectedIds.has(s.id));
+  selectedIds.clear();
+  persist();
+  updateCounts();
+  renderTable(_lastSearch);
+  showNotif(`Deleted ${n} SKU${n>1?'s':''}`);
+}
+
 function deleteSKU(id) {
   skus = skus.filter(x => x.id !== id);
   persist();
@@ -1434,6 +1516,7 @@ function deleteSKU(id) {
 
 function clearAll() {
   if (!confirm(`Delete all ${skus.length} SKUs? This cannot be undone.`)) return;
+  selectedIds.clear();
   skus = [];
   persist();
   renderTable();
@@ -1645,12 +1728,27 @@ function updateExportSummary() {
   if (brEl) brEl.textContent = blankRoute.length ? '⚠ ' + blankRoute.length + ' SKUs have no route set — go to Global Settings to set a default' : '';
   if (zmEl) zmEl.textContent = zeroMin.length    ? '⚠ ' + zeroMin.length    + ' SKUs will calculate to Min = 0 — check their sales averages or Min On Hand values' : '';
   const hasPNs = odooPNs.size > 0;
-  const inOdoo     = hasPNs ? skus.filter(s => odooPNs.has(s.sku)) : skus;
-  const notOdoo    = hasPNs ? skus.filter(s => !odooPNs.has(s.sku)) : [];
+
+  // Populate category dropdown
+  const catSel = document.getElementById('export-cat-filter');
+  if (catSel) {
+    const current = catSel.value;
+    const cats = [...new Set(skus.map(s => s.category||'').filter(Boolean))].sort();
+    catSel.innerHTML = '<option value="">All Categories</option>' + cats.map(c => `<option value="${c}" ${c===current?'selected':''}>${c}</option>`).join('');
+  }
+  const exportCat = catSel ? catSel.value : '';
+  const catFiltered = exportCat ? skus.filter(s => (s.category||'') === exportCat) : skus;
+
+  // Badge showing filter status
+  const badge = document.getElementById('export-cat-badge');
+  if (badge) badge.textContent = exportCat ? `${catFiltered.length} SKU${catFiltered.length!==1?'s':''} in category` : '';
+
+  const inOdoo     = hasPNs ? catFiltered.filter(s => odooPNs.has(s.sku)) : catFiltered;
+  const notOdoo    = hasPNs ? catFiltered.filter(s => !odooPNs.has(s.sku)) : [];
   const needReorder= inOdoo.filter(s => { const c = calcSKU(s); return c.hasData && (parseFloat(s.onHand)||0) < c.odooMin; });
 
   const ruleSkus     = new Set(odooRules.map(r => r.sku));
-  const canUpdate    = skus.filter(s => ruleSkus.has(s.sku));
+  const canUpdate    = catFiltered.filter(s => ruleSkus.has(s.sku));
   const needCreate   = inOdoo.filter(s => !ruleSkus.has(s.sku));
 
   const updateCount  = document.getElementById('export-card-update-count');
@@ -1660,13 +1758,26 @@ function updateExportSummary() {
   const allCount     = document.getElementById('export-card-all-count');
   const reorderCount = document.getElementById('export-card-reorder-count');
 
-  if (updateCount)  updateCount.textContent  = canUpdate.length + ' SKU' + (canUpdate.length !== 1 ? 's' : '') + (odooRules.length ? ' ready' : '');
+  if (updateCount) {
+    if (odooRules.length) {
+      updateCount.textContent = canUpdate.length + ' SKU' + (canUpdate.length !== 1 ? 's' : '') + ' matched by rule ID';
+    } else if (hasPNs) {
+      updateCount.textContent = inOdoo.length + ' SKU' + (inOdoo.length !== 1 ? 's' : '') + ' matched in Odoo — exports by Internal Reference';
+    } else {
+      updateCount.textContent = skus.length + ' SKU' + (skus.length !== 1 ? 's' : '') + ' total — exports all by Internal Reference';
+    }
+  }
   if (noRulesWarn)  noRulesWarn.style.display = odooRules.length ? 'none' : 'block';
   if (createCount)  createCount.textContent  = odooRules.length
     ? needCreate.length + ' SKU' + (needCreate.length !== 1 ? 's' : '') + ' need new rules'
     : inOdoo.length + ' SKUs' + (hasPNs ? '' : ' — load Odoo PNs first');
   if (notCount)     notCount.textContent     = notOdoo.length + ' SKU' + (notOdoo.length !== 1 ? 's' : '') + (hasPNs ? '' : ' — load Odoo PNs first');
-  if (allCount)     allCount.textContent     = skus.length + ' SKUs total';
+  if (allCount)     allCount.textContent     = catFiltered.length + ' SKU' + (catFiltered.length!==1?'s':'') + (exportCat ? ' in '+exportCat : ' total');
+  const automateCount = document.getElementById('export-card-automate-count');
+  if (automateCount) {
+    const n = odooRules.length ? canUpdate.length : catFiltered.length;
+    automateCount.textContent = n + ' SKU' + (n!==1?'s':'') + (odooRules.length ? ' — ID-based' : ' — by Internal Reference');
+  }
   if (reorderCount) reorderCount.textContent = needReorder.length + ' SKU' + (needReorder.length !== 1 ? 's' : '') + ' below min';
 
   // Summary bar
@@ -1683,34 +1794,91 @@ function exportFiltered(type) {
   if (!skus.length) { showNotif('No SKUs to export'); return; }
   const hasPNs = odooPNs.size > 0;
 
+  // Respect category filter on export view
+  const catSel = document.getElementById('export-cat-filter');
+  const exportCat = catSel ? catSel.value : '';
+  const catFiltered = exportCat ? skus.filter(s => (s.category||'') === exportCat) : skus;
+  if (!catFiltered.length) { showNotif('No SKUs in selected category'); return; }
+
   let subset, filename, useOdooFormat;
 
   if (type === 'update-rules') {
-    // SKUs that have an existing Odoo rule with an ID
+    const hasRules = odooRules.length > 0;
     const ruleMap = {};
     odooRules.forEach(r => { ruleMap[r.sku] = r.id; });
-    subset = skus.filter(s => ruleMap[s.sku]);
-    if (!subset.length) { showNotif(odooRules.length ? 'No matched SKUs to update' : 'Upload existing rules first'); return; }
-    // Use Odoo format with ID for update
-    const rows = subset.map(s => {
-      const c = calcSKU(s);
-      const rule = odooRules.find(r => r.sku === s.sku);
-      return {
-        'id':              ruleMap[s.sku],
-        'product_min_qty': c.odooMin,
-        'product_max_qty': c.odooMax,
-        'route_id':        s.route || settings.route || (rule ? rule.route : ''),
-      };
-    });
-    const headers = Object.keys(rows[0]);
-    const csv = [headers.join(','), ...rows.map(r => headers.map(h => `"${String(r[h]).replace(/"/g,'""')}"`).join(','))].join('\n');
-    downloadCSV(csv, 'TGK_Odoo_UpdateRules_' + dateStr() + '.csv');
-    showNotif('Downloaded update CSV for ' + subset.length + ' rules');
+
+    // If Odoo rule IDs are loaded — use ID-based update (most reliable)
+    if (hasRules) {
+      subset = catFiltered.filter(s => ruleMap[s.sku]);
+      if (!subset.length) { showNotif('No SKUs matched to loaded rules'); return; }
+      const rows = subset.map(s => {
+        const c = calcSKU(s);
+        const rule = odooRules.find(r => r.sku === s.sku);
+        return {
+          'id':              ruleMap[s.sku],
+          'product_min_qty': c.odooMin,
+          'product_max_qty': c.odooMax,
+          'route_id':        s.route || settings.route || (rule ? rule.route : ''),
+        };
+      });
+      const headers = Object.keys(rows[0]);
+      const csv = [headers.join(','), ...rows.map(r => headers.map(h => `"${String(r[h]).replace(/"/g,'""')}"`).join(','))].join('\n');
+      downloadCSV(csv, 'TGK_Odoo_UpdateRules_' + dateStr() + '.csv');
+      showNotif('Downloaded update CSV for ' + subset.length + ' rules (ID-based)');
+    } else {
+      // No rule IDs loaded — export using Internal Reference lookup (works for new + existing rules)
+      subset = hasPNs ? catFiltered.filter(s => odooPNs.has(s.sku)) : catFiltered;
+      if (!subset.length) { showNotif('No SKUs to export'); return; }
+      const rows = subset.map(s => {
+        const c = calcSKU(s);
+        return {
+          'product_id/default_code': s.sku,
+          'route_id/name':           s.route || settings.route,
+          'product_min_qty':         c.odooMin,
+          'product_max_qty':         c.odooMax,
+          'qty_multiple':            parseInt(s.moq) > 0 ? parseInt(s.moq) : settings.moq,
+        };
+      });
+      const headers = Object.keys(rows[0]);
+      const csv = [headers.join(','), ...rows.map(r => headers.map(h => `"${String(r[h]).replace(/"/g,'""')}"`).join(','))].join('\n');
+      const catTag = exportCat ? '_' + exportCat.replace(/[^a-zA-Z0-9]/g,'_') : '';
+      downloadCSV(csv, 'TGK_Odoo_UpdateRules_BySKU' + catTag + '_' + dateStr() + '.csv');
+      showNotif('Downloaded update CSV for ' + subset.length + ' SKUs' + (exportCat ? ' in '+exportCat : '') + ' (by Internal Reference)');
+    }
     return;
+  } else if (type === 'automate-rules') {
+    // Export CSV that sets trigger=automatic on all matched rules
+    const hasRules = odooRules.length > 0;
+    let rows;
+    if (hasRules) {
+      const ruleMap = {};
+      odooRules.forEach(r => { ruleMap[r.sku] = r.id; });
+      const matched = catFiltered.filter(s => ruleMap[s.sku]);
+      if (!matched.length) { showNotif('No rules matched — upload existing rules first'); return; }
+      rows = matched.map(s => ({
+        'id':      ruleMap[s.sku],
+        'trigger': 'automatic',
+      }));
+    } else {
+      // No rule IDs — export by Internal Reference, Odoo will match
+      const toExport = hasPNs ? catFiltered.filter(s => odooPNs.has(s.sku)) : catFiltered;
+      if (!toExport.length) { showNotif('No SKUs to export'); return; }
+      rows = toExport.map(s => ({
+        'product_id/default_code': s.sku,
+        'trigger': 'automatic',
+      }));
+    }
+    const headers = Object.keys(rows[0]);
+    const catTag = exportCat ? '_' + exportCat.replace(/[^a-zA-Z0-9]/g,'_') : '';
+    const csv = [headers.join(','), ...rows.map(r => headers.map(h => `"${String(r[h]).replace(/"/g,'""')}"`).join(','))].join('\n');
+    downloadCSV(csv, 'TGK_Odoo_AutomateRules' + catTag + '_' + dateStr() + '.csv');
+    showNotif('Downloaded automate CSV for ' + rows.length + ' rules');
+    return;
+
   } else if (type === 'create-rules') {
     // SKUs in Odoo but without an existing rule
     const ruleSkus = new Set(odooRules.map(r => r.sku));
-    const inOdoo = hasPNs ? skus.filter(s => odooPNs.has(s.sku)) : skus;
+    const inOdoo = hasPNs ? catFiltered.filter(s => odooPNs.has(s.sku)) : catFiltered;
     subset = inOdoo.filter(s => !ruleSkus.has(s.sku));
     if (!subset.length) { showNotif('No SKUs need new rules'); return; }
     // Create format — product looked up by internal reference
@@ -1730,12 +1898,12 @@ function exportFiltered(type) {
     showNotif('Downloaded create CSV for ' + subset.length + ' new rules');
     return;
   } else if (type === 'odoo') {
-    subset = hasPNs ? skus.filter(s => odooPNs.has(s.sku)) : skus;
+    subset = hasPNs ? catFiltered.filter(s => odooPNs.has(s.sku)) : catFiltered;
     filename = 'TGK_Odoo_ReorderRules_' + dateStr() + '.csv';
     useOdooFormat = true;
     if (!subset.length) { showNotif('No matched Odoo SKUs to export'); return; }
   } else if (type === 'not-odoo') {
-    subset = hasPNs ? skus.filter(s => !odooPNs.has(s.sku)) : [];
+    subset = hasPNs ? catFiltered.filter(s => !odooPNs.has(s.sku)) : [];
     filename = 'TGK_NotInOdoo_Review_' + dateStr() + '.csv';
     useOdooFormat = false;
     if (!subset.length) { showNotif(hasPNs ? 'All SKUs matched — nothing to export' : 'Load Odoo PNs first'); return; }
@@ -2358,6 +2526,24 @@ function importOdooPaste() {
   updateOdooPNDisplay();
   renderTable(_lastSearch);
   showNotif(`${pns.length} PNs added (${odooPNs.size} total)`);
+}
+
+function clearOdooRules() {
+  if (!odooRules.length) { showNotif('No rules loaded'); return; }
+  if (!confirm(`Clear all ${odooRules.length} loaded Odoo rules? This does not affect Odoo — only removes them from this tool.`)) return;
+  odooRules = [];
+  document.getElementById('nav-rules-count').textContent = '';
+  document.getElementById('rules-loaded-panel').style.display = 'none';
+  document.getElementById('rules-upload-preview').style.display = 'none';
+  document.getElementById('rules-upload-preview').innerHTML = '';
+  // Reset drop zone
+  const dz = document.getElementById('rules-drop-zone');
+  if (dz) {
+    dz.querySelector('.drop-zone-text').textContent = 'Click to upload existing reorder rules CSV';
+    dz.querySelector('.drop-zone-sub').textContent  = 'The ID column is required to update existing rules';
+  }
+  updateExportCounts();
+  showNotif('Existing rules cleared');
 }
 
 function clearOdooPNs() {
