@@ -1815,10 +1815,11 @@ function exportFiltered(type) {
         const c = calcSKU(s);
         const rule = odooRules.find(r => r.sku === s.sku);
         return {
-          'id':              ruleMap[s.sku],
-          'product_min_qty': c.odooMin,
-          'product_max_qty': c.odooMax,
-          'route_id':        s.route || settings.route || (rule ? rule.route : ''),
+          'id':                      ruleMap[s.sku],
+          'product_id/default_code': s.sku,
+          'product_min_qty':         c.odooMin,
+          'product_max_qty':         c.odooMax,
+          'route_id/name':           s.route || settings.route || (rule ? rule.route : ''),
         };
       });
       const headers = Object.keys(rows[0]);
@@ -1856,8 +1857,9 @@ function exportFiltered(type) {
       const matched = catFiltered.filter(s => ruleMap[s.sku]);
       if (!matched.length) { showNotif('No rules matched — upload existing rules first'); return; }
       rows = matched.map(s => ({
-        'id':      ruleMap[s.sku],
-        'trigger': 'automatic',
+        'id':                      ruleMap[s.sku],
+        'product_id/default_code': s.sku,
+        'trigger':                 'automatic',
       }));
     } else {
       // No rule IDs — export by Internal Reference, Odoo will match
@@ -1886,10 +1888,11 @@ function exportFiltered(type) {
       const c = calcSKU(s);
       return {
         'product_id/default_code': s.sku,
-        'route_id/name': s.route || settings.route,
-        'product_min_qty': c.odooMin,
-        'product_max_qty': c.odooMax,
-        'qty_multiple': parseInt(s.moq) > 0 ? parseInt(s.moq) : settings.moq,
+        'route_id/name':           s.route || settings.route,
+        'product_min_qty':         c.odooMin,
+        'product_max_qty':         c.odooMax,
+        'qty_multiple':            parseInt(s.moq) > 0 ? parseInt(s.moq) : settings.moq,
+        'trigger':                 'automatic',
       };
     });
     const headers = Object.keys(rows[0]);
@@ -1981,11 +1984,37 @@ function previewExport() {
 }
 
 function downloadCSV(csv, filename) {
-  const a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
-  a.download = filename;
-  a.click();
+  // UTF-8 BOM prefix fixes Odoo "ascii decoding" error
+  const bom = '\uFEFF';
+  const content = bom + csv;
+  try {
+    // Method 1: Blob + object URL (best, works in most browsers)
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  } catch(e) {
+    // Method 2: Open in new tab so user can save manually
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write('<pre style="font-family:monospace;font-size:12px;white-space:pre-wrap">' + content.replace(/</g,'&lt;') + '</pre>');
+      win.document.title = filename;
+      win.document.close();
+      win.focus();
+      showNotif('CSV opened in new tab — use File → Save As → choose CSV format', 5000);
+    } else {
+      // Method 3: Fallback — show in modal so user can copy
+      showCSVModal(content, filename);
+    }
+  }
 }
+
+
 
 // ── IMPORT TABS ──────────────────────────────────────────────────────
 function setImportTab(tab) {
