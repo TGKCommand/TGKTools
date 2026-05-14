@@ -267,7 +267,7 @@ select.form-input{cursor:pointer}
             <div class="drop-zone-text">Click to upload or drag & drop</div>
             <div class="drop-zone-sub">CSV or TSV — must include SKU column. Other columns auto-mapped.</div>
           </div>
-          <input type="file" id="file-input" accept=".csv,.tsv,.txt" style="display:none" onchange="handleFileSelect(event)">
+          <input type="file" id="file-input" accept=".csv,.tsv,.txt,.xls,.xlsx" style="display:none" onchange="handleFileSelect(event)">
           <div id="import-preview" style="display:none"></div>
           <div style="margin-top:12px">
             <div class="panel-title" style="margin-bottom:8px">Expected Columns</div>
@@ -995,30 +995,41 @@ function handleDrop(e) {
 function handleFileSelect(e) { const f = e.target.files[0]; if (f) processFile(f); }
 
 function processFile(file) {
+  const name = file.name.toLowerCase();
+  if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
+    showNotif('Please export as CSV or TSV from Excel first (File → Save As → CSV)');
+    return;
+  }
   const reader = new FileReader();
   reader.onload = e => parseAndImport(e.target.result);
   reader.readAsText(file);
 }
 
 function parseAndImport(text) {
+  text = text.replace(/^\uFEFF/, ''); // strip Excel BOM
   const lines = text.split(/\r?\n/).filter(l => l.trim());
   if (lines.length < 2) { showNotif('File appears empty'); return; }
 
   const header = parseLine(lines[0]).map(h => h.trim().toLowerCase().replace(/[^a-z0-9]/g,''));
 
-  // Column mapping aliases
+  // Column mapping — matched to TGK Excel headers:
+  // PN | Rev (LTR) | Rev (NBR) | PN w/Rev | Description | Total To Package |
+  // Materials Available | Total Ass'd On Hand | Min Ass'd On Hand | Tgt Ass'd On Hand |
+  // Avg Ass'd On Hand | 4 week Sales/Wk | 24 week Sales/Wk | Min Wks Ahead | Tgt Wks Ahead
   const aliases = {
-    sku:       ['sku','internalreference','ref','productcode','itemno','itemnumber','partno','partnumber'],
-    name:      ['productname','name','description','product','itemname','productdescription'],
-    weeklyAvg: ['weeklyavg','weeklyaverage','avgweekly','avgsales','weeklysales','wklyavg'],
-    avg4wk:    ['4wkavg','4weekavg','4wkaverage','fourweekavg','rollingavg4wk','avg4wk','4wksalesavg'],
-    avg24wk:   ['24wkavg','24weekavg','24wkaverage','twentyfourweekavg','avg24wk','24wksalesavg'],
-    onHand:    ['onhand','currentstock','stockonhand','qty','currentqty','soh'],
-    minOnHand: ['minionhand','minstockonhand','minonhand','minstock','currentmin','min on hand'],
-    tgtOnHand: ['tgtonhand','targetonhand','tgtstockonhand','tgtstock','assdonhand','tgt assd on hand','tgtonhand','targetstock'],
+    sku:       ['pn','pnwrev','sku','internalreference','ref','productcode','partno','partnumber','itemnumber'],
+    name:      ['description','productname','name','product','itemname','productdescription'],
+    avg4wk:    ['4weeksaleswk','4wksaleswk','4wkavg','4weekavg','fourweekavg','avg4wk','4wksalesavg'],
+    avg24wk:   ['24weeksaleswk','24wksaleswk','24wkavg','24weekavg','twentyfourweekavg','avg24wk','24wksalesavg'],
+    onHand:    ['totalassdonhand','totalassd','assdonhand','onhand','currentstock','stockonhand','soh'],
+    minOnHand: ['minassdonhand','minassd','minionhand','minonhand','minstock'],
+    tgtOnHand: ['tgtassdonhand','tgtassd','tgtonhand','targetassdonhand','targetonhand','tgtstock'],
+    avgOnHand: ['avgassdonhand','avgassd','avgonhand'],
+    totalPkg:  ['totaltopackage','totaltopkg','totalpackage'],
+    matsAvail: ['materialsavailable','matsavailable','materialsavail'],
     leadDays:  ['leadtime','leaddays','supplierleadtime','ltdays','lead'],
-    minWks:    ['minweeks','minweeksahead','minwksahead','minwks','weeksminimum'],
-    tgtWks:    ['tgtweeks','targetweeks','tgtweeksahead','tgtwksahead','targetwksahead','tgtwks'],
+    minWks:    ['minwksahead','minweeksahead','minwks','minweeks','weeksminimum'],
+    tgtWks:    ['tgtwksahead','tgtweeksahead','tgtwks','tgtweeks','targetweeks','targetwksahead'],
     moq:       ['moq','minimumorderqty','minorderqty','ordermin'],
     route:     ['route','replenishmenttype','replenishment'],
     uom:       ['uom','unitofmeasure','unit'],
@@ -1030,7 +1041,7 @@ function parseAndImport(text) {
     if (idx >= 0) colMap[key] = idx;
   });
 
-  if (colMap.sku === undefined) { showNotif('Could not find SKU/reference column'); return; }
+  if (colMap.sku === undefined) { showNotif('SKU column not found. Detected headers: ' + header.slice(0,5).join(', ')); return; }
 
   let added = 0, updated = 0, skipped = 0;
   const previewLines = [`<span class="ok">✓ Header mapped. Columns found: ${Object.keys(colMap).join(', ')}</span>`];
@@ -1051,6 +1062,9 @@ function parseAndImport(text) {
       onHand:    get('onHand'),
       minOnHand: get('minOnHand'),
       tgtOnHand: get('tgtOnHand'),
+      avgOnHand: get('avgOnHand'),
+      totalPkg:  get('totalPkg'),
+      matsAvail: get('matsAvail'),
       leadDays:  get('leadDays'),
       minWks:    get('minWks'),
       tgtWks:    get('tgtWks'),
