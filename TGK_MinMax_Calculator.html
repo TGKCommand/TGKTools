@@ -1091,7 +1091,11 @@ function handleDrop(e) {
   const file = e.dataTransfer.files[0];
   if (file) processFile(file);
 }
-function handleFileSelect(e) { const f = e.target.files[0]; if (f) processFile(f); }
+function handleFileSelect(e) {
+  const f = e.target.files[0];
+  if (f) processFile(f);
+  e.target.value = ''; // reset so same file can be re-selected
+}
 
 function processFile(file) {
   const name = file.name.toLowerCase();
@@ -1291,7 +1295,11 @@ function handleOdooDrop(e) {
   const file = e.dataTransfer.files[0];
   if (file) processOdooFile(file);
 }
-function handleOdooFileSelect(e) { const f = e.target.files[0]; if (f) processOdooFile(f); }
+function handleOdooFileSelect(e) {
+  const f = e.target.files[0];
+  if (f) processOdooFile(f);
+  e.target.value = ''; // reset so same file can be re-selected
+}
 
 function processOdooFile(file) {
   const reader = new FileReader();
@@ -1305,10 +1313,28 @@ function parseOdooCSV(text) {
   if (lines.length < 2) { showNotif('File appears empty'); return; }
   const header = parseLine(lines[0]).map(h => h.trim().toLowerCase().replace(/[^a-z0-9]/g,''));
   // Find internal reference / SKU column
-  const skuAliases = ['internalreference','internreference','ref','sku','productcode','partno','partnumber','pn','referenceinterne'];
+  // Odoo exports 'Internal Reference' — after stripping non-alphanumeric: 'internalreference'
+  // French Odoo: 'Référence interne' -> 'referenceinterne'
+  // Some exports use 'Internal Ref', 'Product Code', 'Default Code' etc.
+  const skuAliases = [
+    'internalreference','internalref','internref','internreference',
+    'defaultcode','productcode','productref',
+    'ref','sku','pn','partno','partnumber','itemno','itemnumber',
+    'referenceinterne','referenceint','refint',
+    'code','artno','articlenumber','articleno',
+    'externalid','externalreference'
+  ];
   const skuIdx = header.findIndex(h => skuAliases.includes(h));
   if (skuIdx === -1) {
-    showNotif('Could not find Internal Reference column. Headers: ' + header.slice(0,6).join(', '));
+    const prev = document.getElementById('odoo-upload-preview');
+    prev.style.display = 'block';
+    prev.innerHTML = '<div class="import-preview">'
+      + '<span class="err">✗ Could not find Internal Reference column.</span><br><br>'
+      + '<span style="color:var(--text3)">All headers detected (' + header.length + '):</span><br>'
+      + header.map((h,i) => '<span class="ok">['+i+']</span> <span style="color:var(--text2)">'+h+'</span>').join('<br>')
+      + '<br><br><span style="color:var(--text3)">Tip: Odoo export should include an <strong style="color:var(--text)">Internal Reference</strong> column.</span>'
+      + '</div>';
+    showNotif('Column not found — see header list below');
     return;
   }
   let added = 0;
