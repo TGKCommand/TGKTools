@@ -12,7 +12,7 @@
 :root{
   --bg:#111314;--bg2:#181a1c;--bg3:#1e2022;--bg4:#252729;--bg5:#2c2f31;
   --border:#2a2d30;--border2:#343739;
-  --text:#f0f0ee;--text2:#9a9a96;--text3:#5a5a56;
+  --text:#f0f0ee;--text2:#b8b8b4;--text3:#7a7a76;
   --teal:#2ABFAA;--teal-d:#1a8f7d;--teal-dim:rgba(42,191,170,.10);
   --orange:#E07B28;--orange-d:#c46820;--orange-dim:rgba(224,123,40,.10);
   --red:#e05555;--red-dim:rgba(224,85,85,.12);
@@ -35,7 +35,7 @@ input,button,textarea,select{font-family:var(--font)}
 .sidebar-logo::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--orange) 60%,transparent)}
 .logo-img{width:140px;height:auto;object-fit:contain;display:block}
 .sidebar-section{padding:14px 14px 4px;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text3)}
-.nav-item{display:flex;align-items:center;gap:9px;padding:7px 11px;margin:2px 8px;border-radius:20px;cursor:pointer;transition:all .15s;border:1px solid transparent;background:transparent;width:calc(100% - 16px);text-align:left;color:var(--text2);font-size:12px;font-weight:500}
+.nav-item{display:flex;align-items:center;gap:9px;padding:7px 11px;margin:2px 8px;border-radius:20px;cursor:pointer;transition:all .15s;border:1px solid transparent;background:transparent;width:calc(100% - 16px);text-align:left;color:#d8d8d4;font-size:12px;font-weight:500}
 .nav-item:hover{background:var(--bg3);color:var(--text)}
 .nav-item.active{background:var(--teal-dim);color:var(--teal);border-color:rgba(42,191,170,.2)}
 .nav-dot{width:5px;height:5px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:all .15s}
@@ -44,14 +44,14 @@ input,button,textarea,select{font-family:var(--font)}
 .nav-item.active .nav-count{color:var(--teal);background:var(--teal-dim);border-color:rgba(42,191,170,.25)}
 /* sidebar cat nav */
 .nav-cat-wrap{margin:1px 8px}
-.nav-cat{display:flex;align-items:center;gap:9px;padding:6px 11px;border-radius:20px;cursor:pointer;color:var(--text3);font-size:11px;font-weight:500;transition:all .12s;border:1px solid transparent;width:100%}
+.nav-cat{display:flex;align-items:center;gap:9px;padding:6px 11px;border-radius:20px;cursor:pointer;color:#c0c0bc;font-size:11px;font-weight:500;transition:all .12s;border:1px solid transparent;width:100%}
 .nav-cat:hover{background:var(--bg3);color:var(--text2)}
 .nav-cat.active{color:var(--teal);background:var(--teal-dim);border-color:rgba(42,191,170,.15)}
 .nav-cat .arrow{margin-left:auto;transition:transform .15s;font-size:9px;opacity:.5}
 .nav-cat.open .arrow{transform:rotate(90deg)}
 .nav-sub{display:none;padding:2px 0 2px 14px}
 .nav-sub.open{display:block}
-.nav-sub-item{padding:5px 11px;cursor:pointer;color:var(--text3);font-size:11px;border-radius:14px;margin:1px 0;transition:all .12s;display:block}
+.nav-sub-item{padding:5px 11px;cursor:pointer;color:#c0c0bc;font-size:11px;border-radius:14px;margin:1px 0;transition:all .12s;display:block}
 .nav-sub-item:hover{color:var(--text2);background:var(--bg3)}
 .nav-sub-item.active{color:var(--teal);background:var(--teal-dim)}
 .nav-divider{height:1px;background:var(--border);margin:6px 12px}
@@ -60,7 +60,6 @@ input,button,textarea,select{font-family:var(--font)}
 .nav-all-btn.active{background:var(--teal-dim);color:var(--teal);border-color:rgba(42,191,170,.2)}
 .sidebar-footer{margin-top:auto;padding:10px 14px 14px;border-top:1px solid var(--border);flex-shrink:0}
 .sidebar-meta{font-size:10px;color:var(--text3);line-height:1.7}
-.sync-badge{font-size:10px;font-family:var(--mono);font-weight:600;color:var(--teal);display:block;margin-top:3px}
 /* ── MAIN ── */
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
 /* ── TOPBAR ── */
@@ -198,7 +197,7 @@ select.form-input{cursor:pointer}
     </div>
     <div class="sidebar" id="sidebar"></div>
     <div class="sidebar-footer">
-      <div class="sidebar-meta"><span id="sb-count" style="color:var(--teal)">201 SKUs tracked</span><span class="sync-badge" id="sync-badge">↻ Connecting…</span></div>
+      <div class="sidebar-meta"><span id="sb-count" style="color:var(--teal)">201 SKUs tracked</span></div>
     </div>
   </div>
 
@@ -218,7 +217,6 @@ select.form-input{cursor:pointer}
         <button class="export-btn" onclick="triggerImport()">⬆ Import CSV</button>
         <input type="file" id="csv-file-input" accept=".csv" style="display:none" onchange="importCSV(event)">
         <button class="export-btn" onclick="exportCSV()">⬇ Export CSV</button>
-        <button class="export-btn" onclick="saveWithMerge()" title="Sync to cloud">⟳ Sync</button>
         <div class="count-badge" id="total-count">201 SKUs</div>
       </div>
     </div>
@@ -267,7 +265,7 @@ select.form-input{cursor:pointer}
               <div class="form-label">Sequence Number</div>
               <div style="margin-bottom:12px">
                 <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Next available in this sub-category: <span id="next-seq" style="color:var(--teal)">--</span></div>
-                <input type="number" class="form-input" id="seq-input" placeholder="e.g. 01" style="width:100px;display:inline-block;margin-right:8px" min="1" max="99" oninput="updateSeqPreview()">
+                <input type="text" class="form-input" id="seq-input" placeholder="e.g. 01 or A1" style="width:100px;display:inline-block;margin-right:8px" oninput="updateSeqPreview()">
                 <button class="btn btn-secondary" onclick="useNextSeq()">USE NEXT</button>
               </div>
               <div style="font-size:11px;color:var(--text3);line-height:1.7">
@@ -446,7 +444,7 @@ function buildSku(){
   if(!builder.cat) return 'TGK-????-??';
   const cc = getCatCode(builder.cat);
   const sc = builder.sub ? getSubCode(builder.cat, builder.sub) : '??';
-  const seq = builder.seq ? pad2(parseInt(builder.seq)) : '??';
+  const seq = builder.seq ? (isNaN(builder.seq) ? builder.seq.toUpperCase() : pad2(parseInt(builder.seq))) : '??';
   return `TGK-${cc}${sc}-${seq}`;
 }
 
@@ -533,7 +531,8 @@ function selectSub(sub){
 }
 
 function updateSeqPreview(){
-  builder.seq = document.getElementById('seq-input').value;
+  const v = document.getElementById('seq-input').value.trim();
+  builder.seq = v;
   updatePreview();
 }
 
@@ -558,8 +557,8 @@ function nextStep(){
   if(builder.step===1 && !builder.cat){showNotif('Select a category first');return;}
   if(builder.step===2 && !builder.sub){showNotif('Select a sub-category first');return;}
   if(builder.step===3){
-    const v = document.getElementById('seq-input').value;
-    if(!v||isNaN(v)||parseInt(v)<1){showNotif('Enter a valid sequence number');return;}
+    const v = document.getElementById('seq-input').value.trim();
+    if(!v){showNotif('Enter a sequence value');return;}
     builder.seq = v;
     const sku = buildSku();
     if(skus.find(s=>s.newSku===sku)){showNotif('SKU '+sku+' already exists!');return;}
@@ -580,8 +579,7 @@ function saveSku(){
     live:builder.live,
     cat:builder.cat,
     sub:builder.sub,
-    subsub:'',
-    updated:new Date().toISOString()
+    subsub:''
   };
   skus.push(entry);
   recentlyAdded.unshift(entry);
@@ -592,8 +590,6 @@ function saveSku(){
   showNotif('Saved: '+sku);
   resetBuilder();
   renderSidebar();
-  // Push to cloud
-  if (_sbReady) { var p=_skuPayload(); try{localStorage.setItem(SK_SKUS,JSON.stringify(p));}catch(e){} _sbSet(SK_SKUS,p).then(function(ok){_updateSyncBadge(ok?'ok':'offline');}); }
 }
 
 function resetBuilder(){
@@ -745,7 +741,6 @@ function deleteSku(id){
   document.getElementById('total-count').textContent = skus.length+' SKUs';
   renderTable();
   showNotif('Deleted: '+id);
-  if (_sbReady) { var p=_skuPayload(); try{localStorage.setItem(SK_SKUS,JSON.stringify(p));}catch(e){} _sbSet(SK_SKUS,p).then(function(ok){_updateSyncBadge(ok?'ok':'offline');}); }
 }
 
 function openEdit(id){
@@ -755,7 +750,7 @@ function openEdit(id){
   document.getElementById('modal-body').innerHTML = `
     <div class="form-group">
       <label class="form-label">New SKU</label>
-      <input class="form-input" id="e-newSku" value="${s.newSku}" readonly style="opacity:.6">
+      <input class="form-input" id="e-newSku" value="${s.newSku}">
     </div>
     <div class="form-group">
       <label class="form-label">Legacy SKU</label>
@@ -791,17 +786,22 @@ function openEdit(id){
 function saveEdit(id){
   const s = skus.find(x=>x.newSku===id);
   if(!s) return;
+  const newSkuVal = document.getElementById('e-newSku').value.trim();
+  if(newSkuVal !== id){
+    if(skus.find(x=>x.newSku===newSkuVal)){showNotif('SKU '+newSkuVal+' already exists!');return;}
+    s.newSku = newSkuVal;
+  }
   s.legacy = document.getElementById('e-legacy').value.trim();
   s.desc = document.getElementById('e-desc').value.trim();
   s.cat = document.getElementById('e-cat').value.trim();
   s.sub = document.getElementById('e-sub').value.trim();
   s.live = document.getElementById('e-live').value;
-  s.updated = new Date().toISOString();
   closeModal();
   renderTable();
-  showNotif('Updated: '+id);
-  // Push to cloud
-  if (_sbReady) { var p=_skuPayload(); try{localStorage.setItem(SK_SKUS,JSON.stringify(p));}catch(e){} _sbSet(SK_SKUS,p).then(function(ok){_updateSyncBadge(ok?'ok':'offline');}); }
+  renderSidebar();
+  document.getElementById('total-count').textContent = skus.length+' SKUs';
+  document.getElementById('sb-count').textContent = skus.length+' SKUs tracked';
+  showNotif('Updated: '+(newSkuVal||id));
 }
 
 function closeModal(e){
@@ -1098,184 +1098,12 @@ function parseCSVLine(line){
   return result;
 }
 
-// ── CLOUD SYNC (Supabase) ─────────────────────────────────────────────
-var TGK_SB_URL = 'https://piamamighqiielfztgic.supabase.co';
-var TGK_SB_KEY = 'sb_publishable_JHTuiKlkCD_EHoyDtWtKsQ_gyQ6kgfJ';
-var _sbReady = false;
-var _sbCache = null;
-var _syncInterval = null;
-const SK_SKUS = 'tgk_skus_v1';
-
-async function _sbGet(id) {
-  try {
-    var res = await fetch(TGK_SB_URL + '/rest/v1/workspace?id=eq.' + encodeURIComponent(id) + '&select=data&limit=1', {
-      headers: { 'apikey': TGK_SB_KEY, 'Authorization': 'Bearer ' + TGK_SB_KEY }
-    });
-    var rows = await res.json();
-    return (rows && rows[0]) ? rows[0].data : null;
-  } catch(e) { return null; }
-}
-
-async function _sbSet(id, payload) {
-  try {
-    var res = await fetch(TGK_SB_URL + '/rest/v1/workspace', {
-      method: 'POST',
-      headers: { 'apikey': TGK_SB_KEY, 'Authorization': 'Bearer ' + TGK_SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-      body: JSON.stringify({ id: id, data: payload, updated_at: new Date().toISOString() })
-    });
-    return res.ok;
-  } catch(e) { console.warn('Cloud save failed:', e); return false; }
-}
-
-function _sbToast(msg, ok) {
-  var el = document.getElementById('_sb_toast');
-  if (!el) { el = document.createElement('div'); el.id = '_sb_toast'; el.style.cssText = 'position:fixed;bottom:16px;left:16px;padding:8px 14px;border-radius:7px;font-size:11px;font-weight:700;z-index:9999;transition:opacity .4s;font-family:inherit'; document.body.appendChild(el); }
-  el.textContent = msg;
-  el.style.background = ok ? 'rgba(42,191,170,.9)' : 'rgba(224,85,85,.9)';
-  el.style.color = '#fff'; el.style.opacity = '1';
-  setTimeout(function(){ el.style.opacity = '0'; }, 3000);
-}
-
-function _updateSyncBadge(status) {
-  var el = document.getElementById('sync-badge');
-  if (!el) return;
-  if (status === 'syncing') { el.textContent = '↻ Syncing…'; el.style.color = '#888'; }
-  else if (status === 'ok') {
-    var now = new Date();
-    el.textContent = '✓ Synced ' + now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-    el.style.color = '#2ABFAA';
-  }
-  else if (status === 'offline') { el.textContent = '⚠ Offline'; el.style.color = '#f87171'; }
-}
-
-function _skuPayload() {
-  return { skus: skus, taxonomy: TAXONOMY, updated_at: new Date().toISOString() };
-}
-
-function _mergeSkuData(local, cloud) {
-  // Merge taxonomy — cloud is authoritative for keys that exist, local adds new ones
-  var merged = {
-    taxonomy: JSON.parse(JSON.stringify(cloud.taxonomy || {})),
-    skus: [...(cloud.skus || [])]
-  };
-  // Add any local taxonomy categories/subs not in cloud
-  Object.keys(local.taxonomy || {}).forEach(function(cat) {
-    if (!merged.taxonomy[cat]) merged.taxonomy[cat] = local.taxonomy[cat];
-    else {
-      Object.keys(local.taxonomy[cat].subs || {}).forEach(function(sub) {
-        if (merged.taxonomy[cat].subs[sub] === undefined)
-          merged.taxonomy[cat].subs[sub] = local.taxonomy[cat].subs[sub];
-      });
-    }
-  });
-  // Merge SKUs — match by newSku, keep cloud version unless local is newer
-  (local.skus || []).forEach(function(ls) {
-    if (!ls.newSku) return;
-    var idx = merged.skus.findIndex(function(cs){ return cs.newSku === ls.newSku; });
-    if (idx > -1) {
-      // keep whichever was updated more recently; if no timestamp, prefer cloud
-      var cloudUpdated = new Date(merged.skus[idx].updated || 0);
-      var localUpdated = new Date(ls.updated || 0);
-      if (localUpdated > cloudUpdated) merged.skus[idx] = ls;
-    } else {
-      merged.skus.push(ls); // new local SKU
-    }
-  });
-  return merged;
-}
-
-async function _sbBoot() {
-  _updateSyncBadge('syncing');
-  try {
-    var cloud = await _sbGet(SK_SKUS);
-    if (cloud && ((cloud.skus || []).length > 0)) {
-      var merged = _mergeSkuData({ skus: skus, taxonomy: TAXONOMY }, cloud);
-      skus = merged.skus;
-      TAXONOMY = merged.taxonomy;
-      try { localStorage.setItem(SK_SKUS, JSON.stringify({ skus: skus, taxonomy: TAXONOMY })); } catch(e) {}
-    }
-    _sbReady = true;
-    _updateSyncBadge('ok');
-    _sbToast('✓ Synced — ' + skus.length + ' SKUs', true);
-    _syncInterval = setInterval(_backgroundSync, 300000);
-  } catch(e) {
-    _updateSyncBadge('offline');
-    _sbToast('⚠ Cloud offline — local only', false);
-  }
-}
-
-async function _backgroundSync() {
-  if (!_sbReady) return;
-  try {
-    var cloud = await _sbGet(SK_SKUS);
-    if (!cloud) return;
-    var cloudCount = (cloud.skus || []).length;
-    var localCount = skus.length;
-    var cloudNewest = (cloud.skus || []).reduce(function(max, s){ return (s.updated||'') > max ? (s.updated||'') : max; }, '');
-    var localNewest = skus.reduce(function(max, s){ return (s.updated||'') > max ? (s.updated||'') : max; }, '');
-    if (cloudCount !== localCount || cloudNewest > localNewest) {
-      var merged = _mergeSkuData({ skus: skus, taxonomy: TAXONOMY }, cloud);
-      skus = merged.skus;
-      TAXONOMY = merged.taxonomy;
-      try { localStorage.setItem(SK_SKUS, JSON.stringify({ skus: skus, taxonomy: TAXONOMY })); } catch(e) {}
-      renderSidebar();
-      renderTable();
-      document.getElementById('total-count').textContent = skus.length + ' SKUs';
-      document.getElementById('sb-count').textContent = skus.length + ' SKUs tracked';
-      _sbToast('↻ Updated from cloud', true);
-    }
-    _updateSyncBadge('ok');
-  } catch(e) { _updateSyncBadge('offline'); }
-}
-
-async function saveWithMerge() {
-  var btn = document.querySelector('.export-btn[onclick="saveWithMerge()"]');
-  if (btn) { var orig = btn.textContent; btn.textContent = '↻ Syncing…'; }
-  _updateSyncBadge('syncing');
-  try {
-    var cloud = await _sbGet(SK_SKUS);
-    if (cloud && (cloud.skus || []).length > 0) {
-      var merged = _mergeSkuData({ skus: skus, taxonomy: TAXONOMY }, cloud);
-      skus = merged.skus;
-      TAXONOMY = merged.taxonomy;
-    }
-    var payload = _skuPayload();
-    try { localStorage.setItem(SK_SKUS, JSON.stringify(payload)); } catch(e) {}
-    var ok = await _sbSet(SK_SKUS, payload);
-    _updateSyncBadge(ok ? 'ok' : 'offline');
-    _sbToast(ok ? '✓ Saved & synced' : '⚠ Save failed', ok);
-    renderSidebar();
-    renderTable();
-    document.getElementById('total-count').textContent = skus.length + ' SKUs';
-    document.getElementById('sb-count').textContent = skus.length + ' SKUs tracked';
-  } catch(e) {
-    _updateSyncBadge('offline');
-    _sbToast('⚠ Sync failed — ' + e.message, false);
-  }
-  if (btn) btn.textContent = orig;
-}
-
-// Load from localStorage as fallback before cloud boot
-(function() {
-  try {
-    var stored = localStorage.getItem(SK_SKUS);
-    if (stored) {
-      var parsed = JSON.parse(stored);
-      if (parsed.skus && parsed.skus.length > 0) {
-        skus = parsed.skus;
-        if (parsed.taxonomy) TAXONOMY = parsed.taxonomy;
-      }
-    }
-  } catch(e) {}
-})();
-
 // ── INIT ─────────────────────────────────────────────────────────────
 renderSidebar();
 renderStep();
 renderRecent();
 document.getElementById('total-count').textContent = skus.length+' SKUs';
 document.getElementById('sb-count').textContent = skus.length+' SKUs tracked';
-_sbBoot();
 </script>
 </body>
 </html>
