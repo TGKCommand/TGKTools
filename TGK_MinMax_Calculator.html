@@ -1258,7 +1258,6 @@ const TABLE_COLS = [
   { key: 'route',      label: 'Route',        sortable: true,  teal: false },
   { key: '_odooMin',   label: '▸ ODOO MIN',   sortable: true,  teal: true  },
   { key: '_odooMax',   label: '▸ ODOO MAX',   sortable: true,  teal: true  },
-  { key: '_check',     label: '',             sortable: false, teal: false },
 ];
 
 function renderHeader() {
@@ -1480,6 +1479,9 @@ function toggleSelectAll(checked) {
   });
   updateDeleteBtn();
   renderTable(_lastSearch);
+  // Restore checkbox state after renderTable re-renders the header
+  const allChk = document.getElementById('chk-all');
+  if (allChk) allChk.checked = checked;
 }
 
 function updateDeleteBtn() {
