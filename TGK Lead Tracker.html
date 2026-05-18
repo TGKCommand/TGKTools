@@ -1379,7 +1379,7 @@ function scanDuplicates(){
             <div style="width:32px;height:32px;border-radius:50%;background:rgba(248,113,113,.12);color:#f87171;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;border:1px solid rgba(248,113,113,.2)">${initials(l.name)}</div>
             <div style="flex:1;min-width:0">
               <div style="font-size:12px;font-weight:600;color:var(--text)">${esc(l.name)}</div>
-              <div style="font-size:11px;color:var(--text3);margin-top:1px">${lp?esc(lp.name):'?'}${l.link?` · <a href="${l.link}" target="_blank" style="color:var(--teal);font-size:10px">FB ↗</a>`:''}</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:1px">${lp?esc(lp.name):'?'}${l.link?` · <a href="${l.link}" target="_blank" rel="noopener noreferrer" style="color:var(--teal);font-size:10px">FB ↗</a>`:''}</div>
               <div style="display:flex;gap:8px;margin-top:3px;flex-wrap:wrap">
                 ${reasons.length?`<span style="font-size:9px;color:#f87171;font-weight:700;text-transform:uppercase;letter-spacing:.06em">${reasons.join(' & ')}</span>`:'<span style="font-size:9px;color:var(--text3)">primary</span>'}
                 ${total?`<span style="font-size:9px;color:var(--text3)">${done}/${total} checklist</span>`:''}
@@ -1536,7 +1536,6 @@ function markContactedBulk(pid){
 function quickContact(lid){
   const l=data.leads.find(l=>l.id===lid);if(!l)return;
   const now=new Date().toISOString();
-  // Update all leads matching this person (same name or same link)
   const nameLower=l.name.trim().toLowerCase();
   const targets=data.leads.filter(x=>x.name.trim().toLowerCase()===nameLower||(l.link&&x.link&&x.link===l.link));
   targets.forEach(x=>{
@@ -1546,7 +1545,6 @@ function quickContact(lid){
     _touch(x);
   });
   save();
-  // Preserve open product cards across re-render
   const openCards=[...document.querySelectorAll('.product-card.open')].map(c=>c.id.replace('pc-',''));
   render();
   setTimeout(()=>{openCards.forEach(id=>{const c=document.getElementById('pc-'+id);if(c)c.classList.add('open');});},10);

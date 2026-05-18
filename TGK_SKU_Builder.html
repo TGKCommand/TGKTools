@@ -12,7 +12,7 @@
 :root{
   --bg:#111314;--bg2:#181a1c;--bg3:#1e2022;--bg4:#252729;--bg5:#2c2f31;
   --border:#2a2d30;--border2:#343739;
-  --text:#f0f0ee;--text2:#b8b8b4;--text3:#7a7a76;
+  --text:#f0f0ee;--text2:#9a9a96;--text3:#5a5a56;
   --teal:#2ABFAA;--teal-d:#1a8f7d;--teal-dim:rgba(42,191,170,.10);
   --orange:#E07B28;--orange-d:#c46820;--orange-dim:rgba(224,123,40,.10);
   --red:#e05555;--red-dim:rgba(224,85,85,.12);
@@ -35,7 +35,7 @@ input,button,textarea,select{font-family:var(--font)}
 .sidebar-logo::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--orange) 60%,transparent)}
 .logo-img{width:140px;height:auto;object-fit:contain;display:block}
 .sidebar-section{padding:14px 14px 4px;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text3)}
-.nav-item{display:flex;align-items:center;gap:9px;padding:7px 11px;margin:2px 8px;border-radius:20px;cursor:pointer;transition:all .15s;border:1px solid transparent;background:transparent;width:calc(100% - 16px);text-align:left;color:#d8d8d4;font-size:12px;font-weight:500}
+.nav-item{display:flex;align-items:center;gap:9px;padding:7px 11px;margin:2px 8px;border-radius:20px;cursor:pointer;transition:all .15s;border:1px solid transparent;background:transparent;width:calc(100% - 16px);text-align:left;color:var(--text2);font-size:12px;font-weight:500}
 .nav-item:hover{background:var(--bg3);color:var(--text)}
 .nav-item.active{background:var(--teal-dim);color:var(--teal);border-color:rgba(42,191,170,.2)}
 .nav-dot{width:5px;height:5px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:all .15s}
@@ -44,14 +44,14 @@ input,button,textarea,select{font-family:var(--font)}
 .nav-item.active .nav-count{color:var(--teal);background:var(--teal-dim);border-color:rgba(42,191,170,.25)}
 /* sidebar cat nav */
 .nav-cat-wrap{margin:1px 8px}
-.nav-cat{display:flex;align-items:center;gap:9px;padding:6px 11px;border-radius:20px;cursor:pointer;color:#c0c0bc;font-size:11px;font-weight:500;transition:all .12s;border:1px solid transparent;width:100%}
+.nav-cat{display:flex;align-items:center;gap:9px;padding:6px 11px;border-radius:20px;cursor:pointer;color:var(--text3);font-size:11px;font-weight:500;transition:all .12s;border:1px solid transparent;width:100%}
 .nav-cat:hover{background:var(--bg3);color:var(--text2)}
 .nav-cat.active{color:var(--teal);background:var(--teal-dim);border-color:rgba(42,191,170,.15)}
 .nav-cat .arrow{margin-left:auto;transition:transform .15s;font-size:9px;opacity:.5}
 .nav-cat.open .arrow{transform:rotate(90deg)}
 .nav-sub{display:none;padding:2px 0 2px 14px}
 .nav-sub.open{display:block}
-.nav-sub-item{padding:5px 11px;cursor:pointer;color:#c0c0bc;font-size:11px;border-radius:14px;margin:1px 0;transition:all .12s;display:block}
+.nav-sub-item{padding:5px 11px;cursor:pointer;color:var(--text3);font-size:11px;border-radius:14px;margin:1px 0;transition:all .12s;display:block}
 .nav-sub-item:hover{color:var(--text2);background:var(--bg3)}
 .nav-sub-item.active{color:var(--teal);background:var(--teal-dim)}
 .nav-divider{height:1px;background:var(--border);margin:6px 12px}
@@ -265,7 +265,7 @@ select.form-input{cursor:pointer}
               <div class="form-label">Sequence Number</div>
               <div style="margin-bottom:12px">
                 <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Next available in this sub-category: <span id="next-seq" style="color:var(--teal)">--</span></div>
-                <input type="text" class="form-input" id="seq-input" placeholder="e.g. 01 or A1" style="width:100px;display:inline-block;margin-right:8px" oninput="updateSeqPreview()">
+                <input type="number" class="form-input" id="seq-input" placeholder="e.g. 01" style="width:100px;display:inline-block;margin-right:8px" min="1" max="99" oninput="updateSeqPreview()">
                 <button class="btn btn-secondary" onclick="useNextSeq()">USE NEXT</button>
               </div>
               <div style="font-size:11px;color:var(--text3);line-height:1.7">
@@ -444,7 +444,7 @@ function buildSku(){
   if(!builder.cat) return 'TGK-????-??';
   const cc = getCatCode(builder.cat);
   const sc = builder.sub ? getSubCode(builder.cat, builder.sub) : '??';
-  const seq = builder.seq ? (isNaN(builder.seq) ? builder.seq.toUpperCase() : pad2(parseInt(builder.seq))) : '??';
+  const seq = builder.seq ? pad2(parseInt(builder.seq)) : '??';
   return `TGK-${cc}${sc}-${seq}`;
 }
 
@@ -531,8 +531,7 @@ function selectSub(sub){
 }
 
 function updateSeqPreview(){
-  const v = document.getElementById('seq-input').value.trim();
-  builder.seq = v;
+  builder.seq = document.getElementById('seq-input').value;
   updatePreview();
 }
 
@@ -557,8 +556,8 @@ function nextStep(){
   if(builder.step===1 && !builder.cat){showNotif('Select a category first');return;}
   if(builder.step===2 && !builder.sub){showNotif('Select a sub-category first');return;}
   if(builder.step===3){
-    const v = document.getElementById('seq-input').value.trim();
-    if(!v){showNotif('Enter a sequence value');return;}
+    const v = document.getElementById('seq-input').value;
+    if(!v||isNaN(v)||parseInt(v)<1){showNotif('Enter a valid sequence number');return;}
     builder.seq = v;
     const sku = buildSku();
     if(skus.find(s=>s.newSku===sku)){showNotif('SKU '+sku+' already exists!');return;}
@@ -750,7 +749,7 @@ function openEdit(id){
   document.getElementById('modal-body').innerHTML = `
     <div class="form-group">
       <label class="form-label">New SKU</label>
-      <input class="form-input" id="e-newSku" value="${s.newSku}">
+      <input class="form-input" id="e-newSku" value="${s.newSku}" readonly style="opacity:.6">
     </div>
     <div class="form-group">
       <label class="form-label">Legacy SKU</label>
@@ -786,11 +785,6 @@ function openEdit(id){
 function saveEdit(id){
   const s = skus.find(x=>x.newSku===id);
   if(!s) return;
-  const newSkuVal = document.getElementById('e-newSku').value.trim();
-  if(newSkuVal !== id){
-    if(skus.find(x=>x.newSku===newSkuVal)){showNotif('SKU '+newSkuVal+' already exists!');return;}
-    s.newSku = newSkuVal;
-  }
   s.legacy = document.getElementById('e-legacy').value.trim();
   s.desc = document.getElementById('e-desc').value.trim();
   s.cat = document.getElementById('e-cat').value.trim();
@@ -798,10 +792,7 @@ function saveEdit(id){
   s.live = document.getElementById('e-live').value;
   closeModal();
   renderTable();
-  renderSidebar();
-  document.getElementById('total-count').textContent = skus.length+' SKUs';
-  document.getElementById('sb-count').textContent = skus.length+' SKUs tracked';
-  showNotif('Updated: '+(newSkuVal||id));
+  showNotif('Updated: '+id);
 }
 
 function closeModal(e){
