@@ -568,6 +568,18 @@ async function _sbBoot() {
       _sbCache = cloud;
       localStorage.setItem('tgk_leads_v3', JSON.stringify(cloud));
     }
+    // Also load FB Group library from cloud
+    var cloudFBG = await _sbLoadFBG();
+    if (cloudFBG && cloudFBG.length > 0) {
+      var localFBG = [];
+      try { localFBG = JSON.parse(localStorage.getItem('tgk_fbg_library_v1')) || []; } catch(e) {}
+      var mergedFBG = _mergeFBG(localFBG, cloudFBG);
+      localStorage.setItem('tgk_fbg_library_v1', JSON.stringify(mergedFBG));
+      setTimeout(function(){
+        if (typeof fbgRenderLibrary === 'function') fbgRenderLibrary();
+        if (typeof fbgPopulateCarDropdowns === 'function') fbgPopulateCarDropdowns();
+      }, 200);
+    }
     _sbReady = true;
     _updateSyncBadge('ok');
     _sbToast('✓ Synced — ' + (((_sbCache||{}).leads)||[]).length + ' leads', true);
@@ -606,6 +618,39 @@ async function _backgroundSync() {
   } catch(e) { _updateSyncBadge('offline'); }
 }
 // ─────────────────────────────────────────────────────────────
+
+// ── FB Group Library cloud sync ───────────────────────────────
+var _fbgCloudCache = null;
+
+async function _sbLoadFBG() {
+  try {
+    var d = await _sbGet('tgk_fbg_library');
+    _fbgCloudCache = Array.isArray(d) ? d : null;
+    return _fbgCloudCache;
+  } catch(e) { return null; }
+}
+
+async function _sbSaveFBG(libData) {
+  _fbgCloudCache = libData;
+  return await _sbSet('tgk_fbg_library', libData);
+}
+
+// ── FBG merge helper ──────────────────────────────────────────
+function _mergeFBG(local, cloud) {
+  var merged = JSON.parse(JSON.stringify(cloud || []));
+  (local || []).forEach(function(lc) {
+    var idx = merged.findIndex(function(cc){ return cc.key === lc.key; });
+    if (idx === -1) {
+      merged.push(lc);
+    } else {
+      var existingNames = new Set((merged[idx].groups||[]).map(function(g){ return g.name; }));
+      (lc.groups||[]).forEach(function(g){
+        if (!existingNames.has(g.name)) merged[idx].groups.push(g);
+      });
+    }
+  });
+  return merged;
+}
 
 const SK = 'tgk_leads_v3';
 let data={products:[],leads:[],deleted:[]};
@@ -1687,6 +1732,10 @@ function fbgLibLoad(){
 }
 function fbgLibSave(data){
   try{ localStorage.setItem(FBG_LIBRARY_KEY, JSON.stringify(data)); } catch(e){}
+  // Push to Supabase cloud
+  if (typeof _sbSaveFBG === 'function') {
+    _sbSaveFBG(data).catch(function(e){ console.warn('FBG cloud save failed:', e); });
+  }
 }
 function fbgCarKey(year,make,model){ return [year,make,model].join('_').toLowerCase().replace(/\s+/g,'_'); }
 
