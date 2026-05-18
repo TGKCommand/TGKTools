@@ -351,11 +351,12 @@ select.form-input{cursor:pointer}
               <span>Internal Reference</span> → SKU<br>
               <span>Name</span> → Product Name<br>
               <span>Quantity On Hand</span> → On Hand (current stock)<br>
-              <span>Reordering Min Qty</span> → Min On Hand (existing Odoo min)<br>
-              <span>Reordering Max Qty</span> → Tgt On Hand (existing Odoo max)<br>
+              <span>Reordering Min Qty</span> → Odoo Current Min (reference — not used in formula)<br>
+              <span>Reordering Max Qty</span> → Odoo Current Max (reference — not used in formula)<br>
               <span>Routes</span> → Route (Buy / Manufacture)<br>
               <span>Product Category</span> → Category (for filtering &amp; sorting)<br>
-              <span style="color:var(--text3)">Min Wks Ahead / Tgt Wks Ahead will use global defaults unless set in your spreadsheet</span>
+              <span style="color:var(--text3)">Min Wks Ahead / Tgt Wks Ahead will use global defaults unless set in your spreadsheet</span><br>
+              <span style="color:var(--orange)">Odoo Min/Max is always recalculated from sales averages — import values are for comparison only</span>
             </div>
           </div>
         </div>
@@ -818,10 +819,10 @@ select.form-input{cursor:pointer}
             </label>
           </div>
           <div class="formula-box">
-            <span>Min Qty</span> = Effective Weekly Avg × (Lead Time weeks + Min Weeks Cover)<br>
-            <span>Max Qty</span> = Effective Weekly Avg × (Lead Time weeks + Target Weeks Cover)<br>
-            <span>QTY to Order</span> = max(Max Qty − Current On Hand, MOQ)<br>
-            <span>Lead Time weeks</span> = Lead Time days ÷ 7
+            <span>Odoo Min</span> = Sales Avg/wk × (Lead Time wks + Min Weeks Cover)<br>
+            <span>Odoo Max</span> = Sales Avg/wk × (Lead Time wks + Target Weeks Cover)<br>
+            <span>Qty to Order</span> = max(Odoo Max − On Hand, 0), rounded up to MOQ<br>
+            <span style="color:var(--orange)">Requires sales history</span> — SKUs with no avg show — in Odoo Min/Max
           </div>
         </div>
       </div>
@@ -864,11 +865,11 @@ select.form-input{cursor:pointer}
           <input type="number" class="form-input" id="m-onhand" placeholder="0" min="0">
         </div>
         <div class="form-group">
-          <label class="form-label">Min On Hand (from ERP)</label>
+          <label class="form-label">Odoo Current Min (reference only)</label>
           <input type="number" class="form-input" id="m-minonhand" placeholder="e.g. 2.5" step="0.01" min="0">
         </div>
         <div class="form-group">
-          <label class="form-label">Tgt Ass'd On Hand (from ERP)</label>
+          <label class="form-label">Odoo Current Max (reference only)</label>
           <input type="number" class="form-input" id="m-tgtonhand" placeholder="e.g. 8.0" step="0.01" min="0">
         </div>
         <div class="form-group">
@@ -1152,21 +1153,15 @@ function calcSKU(s) {
   const tgtWks   = parseFloat(s.tgtWks)   > 0 ? parseFloat(s.tgtWks)   : settings.tgtWks;
   const moq      = parseInt(s.moq)        > 0 ? parseInt(s.moq)        : settings.moq;
 
-  let odooMin, odooMax;
-
-  if (avg > 0) {
-    // Calculate from weekly average + weeks cover
-    const leadWks = leadDays; // stored as weeks directly
-    odooMin = Math.ceil(avg * (leadWks + minWks));
-    odooMax = Math.ceil(avg * (leadWks + tgtWks));
-  } else if (parseFloat(s.minOnHand) > 0 || parseFloat(s.tgtOnHand) > 0) {
-    // Fall back to direct Min On Hand / Tgt On Hand values (decimals rounded up)
-    odooMin = Math.ceil(parseFloat(s.minOnHand) || 0);
-    odooMax = Math.ceil(parseFloat(s.tgtOnHand) || odooMin);
-  } else {
-    // No data at all
+  // Min/Max is ALWAYS calculated from sales history only.
+  // minOnHand / tgtOnHand are reference fields showing what Odoo currently has — they do NOT drive the formula.
+  if (avg <= 0) {
     return { avg: 0, odooMin: 0, odooMax: 0, qtyOrder: 0, hasData: false };
   }
+
+  const leadWks  = leadDays; // stored as weeks directly
+  const odooMin  = Math.ceil(avg * (leadWks + minWks));
+  const odooMax  = Math.ceil(avg * (leadWks + tgtWks));
 
   const onHand      = parseFloat(s.onHand) || 0;
   const qtyOrder    = Math.max(odooMax - onHand, 0);
@@ -1249,8 +1244,8 @@ const TABLE_COLS = [
   { key: 'name',       label: 'Name',         sortable: true,  teal: false },
   { key: 'avg4wk',     label: '4wk Avg',      sortable: true,  teal: false },
   { key: 'avg24wk',    label: '24wk Avg',     sortable: true,  teal: false },
-  { key: 'minOnHand',  label: 'Min On Hand',  sortable: true,  teal: false },
-  { key: 'tgtOnHand',  label: 'Tgt On Hand',  sortable: true,  teal: false },
+  { key: 'minOnHand',  label: 'Odoo Cur Min', sortable: true,  teal: false },
+  { key: 'tgtOnHand',  label: 'Odoo Cur Max', sortable: true,  teal: false },
   { key: 'leadDays',   label: 'Lead (wks)',   sortable: true,  teal: false },
   { key: 'minWks',     label: 'Min Wks',      sortable: true,  teal: false },
   { key: 'tgtWks',     label: 'Tgt Wks',      sortable: true,  teal: false },
@@ -1267,8 +1262,10 @@ function renderHeader() {
     if (!col.sortable) return `<th></th>`;
     const isSorted = sortCol === col.key;
     const arrow = isSorted ? (sortDir === 1 ? '▲' : '▼') : '⇅';
-    const color = col.teal ? 'color:var(--teal)' : '';
-    return `<th class="th-sort${isSorted?' sorted':''}" style="${color}" onclick="setSort('${col.key}')">${col.label} <span class="sort-arrow">${arrow}</span></th>`;
+    const isRef = col.key === 'minOnHand' || col.key === 'tgtOnHand';
+    const color = col.teal ? 'color:var(--teal)' : isRef ? 'color:var(--text3)' : '';
+    const title = isRef ? ' title="Reference only — shows current Odoo value. Does not affect the Min/Max calculation."' : '';
+    return `<th class="th-sort${isSorted?' sorted':''}" style="${color}" onclick="setSort('${col.key}')"${title}>${col.label} <span class="sort-arrow">${arrow}</span></th>`;
   }).join('');
 }
 
@@ -1349,8 +1346,8 @@ function renderTable(search='') {
       <td style="color:var(--text2);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name||'—'}</td>
       <td class="mono">${fmt(s.avg4wk)}</td>
       <td class="mono">${fmt(s.avg24wk)}</td>
-      <td><input class="inline-input" type="number" value="${s.minOnHand||''}" placeholder="—" step="0.01" onchange="updateField('${s.id}','minOnHand',this.value);renderTable()"></td>
-      <td><input class="inline-input" type="number" value="${s.tgtOnHand||''}" placeholder="—" step="0.01" onchange="updateField('${s.id}','tgtOnHand',this.value);renderTable()"></td>
+      <td class="mono" style="color:var(--text3);font-size:11px">${s.minOnHand > 0 ? s.minOnHand : '—'}</td>
+      <td class="mono" style="color:var(--text3);font-size:11px">${s.tgtOnHand > 0 ? s.tgtOnHand : '—'}</td>
       <td><input class="inline-input" type="number" value="${leadVal}" placeholder="${settings.leadDays}" min="0.5" step="0.5" onchange="updateField('${s.id}','leadDays',this.value);renderTable()"></td>
       <td><input class="inline-input" type="number" value="${minWVal}" placeholder="${settings.minWks}" step="0.5" onchange="updateField('${s.id}','minWks',this.value);renderTable()"></td>
       <td><input class="inline-input" type="number" value="${tgtWVal}" placeholder="${settings.tgtWks}" step="0.5" onchange="updateField('${s.id}','tgtWks',this.value);renderTable()"></td>
@@ -1729,7 +1726,7 @@ function updateExportSummary() {
   const brEl = document.getElementById('blank-route-warning');
   const zmEl = document.getElementById('zero-min-warning');
   if (brEl) brEl.textContent = blankRoute.length ? '⚠ ' + blankRoute.length + ' SKUs have no route set — go to Global Settings to set a default' : '';
-  if (zmEl) zmEl.textContent = zeroMin.length    ? '⚠ ' + zeroMin.length    + ' SKUs will calculate to Min = 0 — check their sales averages or Min On Hand values' : '';
+  if (zmEl) zmEl.textContent = zeroMin.length    ? '⚠ ' + zeroMin.length    + ' SKUs have no sales history — add a weekly, 4-week, or 24-week sales average to calculate' : '';
   const hasPNs = odooPNs.size > 0;
 
   // Populate category dropdown
