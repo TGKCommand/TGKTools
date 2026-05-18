@@ -11,7 +11,7 @@
 :root{
   --bg:#111314;--bg2:#181a1c;--bg3:#1e2022;--bg4:#252729;--bg5:#2c2f31;
   --border:#2a2d30;--border2:#343739;
-  --text:#f0f0ee;--text2:#9a9a96;--text3:#5a5a56;
+  --text:#f0f0ee;--text2:#b8b8b4;--text3:#7a7a76;
   --teal:#2ABFAA;--teal-d:#1a8f7d;--teal-dim:rgba(42,191,170,.10);
   --orange:#E07B28;--orange-d:#c46820;--orange-dim:rgba(224,123,40,.10);
   --red:#e05555;--red-dim:rgba(224,85,85,.12);
@@ -136,15 +136,15 @@ input,button,textarea,select{font-family:var(--font)}
 .status-tag.recent{color:var(--green);background:var(--green-dim);border-color:rgba(76,175,125,.25)}
 .status-tag.stale{color:var(--orange);background:var(--orange-dim);border-color:rgba(224,123,40,.25)}
 .status-tag.never{color:var(--text3);background:transparent;border-color:var(--border)}
+.quick-contact-btn{display:inline-flex;align-items:center;justify-content:center;height:18px;padding:0 6px;border-radius:3px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-family:var(--mono);border:1px solid rgba(76,175,125,.3);background:var(--green-dim);color:var(--green);cursor:pointer;margin-left:5px;transition:all .15s;flex-shrink:0;vertical-align:middle}
+.quick-contact-btn:hover{background:rgba(76,175,125,.25);border-color:rgba(76,175,125,.55);transform:scale(1.05)}
+.quick-contact-btn:active{transform:scale(.97)}
+.contact-cell{display:inline-flex;align-items:center;gap:0}
 .mini-bar-wrap{display:flex;align-items:center;gap:6px}
 .mini-bar{flex:1;height:3px;background:var(--bg5);border-radius:2px;overflow:hidden;min-width:32px}
 .mini-bar-fill{height:100%;background:var(--teal)}
 .mini-label{font-size:9px;color:var(--text3);font-family:var(--mono);white-space:nowrap}
 .bulk-action-bar{display:flex;align-items:center;gap:10px;padding:8px 16px;background:rgba(42,191,170,.06);border-top:1px solid rgba(42,191,170,.2);border-bottom-left-radius:var(--r);border-bottom-right-radius:var(--r)}
-.quick-contact-btn{display:inline-flex;align-items:center;justify-content:center;height:18px;padding:0 6px;border-radius:3px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-family:var(--mono);border:1px solid rgba(76,175,125,.3);background:var(--green-dim);color:var(--green);cursor:pointer;margin-left:5px;transition:all .15s;flex-shrink:0}
-.quick-contact-btn:hover{background:rgba(76,175,125,.25);border-color:rgba(76,175,125,.55);transform:scale(1.05)}
-.quick-contact-btn:active{transform:scale(.97)}
-.contact-cell{display:flex;align-items:center;gap:0}
 .bulk-count{font-size:11px;font-weight:700;color:var(--teal);min-width:80px}
 .lead-row.selected td{background:rgba(42,191,170,.04)}
 .add-lead-section{padding:12px 16px;background:var(--bg3);border-top:1px solid var(--border)}
@@ -164,6 +164,8 @@ input,button,textarea,select{font-family:var(--font)}
 .person-meta{font-size:11px;color:var(--text3);margin-top:2px}
 .person-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
 .prod-tag{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;font-family:var(--mono);padding:2px 7px;border-radius:3px;background:var(--orange-dim);color:var(--orange);border:1px solid rgba(224,123,40,.25)}
+.people-table .prod-tag{padding:1px 6px;font-size:9px;font-weight:600;letter-spacing:.03em;background:rgba(224,123,40,.08);color:var(--orange);border-color:rgba(224,123,40,.2);text-transform:none}
+.person-row .prod-tag{padding:1px 5px;font-size:8px;font-weight:600;letter-spacing:.04em;background:var(--bg4);color:var(--text3);border-color:var(--border)}
 .prod-tag::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--orange);flex-shrink:0}
 
 /* ── FORMS ── */
@@ -218,6 +220,88 @@ input,button,textarea,select{font-family:var(--font)}
 .modal-msg{font-size:12px;color:var(--text2);line-height:1.6}
 .modal-sm-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
 
+/* ── PRODUCT TABS (People / Groups) ── */
+.product-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--bg3);flex-shrink:0}
+.product-tab{flex:1;padding:8px 14px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);background:none;border:none;cursor:pointer;font-family:var(--font);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px}
+.product-tab:hover{color:var(--text2)}
+.product-tab.active{color:var(--teal);border-bottom-color:var(--teal)}
+.product-tab-count{font-size:9px;font-family:var(--mono);font-weight:700;padding:1px 5px;border-radius:3px;background:var(--bg4);border:1px solid var(--border);color:var(--text3)}
+.product-tab.active .product-tab-count{background:var(--teal-dim);border-color:rgba(42,191,170,.25);color:var(--teal)}
+
+/* ── GROUP ROWS ── */
+.group-row td{padding:9px 16px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:12px;color:var(--text2)}
+.group-row:last-child td{border-bottom:none}
+.group-row:hover td{background:rgba(255,255,255,.012)}
+.group-icon{width:28px;height:28px;border-radius:6px;background:rgba(42,191,170,.1);display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;border:1px solid rgba(42,191,170,.15)}
+.group-badge{display:inline-flex;align-items:center;height:16px;padding:0 6px;border-radius:3px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-family:var(--mono);background:rgba(42,191,170,.08);color:var(--teal);border:1px solid rgba(42,191,170,.2)}
+.group-members{font-size:10px;font-family:var(--mono);color:var(--text3)}
+
+/* ── ADD GROUP FORM ── */
+.add-group-form{display:none;margin-top:10px}
+.add-group-form.open{display:block}
+.group-picker-list{max-height:220px;overflow-y:auto;border:1px solid var(--border2);border-radius:var(--r);background:var(--bg4);margin-bottom:8px}
+.group-picker-empty{padding:20px;text-align:center;font-size:12px;color:var(--text3)}
+.group-picker-car{border-bottom:1px solid var(--border)}
+.group-picker-car:last-child{border-bottom:none}
+.group-picker-car-header{padding:7px 12px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);background:var(--bg3);display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;transition:background .12s}
+.group-picker-car-header:hover{background:var(--bg4)}
+.group-picker-car-label{flex:1}
+.group-picker-car-count{font-size:9px;font-family:var(--mono);color:var(--text3);background:var(--bg5);padding:1px 5px;border-radius:3px;border:1px solid var(--border)}
+.group-picker-items{display:none}
+.group-picker-items.open{display:block}
+.group-picker-item{display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;transition:background .12s;border-top:1px solid var(--border)}
+.group-picker-item:hover{background:rgba(42,191,170,.05)}
+.group-picker-item.already-added{opacity:.4;pointer-events:none}
+.group-picker-item-icon{font-size:14px;flex-shrink:0;width:20px;text-align:center}
+.group-picker-item-info{flex:1;min-width:0}
+.group-picker-item-name{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.group-picker-item-meta{font-size:10px;color:var(--text3);font-family:var(--mono)}
+.group-picker-search{width:100%;padding:8px 12px;font-size:12px;border:none;border-bottom:1px solid var(--border2);background:var(--bg3);color:var(--text);outline:none;font-family:var(--font)}
+.group-picker-search::placeholder{color:var(--text3)}
+.group-picker-search:focus{border-bottom-color:var(--teal)}
+
+/* ── COMBINED BADGE on product head ── */
+.lead-badge-group{display:inline-flex;align-items:center;height:18px;padding:0 7px;border-radius:3px;font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;font-family:var(--mono);background:rgba(42,191,170,.08);color:var(--teal);border:1px solid rgba(42,191,170,.2)}
+
+/* ── PEOPLE VIEW — IMPROVED ── */
+/* ── PEOPLE TABLE ── */
+.people-toolbar{display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.people-toolbar-left{display:flex;align-items:center;gap:6px;flex:1;min-width:0;flex-wrap:wrap}
+.people-sort-btn{display:inline-flex;align-items:center;padding:4px 10px;font-size:11px;font-weight:600;border-radius:var(--r);border:1px solid var(--border2);background:var(--bg4);color:var(--text3);cursor:pointer;transition:all .15s;white-space:nowrap;font-family:var(--font)}
+.people-sort-btn:hover{background:var(--bg5);color:var(--text2)}
+.people-sort-btn.active{background:var(--teal-dim);color:var(--teal);border-color:rgba(42,191,170,.3)}
+.people-filter-btn{display:inline-flex;align-items:center;padding:4px 10px;font-size:11px;font-weight:600;border-radius:var(--r);border:1px solid var(--border2);background:var(--bg4);color:var(--text3);cursor:pointer;transition:all .15s;white-space:nowrap;font-family:var(--font)}
+.people-filter-btn:hover{background:var(--bg5);color:var(--text2)}
+.people-filter-btn.active{background:rgba(224,123,40,.12);color:var(--orange);border-color:rgba(224,123,40,.3)}
+.people-filter-row{display:flex;align-items:center;gap:6px;padding:8px 0 10px;flex-wrap:wrap;border-bottom:1px solid var(--border);margin-bottom:12px}
+.people-filter-row.hidden{display:none}
+.prod-filter-chip{display:inline-flex;align-items:center;padding:3px 9px;font-size:11px;font-weight:600;border-radius:20px;border:1px solid var(--border2);background:var(--bg4);color:var(--text3);cursor:pointer;transition:all .15s;white-space:nowrap}
+.prod-filter-chip:hover{color:var(--text2)}
+.prod-filter-chip.active{background:rgba(224,123,40,.12);color:var(--orange);border-color:rgba(224,123,40,.3)}
+.people-section-label{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:10px 0 4px;display:flex;align-items:center;gap:8px}
+.people-section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+/* The actual table */
+.people-table{width:100%;border-collapse:collapse;table-layout:fixed}
+.people-table thead tr{background:var(--bg3);border-bottom:2px solid var(--border2)}
+.people-table thead th{padding:6px 12px;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);text-align:left}
+.people-table col.col-avatar{width:40px}
+.people-table col.col-name{width:200px}
+.people-table col.col-product{width:auto}
+.people-table col.col-status{width:90px}
+.people-table col.col-link{width:52px}
+.people-table tbody tr{border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+.people-table tbody tr:last-child{border-bottom:none}
+.people-table tbody tr:hover{background:rgba(255,255,255,.025)}
+.people-table tbody tr.pt-urgent td:first-child{border-left:3px solid var(--orange)}
+.people-table tbody tr.pt-fresh td:first-child{border-left:3px solid var(--teal)}
+.people-table tbody td{padding:5px 12px;font-size:12px;color:var(--text2);vertical-align:middle;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.pt-avatar{width:24px;height:24px;border-radius:50%;background:var(--bg4);display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--text2);border:1px solid var(--border2);vertical-align:middle}
+.pt-name{font-weight:600;color:var(--text)}
+.pt-status{font-size:10px;font-family:var(--mono);font-weight:700;padding:2px 6px;border-radius:3px;border:1px solid;display:inline-flex;align-items:center}
+.pt-status.recent{color:var(--teal);background:var(--teal-dim);border-color:rgba(42,191,170,.25)}
+.pt-status.stale{color:var(--orange);background:var(--orange-dim);border-color:rgba(224,123,40,.25)}
+.pt-status.never{color:var(--text3);background:transparent;border-color:var(--border2)}
+
 /* ── EMPTY ── */
 .empty-state{display:flex;flex-direction:column;align-items:center;gap:12px;padding:48px 20px;text-align:center}
 .empty-icon{font-size:28px;opacity:.25}
@@ -260,6 +344,15 @@ input,button,textarea,select{font-family:var(--font)}
       <button class="nav-item" onclick="openAddProduct()">
         <div class="nav-dot" style="background:var(--orange)"></div>
         <span class="nav-label">+ Add Product</span>
+      </button>
+    </div>
+
+    <!-- TOOLS -->
+    <div class="sidebar-section" style="margin-top:6px">Tools</div>
+    <div class="sidebar-pills">
+      <button class="nav-item" id="nav-fbgroups" onclick="switchView('fbgroups',this)">
+        <div class="nav-dot" style="background:#2ABFAA"></div>
+        <span class="nav-label">👥 FB Group Finder</span>
       </button>
     </div>
 
@@ -314,6 +407,7 @@ input,button,textarea,select{font-family:var(--font)}
       <div class="stats-row" id="stats"></div>
       <div id="view-products"></div>
       <div id="view-people" style="display:none"></div>
+      <div id="view-fbgroups" style="display:none;flex:1;overflow:hidden;background:#0e1012;flex-direction:row;margin:-28px -32px;height:calc(100% + 56px)"></div>
     </div>
   </div>
 
@@ -562,6 +656,18 @@ async function _sbBoot() {
       _sbCache = cloud;
       localStorage.setItem('tgk_leads_v3', JSON.stringify(cloud));
     }
+    // Also load FB Group library from cloud
+    var cloudFBG = await _sbLoadFBG();
+    if (cloudFBG && cloudFBG.length > 0) {
+      var localFBG = [];
+      try { localFBG = JSON.parse(localStorage.getItem('tgk_fbg_library_v1')) || []; } catch(e) {}
+      var mergedFBG = _mergeFBG(localFBG, cloudFBG);
+      localStorage.setItem('tgk_fbg_library_v1', JSON.stringify(mergedFBG));
+      setTimeout(function(){
+        if (typeof fbgRenderLibrary === 'function') fbgRenderLibrary();
+        if (typeof fbgPopulateCarDropdowns === 'function') fbgPopulateCarDropdowns();
+      }, 200);
+    }
     _sbReady = true;
     _updateSyncBadge('ok');
     _sbToast('✓ Synced — ' + (((_sbCache||{}).leads)||[]).length + ' leads', true);
@@ -601,6 +707,39 @@ async function _backgroundSync() {
 }
 // ─────────────────────────────────────────────────────────────
 
+// ── FB Group Library cloud sync ───────────────────────────────
+var _fbgCloudCache = null;
+
+async function _sbLoadFBG() {
+  try {
+    var d = await _sbGet('tgk_fbg_library');
+    _fbgCloudCache = Array.isArray(d) ? d : null;
+    return _fbgCloudCache;
+  } catch(e) { return null; }
+}
+
+async function _sbSaveFBG(libData) {
+  _fbgCloudCache = libData;
+  return await _sbSet('tgk_fbg_library', libData);
+}
+
+// ── FBG merge helper ──────────────────────────────────────────
+function _mergeFBG(local, cloud) {
+  var merged = JSON.parse(JSON.stringify(cloud || []));
+  (local || []).forEach(function(lc) {
+    var idx = merged.findIndex(function(cc){ return cc.key === lc.key; });
+    if (idx === -1) {
+      merged.push(lc);
+    } else {
+      var existingNames = new Set((merged[idx].groups||[]).map(function(g){ return g.name; }));
+      (lc.groups||[]).forEach(function(g){
+        if (!existingNames.has(g.name)) merged[idx].groups.push(g);
+      });
+    }
+  });
+  return merged;
+}
+
 const SK = 'tgk_leads_v3';
 let data={products:[],leads:[],deleted:[]};
 let currentView='products';
@@ -614,6 +753,7 @@ function load(){
   if(!data.products) data.products=[];
   if(!data.leads) data.leads=[];
   if(!data.deleted) data.deleted=[];
+  if(!data.groups) data.groups=[];
   data.leads.forEach(l=>{
     if(!l.checklist)l.checklist=[];
     if(!l.contactHistory)l.contactHistory=[];
@@ -629,7 +769,7 @@ function _touch(record) {
 
 function save(){
   // Safety: never write empty data to cloud if cloud has existing data
-  var hasData = data.leads.length > 0 || data.products.length > 0;
+  var hasData = data.leads.length > 0 || data.products.length > 0 || (data.groups||[]).length > 0;
   try{ localStorage.setItem(SK, JSON.stringify(data)); }catch(e){}
   if(!hasData && _sbCache && ((_sbCache.leads||[]).length > 0)) return; // don't overwrite cloud with empty
   _sbCache = data;
@@ -679,10 +819,12 @@ function switchView(v,el){
   currentView=v;
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   if(el)el.classList.add('active');
+  var isFbg=v==='fbgroups';
   document.getElementById('view-products').style.display=v==='products'?'block':'none';
   document.getElementById('view-people').style.display=v==='people'?'block':'none';
-  document.getElementById('topbar-title').textContent=v==='products'?'By Product':'By Person';
-  render();
+  document.getElementById('view-fbgroups').style.display=isFbg?'flex':'none';
+  document.getElementById('topbar-title').textContent=v==='products'?'By Product':v==='people'?'By Person':'FB Group Finder';
+  if(!isFbg) render();
 }
 
 function render(){renderStats();renderSidebar();if(currentView==='products')renderProducts();else renderPeople();}
@@ -691,7 +833,8 @@ function renderSidebar(){
   document.getElementById('nc-products').textContent=data.products.length;
   const up=[...new Set(data.leads.map(l=>l.name.trim().toLowerCase()))].length;
   document.getElementById('nc-people').textContent=up;
-  document.getElementById('sb-count').textContent=data.leads.length+' lead'+(data.leads.length!==1?'s':'')+' tracked';
+  const gc=(data.groups||[]).length;
+  document.getElementById('sb-count').textContent=data.leads.length+' lead'+(data.leads.length!==1?'s':'')+' · '+gc+' group'+(gc!==1?'s':'')+' tracked';
 }
 
 function renderStats(){
@@ -699,13 +842,198 @@ function renderStats(){
   const up=[...new Set(data.leads.map(l=>l.name.trim().toLowerCase()))].length;
   const pwl=[...new Set(data.leads.map(l=>l.productId))].length;
   const ct=data.leads.filter(l=>l.lastContact).length;
+  const gc=(data.groups||[]).length;
   document.getElementById('stats').innerHTML=`
     <div class="stat-card"><div class="stat-label">Products</div><div class="stat-value">${data.products.length}</div></div>
     <div class="stat-card"><div class="stat-label">Total leads</div><div class="stat-value teal">${tl}</div></div>
     <div class="stat-card"><div class="stat-label">Unique people</div><div class="stat-value">${up}</div></div>
-    <div class="stat-card"><div class="stat-label">Contacted</div><div class="stat-value">${ct}</div></div>
+    <div class="stat-card"><div class="stat-label">FB Groups</div><div class="stat-value">${gc}</div></div>
   `;
 }
+
+// ── GROUP FUNCTIONS ───────────────────────────────────────────
+
+function fmtMembers(n){
+  if(!n||n<=0)return'?';
+  return n>=1000000?(n/1000000).toFixed(1)+'M':n>=1000?(n/1000).toFixed(0)+'K':String(n);
+}
+
+function renderGroupRows(pid){
+  var groups=(data.groups||[]).filter(function(g){return g.productId===pid;});
+  if(!groups.length){
+    return '<table class="lead-table"><tbody><tr><td colspan="4"><div class="no-leads">No groups yet — add one below</div></td></tr></tbody></table>';
+  }
+  var rows=groups.map(function(g){
+    return '<tr class="group-row" data-gid="'+g.id+'">'
+      +'<td style="width:36px"><div class="group-icon">'+esc(g.icon||'👥')+'</div></td>'
+      +'<td>'
+        +'<div style="font-size:12px;font-weight:600;color:var(--text)">'+esc(g.name)+'</div>'
+        +(g.desc?'<div style="font-size:11px;color:var(--text3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px">'+esc(g.desc)+'</div>':'')
+      +'</td>'
+      +'<td style="width:100px"><span class="group-members">'+fmtMembers(g.members)+' members</span></td>'
+      +'<td style="width:110px">'
+        +(g.url?'<a class="fb-link" href="'+esc(g.url)+'" target="_blank" rel="noopener">↗ OPEN GROUP</a>':'<span style="color:var(--text3)">—</span>')
+      +'</td>'
+      +'<td style="width:32px"><button class="icon-btn" onclick="removeGroup(this)" data-gid="'+g.id+'" data-pid="'+pid+'" title="Remove">✕</button></td>'
+      +'</tr>';
+  }).join('');
+  return '<table class="lead-table"><thead><tr>'
+    +'<th style="width:36px"></th><th>Group</th><th>Members</th><th>Link</th><th style="width:32px"></th>'
+    +'</tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+function refreshGroupPanel(pid){
+  var wrap=document.getElementById('group-table-wrap-'+pid);
+  if(wrap) wrap.innerHTML=renderGroupRows(pid);
+  // update tab count badge
+  var badge=document.getElementById('ptc-groups-'+pid);
+  if(badge) badge.textContent=(data.groups||[]).filter(function(g){return g.productId===pid;}).length;
+  // update head badge
+  renderProducts();
+}
+
+function switchProductTab(pid, tab){
+  var peopleTab=document.getElementById('pt-people-'+pid);
+  var groupsTab=document.getElementById('pt-groups-'+pid);
+  var peoplePanel=document.getElementById('pp-people-'+pid);
+  var groupsPanel=document.getElementById('pp-groups-'+pid);
+  if(!peopleTab||!groupsTab||!peoplePanel||!groupsPanel) return;
+  if(tab==='people'){
+    peopleTab.classList.add('active'); groupsTab.classList.remove('active');
+    peoplePanel.style.display=''; groupsPanel.style.display='none';
+  } else {
+    groupsTab.classList.add('active'); peopleTab.classList.remove('active');
+    groupsPanel.style.display=''; peoplePanel.style.display='none';
+  }
+}
+
+function toggleAddGroup(pid){
+  var btn=document.getElementById('agb-'+pid);
+  var form=document.getElementById('agf-'+pid);
+  if(!form) return;
+  var isOpen=form.classList.contains('open');
+  form.classList.toggle('open',!isOpen);
+  if(!isOpen){
+    btn.textContent='Cancel';
+    renderGroupPicker(pid);
+    var s=document.getElementById('agfs-'+pid); if(s){s.value='';s.focus();}
+  } else {
+    btn.textContent='+ Add group';
+  }
+}
+
+function buildGroupPickerHTML(pid){
+  return renderGroupPickerHTML(pid, '');
+}
+
+// Shared registry: pid -> [group objects] built when picker renders
+var _pickerRegistry = {};
+
+function renderGroupPickerHTML(pid, q){
+  var lib=[];
+  try{ lib=JSON.parse(localStorage.getItem('tgk_fbg_library_v1'))||[]; }catch(e){}
+  var addedUrls=new Set((data.groups||[]).filter(function(g){return g.productId===pid;}).map(function(g){return g.url;}));
+  if(!lib.length) return '<div class="group-picker-empty">No saved groups yet — use the FB Group Finder to build your library first.</div>';
+  _pickerRegistry[pid]=[];
+  var html='';
+  lib.forEach(function(car){
+    var groups=(car.groups||[]).filter(function(g){ return !q||(g.name||'').toLowerCase().includes(q); });
+    if(!groups.length) return;
+    var carLabel=car.year+' '+car.make+' '+car.model;
+    var carKey=car.key;
+    html+='<div class="group-picker-car">'
+      +'<div class="group-picker-car-header" onclick="togglePickerCar(this)" data-target="picker-car-'+pid+'-'+carKey+'">'
+      +'<span class="group-picker-car-label">🚗 '+esc(carLabel)+'</span>'
+      +'<span class="group-picker-car-count">'+groups.length+'</span>'
+      +'<span style="font-size:9px;color:var(--text3);margin-left:4px">▶</span>'
+      +'</div>'
+      +'<div class="group-picker-items'+(q?' open':'')+'" id="picker-car-'+pid+'-'+carKey+'">';
+    groups.forEach(function(g){
+      var alreadyAdded=addedUrls.has(g.url);
+      var idx=_pickerRegistry[pid].length;
+      _pickerRegistry[pid].push(g);
+      html+='<div class="group-picker-item'+(alreadyAdded?' already-added':'')+'" onclick="addGroupToProduct(this)" data-pid="'+pid+'" data-idx="'+idx+'">'
+        +'<span class="group-picker-item-icon">'+(g.icon||'👥')+'</span>'
+        +'<div class="group-picker-item-info">'
+          +'<div class="group-picker-item-name">'+esc(g.name)+'</div>'
+          +'<div class="group-picker-item-meta">'+fmtMembers(g.members)+' members'+(alreadyAdded?' · already added':'')+'</div>'
+        +'</div>'
+        +(alreadyAdded?'<span style="font-size:10px;color:var(--teal);font-weight:700">✓</span>':'')
+        +'</div>';
+    });
+    html+='</div></div>';
+  });
+  return html||'<div class="group-picker-empty">No groups found.</div>';
+}
+
+function renderGroupPicker(pid){
+  var container=document.getElementById('agfl-'+pid); if(!container) return;
+  var q=((document.getElementById('agfs-'+pid)||{}).value||'').trim().toLowerCase();
+  container.innerHTML=renderGroupPickerHTML(pid,q);
+}
+
+function togglePickerCar(header){
+  var id=header.getAttribute('data-target');
+  var el=document.getElementById(id); if(!el) return;
+  el.classList.toggle('open');
+  var arrow=header.querySelector('span:last-child');
+  if(arrow) arrow.textContent=el.classList.contains('open')?'▼':'▶';
+}
+
+function addGroupToProduct(el){
+  var pid=el.getAttribute('data-pid');
+  var regIdx=parseInt(el.getAttribute('data-idx'));
+  var g=(_pickerRegistry[pid]||[])[regIdx];
+  if(!g){console.warn('Group not found in registry',pid,regIdx);return;}
+  if(!data.groups) data.groups=[];
+  // Prevent duplicates
+  var exists=data.groups.find(function(x){return x.productId===pid&&x.url===g.url;});
+  if(exists) return;
+  data.groups.push({
+    id:uid(), productId:pid,
+    name:g.name||'', url:g.url||'', members:g.members||0,
+    icon:g.icon||'👥', desc:g.desc||'',
+    created:new Date().toISOString()
+  });
+  save();
+  // Refresh the picker so the item shows as added
+  renderGroupPicker(pid);
+  // Refresh the group table
+  var wrap=document.getElementById('group-table-wrap-'+pid);
+  if(wrap) wrap.innerHTML=renderGroupRows(pid);
+  // Update count badge
+  var badge=document.getElementById('ptc-groups-'+pid);
+  if(badge) badge.textContent=(data.groups||[]).filter(function(gr){return gr.productId===pid;}).length;
+  // Update head badge without full re-render
+  var headBadge=document.querySelector('#pc-'+pid+' .lead-badge-group');
+  var grpCount=(data.groups||[]).filter(function(gr){return gr.productId===pid;}).length;
+  if(headBadge){ headBadge.textContent='👥 '+grpCount; }
+  else {
+    // insert after lead-badge
+    var lb=document.querySelector('#pc-'+pid+' .lead-badge');
+    if(lb&&grpCount===1){
+      var span=document.createElement('span');
+      span.className='lead-badge-group';
+      span.textContent='👥 1';
+      lb.parentNode.insertBefore(span,lb.nextSibling);
+    }
+  }
+  renderSidebar();
+}
+
+function removeGroup(btn){
+  var gid=btn.getAttribute('data-gid');
+  var pid=btn.getAttribute('data-pid');
+  data.groups=(data.groups||[]).filter(function(g){return g.id!==gid;});
+  save();
+  var wrap=document.getElementById('group-table-wrap-'+pid);
+  if(wrap) wrap.innerHTML=renderGroupRows(pid);
+  var badge=document.getElementById('ptc-groups-'+pid);
+  if(badge) badge.textContent=(data.groups||[]).filter(function(g){return g.productId===pid;}).length;
+  renderGroupPicker(pid);
+  renderSidebar();
+}
+
 
 function renderProducts(){
   const el=document.getElementById('view-products');
@@ -725,107 +1053,223 @@ function renderProducts(){
         </div>
         <div style="display:flex;align-items:center;gap:7px">
           <span class="lead-badge ${leads.length?'has-leads':''}">${leads.length} lead${leads.length!==1?'s':''}</span>
+          ${(()=>{const grps=(data.groups||[]).filter(g=>g.productId===p.id);return grps.length?`<span class="lead-badge-group">👥 ${grps.length}</span>`:''})()}
           <button class="icon-btn" onclick="event.stopPropagation();editProduct('${p.id}')" title="Edit">✎</button>
           <button class="icon-btn" onclick="event.stopPropagation();askDeleteProduct('${p.id}')" title="Delete">✕</button>
           <span class="chevron">▶</span>
         </div>
       </div>
       <div class="product-body">
-        <table class="lead-table">
-          <thead><tr>
-            <th style="width:28px"><input type="checkbox" class="bulk-check-all" data-pid="${p.id}" onchange="toggleSelectAll('${p.id}',this.checked)" style="cursor:pointer;accent-color:var(--teal)"/></th>
-            <th style="width:32px"></th>
-            <th>Name</th>
-            <th>Facebook</th>
-            <th>Last contact</th>
-            <th>Checklist</th>
-            <th style="width:32px"></th>
-          </tr></thead>
-          <tbody id="lead-tbody-${p.id}">
-            ${!leads.length?`<tr><td colspan="7"><div class="no-leads">No leads yet — add one below</div></td></tr>`:''}
-            ${leads.map(l=>{
-              const done=l.checklist.filter(c=>c.done).length,total=l.checklist.length,pct=total?Math.round(done/total*100):0;
-              const cls=contactCls(l.lastContact),ago=daysAgo(l.lastContact);
-              return `<tr class="lead-row" data-lid="${l.id}" data-pid="${p.id}">
-                <td><input type="checkbox" class="bulk-check" data-lid="${l.id}" data-pid="${p.id}" onchange="onLeadCheck('${p.id}')" style="cursor:pointer;accent-color:var(--teal)"/></td>
-                <td><div class="avatar">${initials(l.name)}</div></td>
-                <td><button class="lead-name-btn" onclick="openLeadModal('${l.id}')">${esc(l.name)}</button></td>
-                <td>${l.link?`<a class="fb-link" href="${l.link}" target="_blank" rel="noopener">↗ PROFILE</a>`:`<span style="color:var(--text3)">—</span>`}</td>
-                <td><div class="contact-cell"><span class="status-tag ${cls}">${ago||'NEVER'}</span><button class="quick-contact-btn" onclick="event.stopPropagation();quickContact('${l.id}')" title="Mark contacted today">✓</button></div></td>
-                <td>${total?`<div class="mini-bar-wrap"><div class="mini-bar"><div class="mini-bar-fill" style="width:${pct}%"></div></div><span class="mini-label">${done}/${total}</span></div>`:`<span style="color:var(--text3);font-size:11px">—</span>`}</td>
-                <td><button class="icon-btn" onclick="openLeadModal('${l.id}')" title="Edit">✎</button></td>
-              </tr>`;
-            }).join('')}
-          </tbody>
-        </table>
-        <div class="bulk-action-bar" id="bulk-bar-${p.id}" style="display:none">
-          <span class="bulk-count" id="bulk-count-${p.id}">0 selected</span>
-          <button class="btn btn-green" onclick="markContactedBulk('${p.id}')">✓ Mark contacted today</button>
-          <button class="btn" onclick="clearSelection('${p.id}')">Clear</button>
+        <!-- TABS -->
+        <div class="product-tabs">
+          <button class="product-tab active" id="pt-people-${p.id}" onclick="switchProductTab('${p.id}','people')">
+            👤 People <span class="product-tab-count" id="ptc-people-${p.id}">${leads.length}</span>
+          </button>
+          <button class="product-tab" id="pt-groups-${p.id}" onclick="switchProductTab('${p.id}','groups')">
+            👥 Groups <span class="product-tab-count" id="ptc-groups-${p.id}">${(data.groups||[]).filter(g=>g.productId===p.id).length}</span>
+          </button>
         </div>
-        <div class="add-lead-section">
-          <button class="btn btn-teal" id="alb-${p.id}" onclick="toggleAddLead('${p.id}')">+ Add lead</button>
-          <div class="add-lead-form" id="alf-${p.id}">
-            <div class="form-grid" style="margin-bottom:10px">
-              <div class="field-group"><div class="field-label">Full name *</div><input class="field-input" id="ln-${p.id}" placeholder="First Last" /></div>
-              <div class="field-group"><div class="field-label">Facebook URL</div><input class="field-input" id="ll-${p.id}" placeholder="https://facebook.com/…" /></div>
+
+        <!-- PEOPLE PANEL -->
+        <div id="pp-people-${p.id}">
+          <table class="lead-table">
+            <thead><tr>
+              <th style="width:28px"><input type="checkbox" class="bulk-check-all" data-pid="${p.id}" onchange="toggleSelectAll('${p.id}',this.checked)" style="cursor:pointer;accent-color:var(--teal)"/></th>
+              <th style="width:32px"></th>
+              <th>Name</th>
+              <th>Facebook</th>
+              <th>Last contact</th>
+              <th>Checklist</th>
+              <th style="width:32px"></th>
+            </tr></thead>
+            <tbody id="lead-tbody-${p.id}">
+              ${!leads.length?`<tr><td colspan="7"><div class="no-leads">No leads yet — add one below</div></td></tr>`:''}
+              ${leads.map(l=>{
+                const done=l.checklist.filter(c=>c.done).length,total=l.checklist.length,pct=total?Math.round(done/total*100):0;
+                const cls=contactCls(l.lastContact),ago=daysAgo(l.lastContact);
+                return `<tr class="lead-row" data-lid="${l.id}" data-pid="${p.id}">
+                  <td><input type="checkbox" class="bulk-check" data-lid="${l.id}" data-pid="${p.id}" onchange="onLeadCheck('${p.id}')" style="cursor:pointer;accent-color:var(--teal)"/></td>
+                  <td><div class="avatar">${initials(l.name)}</div></td>
+                  <td><button class="lead-name-btn" onclick="openLeadModal('${l.id}')">${esc(l.name)}</button></td>
+                  <td>${l.link?`<a class="fb-link" href="${l.link}" target="_blank" rel="noopener">↗ PROFILE</a>`:`<span style="color:var(--text3)">—</span>`}</td>
+                  <td><span class="contact-cell"><span class="status-tag ${cls}">${ago||'NEVER'}</span><button class="quick-contact-btn" onclick="event.stopPropagation();quickContact('${l.id}')" title="Mark contacted today">✓</button></span></td>
+                  <td>${total?`<div class="mini-bar-wrap"><div class="mini-bar"><div class="mini-bar-fill" style="width:${pct}%"></div></div><span class="mini-label">${done}/${total}</span></div>`:`<span style="color:var(--text3);font-size:11px">—</span>`}</td>
+                  <td><button class="icon-btn" onclick="openLeadModal('${l.id}')" title="Edit">✎</button></td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+          <div class="bulk-action-bar" id="bulk-bar-${p.id}" style="display:none">
+            <span class="bulk-count" id="bulk-count-${p.id}">0 selected</span>
+            <button class="btn btn-green" onclick="markContactedBulk('${p.id}')">✓ Mark contacted today</button>
+            <button class="btn" onclick="clearSelection('${p.id}')">Clear</button>
+          </div>
+          <div class="add-lead-section">
+            <button class="btn btn-teal" id="alb-${p.id}" onclick="toggleAddLead('${p.id}')">+ Add lead</button>
+            <div class="add-lead-form" id="alf-${p.id}">
+              <div class="form-grid" style="margin-bottom:10px">
+                <div class="field-group"><div class="field-label">Full name *</div><input class="field-input" id="ln-${p.id}" placeholder="First Last" /></div>
+                <div class="field-group"><div class="field-label">Facebook URL</div><input class="field-input" id="ll-${p.id}" placeholder="https://facebook.com/…" /></div>
+              </div>
+              <div class="form-grid one" style="margin-bottom:10px">
+                <div class="field-group"><div class="field-label">Note <span style="color:var(--text3);text-transform:none;letter-spacing:0;font-weight:400">(optional)</span></div><input class="field-input" id="lno-${p.id}" placeholder="e.g. Interested in billet version, asked about ETA" /></div>
+              </div>
+              <div class="form-actions">
+                <button class="btn" onclick="toggleAddLead('${p.id}')">Cancel</button>
+                <button class="btn btn-orange" onclick="saveLead('${p.id}')">Add lead</button>
+              </div>
+              <div id="dupe-warn-${p.id}" style="display:none;margin-top:8px;padding:8px 10px;background:rgba(224,123,40,.1);border:1px solid rgba(224,123,40,.3);border-radius:6px;font-size:11px;color:#E07B28;line-height:1.6"></div>
             </div>
-            <div class="form-grid one" style="margin-bottom:10px">
-              <div class="field-group"><div class="field-label">Note <span style="color:var(--text3);text-transform:none;letter-spacing:0;font-weight:400">(optional)</span></div><input class="field-input" id="lno-${p.id}" placeholder="e.g. Interested in billet version, asked about ETA" /></div>
-            </div>
-            <div class="form-actions">
-              <button class="btn" onclick="toggleAddLead('${p.id}')">Cancel</button>
-              <button class="btn btn-orange" onclick="saveLead('${p.id}')">Add lead</button>
-            </div>
-            <div id="dupe-warn-${p.id}" style="display:none;margin-top:8px;padding:8px 10px;background:rgba(224,123,40,.1);border:1px solid rgba(224,123,40,.3);border-radius:6px;font-size:11px;color:#E07B28;line-height:1.6"></div>
           </div>
         </div>
+
+        <!-- GROUPS PANEL -->
+        <div id="pp-groups-${p.id}" style="display:none">
+          <div id="group-table-wrap-${p.id}">
+            ${renderGroupRows(p.id)}
+          </div>
+          <div class="add-lead-section">
+            <button class="btn btn-teal" id="agb-${p.id}" onclick="toggleAddGroup('${p.id}')">+ Add group</button>
+            <div class="add-group-form" id="agf-${p.id}">
+              <input class="group-picker-search" id="agfs-${p.id}" placeholder="Search your saved groups…" oninput="renderGroupPicker('${p.id}')" />
+              <div class="group-picker-list" id="agfl-${p.id}">
+                ${buildGroupPickerHTML(p.id)}
+              </div>
+              <div class="form-actions" style="margin-top:8px">
+                <button class="btn" onclick="toggleAddGroup('${p.id}')">Done</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>`;
   }).join('');
 }
 
+// ── People view state ─────────────────────────────────────────
+var _peopleSort = 'overdue';   // 'overdue' | 'newest' | 'alpha'
+var _peopleProdFilter = '';    // product id, or '' for all
+var _peopleFilterOpen = false;
+
 function renderPeople(){
   const el=document.getElementById('view-people');
-  if(!data.leads.length){el.innerHTML=`<div class="empty-state"><div class="empty-icon">👤</div><div class="empty-title">No leads tracked yet</div><div class="empty-sub">Switch to By Product to start adding people</div></div>`;return;}
+  if(!data.leads.length){
+    el.innerHTML=`<div class="empty-state"><div class="empty-icon">👤</div><div class="empty-title">No leads tracked yet</div><div class="empty-sub">Switch to By Product to start adding people</div></div>`;
+    return;
+  }
+
+  // Gather search/filter state from DOM if already rendered
   const sEl=document.getElementById('people-search');
   const term=sEl?sEl.value.trim().toLowerCase():'';
+
+  // Build grouped people map
   const grouped={};
   data.leads.forEach(l=>{
     const key=(l.link||l.name).trim().toLowerCase();
-    if(!grouped[key])grouped[key]={id:l.id,name:l.name,link:l.link,products:[],lastContact:l.lastContact,created:l.created};
+    if(!grouped[key]) grouped[key]={id:l.id,name:l.name,link:l.link,productIds:[],products:[],lastContact:l.lastContact,created:l.created};
     const p=data.products.find(p=>p.id===l.productId);
-    if(p&&!grouped[key].products.includes(p.name))grouped[key].products.push(p.name);
-    if(l.created<grouped[key].created)grouped[key].created=l.created;
-    if(l.lastContact&&(!grouped[key].lastContact||l.lastContact>grouped[key].lastContact))grouped[key].lastContact=l.lastContact;
+    if(p){
+      if(!grouped[key].productIds.includes(p.id)) grouped[key].productIds.push(p.id);
+      if(!grouped[key].products.find(x=>x.id===p.id)) grouped[key].products.push({id:p.id,name:p.name});
+    }
+    if(l.created<grouped[key].created) grouped[key].created=l.created;
+    if(l.lastContact&&(!grouped[key].lastContact||l.lastContact>grouped[key].lastContact)) grouped[key].lastContact=l.lastContact;
   });
-  const people=Object.values(grouped).filter(p=>!term||p.name.toLowerCase().includes(term));
-  people.sort((a,b)=>a.name.localeCompare(b.name));
+
+  let people=Object.values(grouped);
+
+  // Apply product filter
+  if(_peopleProdFilter) people=people.filter(p=>p.productIds.includes(_peopleProdFilter));
+  // Apply search
+  if(term) people=people.filter(p=>p.name.toLowerCase().includes(term));
+
+  // Sort
+  if(_peopleSort==='overdue'){
+    people.sort((a,b)=>{
+      // Never contacted first, then oldest contact first
+      if(!a.lastContact&&!b.lastContact) return a.name.localeCompare(b.name);
+      if(!a.lastContact) return -1;
+      if(!b.lastContact) return 1;
+      return new Date(a.lastContact)-new Date(b.lastContact);
+    });
+  } else if(_peopleSort==='newest'){
+    people.sort((a,b)=>new Date(b.created)-new Date(a.created));
+  } else {
+    people.sort((a,b)=>a.name.localeCompare(b.name));
+  }
+
+  // Build product filter chips
+  const allProds=data.products;
+  const filterChips=allProds.map(p=>`<span class="prod-filter-chip${_peopleProdFilter===p.id?' active':''}" onclick="setPeopleFilter('${p.id}')">${esc(p.name)}</span>`).join('');
+
+  // Build table rows, injecting section labels as full-width rows
+  let tableRows='';
+  let prevSection='';
+  people.forEach(p=>{
+    const cls=contactCls(p.lastContact), ago=daysAgo(p.lastContact);
+    if(_peopleSort==='overdue'){
+      const section=!p.lastContact?'never':ago&&(ago.includes('D AGO')||ago==='TODAY')?'recent':'older';
+      if(section!==prevSection){
+        const label=section==='never'?'⚠ Never contacted — follow up':section==='recent'?'✓ Contacted recently':'Contacted a while ago';
+        tableRows+=`<tr style="pointer-events:none"><td colspan="5" style="padding:0"><div class="people-section-label" style="padding:10px 12px 4px">${label}</div></td></tr>`;
+        prevSection=section;
+      }
+    }
+    const rowCls=!p.lastContact?'pt-urgent':(cls==='recent'?'pt-fresh':'');
+    const statusCls=cls;
+    const prodTags=p.products.map(pr=>`<span class="prod-tag" style="margin-right:3px">${esc(pr.name)}</span>`).join('');
+    tableRows+=`<tr class="${rowCls}" onclick="openLeadModal('${p.id}')">
+      <td style="width:36px;padding-left:10px"><div class="pt-avatar">${initials(p.name)}</div></td>
+      <td style="width:200px" class="pt-name">${esc(p.name)}</td>
+      <td>${prodTags}</td>
+      <td style="text-align:right;padding-right:8px"><span class="contact-cell"><span class="pt-status ${statusCls}">${ago||'NEVER'}</span><button class="quick-contact-btn" onclick="event.stopPropagation();quickContact('${p.id}')" title="Mark contacted today">✓</button></span></td>
+      <td style="text-align:right;padding-right:12px;white-space:nowrap">${p.link?`<a class="fb-link" href="${p.link}" target="_blank" rel="noopener" onclick="event.stopPropagation()">↗ PROFILE</a>`:''}</td>
+    </tr>`;
+  });
+
   el.innerHTML=`
-    <div class="section-header">
-      <div class="section-title">People — ${people.length}</div>
-      <div class="search-wrap" style="margin-bottom:0;width:220px">
-        <span class="search-icon">⌕</span>
-        <input class="search-input" id="people-search" placeholder="Search by name…" oninput="renderPeople()" value="${esc(term)}" style="padding:6px 10px 6px 28px;font-size:12px" />
-      </div>
-    </div>
-    ${!people.length?`<div class="empty-state"><div class="empty-title">No matches</div><div class="empty-sub">Try a different search term</div></div>`:''}
-    ${people.map(p=>{
-      const cls=contactCls(p.lastContact),ago=daysAgo(p.lastContact);
-      return `<div class="person-card" onclick="openLeadModal('${p.id}')">
-        <div class="person-avatar">${initials(p.name)}</div>
-        <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            <div class="person-name">${esc(p.name)}</div>
-            <div class="contact-cell"><span class="status-tag ${cls}">${ago||'NEVER'}</span><button class="quick-contact-btn" onclick="event.stopPropagation();quickContact('${p.id}')" title="Mark contacted today">✓</button></div>
-          </div>
-          <div class="person-meta">${p.link?`<a class="fb-link" href="${p.link}" target="_blank" rel="noopener" onclick="event.stopPropagation()">↗ FACEBOOK</a> · `:''}First seen ${fmtDate(p.created)}</div>
-          <div class="person-tags">${p.products.map(n=>`<span class="prod-tag">${esc(n)}</span>`).join('')}</div>
+    <div class="people-toolbar">
+      <div class="people-toolbar-left">
+        <div class="search-wrap" style="margin-bottom:0;width:200px;position:relative">
+          <span class="search-icon" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:12px;pointer-events:none">⌕</span>
+          <input class="search-input" id="people-search" placeholder="Search…" oninput="renderPeople()" value="${esc(term)}" style="padding:6px 10px 6px 28px;font-size:12px" />
         </div>
-      </div>`;
-    }).join('')}
+        <button class="people-sort-btn${_peopleSort==='overdue'?' active':''}" onclick="setPeopleSort('overdue')">⚠ Overdue first</button>
+        <button class="people-sort-btn${_peopleSort==='newest'?' active':''}" onclick="setPeopleSort('newest')">↓ Newest</button>
+        <button class="people-sort-btn${_peopleSort==='alpha'?' active':''}" onclick="setPeopleSort('alpha')">A–Z</button>
+        ${allProds.length?`<button class="people-filter-btn${_peopleProdFilter?' active':''}" onclick="togglePeopleFilterRow()">⊟ Filter${_peopleProdFilter?' ✓':''}</button>`:''}
+      </div>
+      <div style="font-size:11px;color:var(--text3);white-space:nowrap">${people.length} of ${Object.keys(grouped).length}</div>
+    </div>
+    ${allProds.length?`<div class="people-filter-row${_peopleFilterOpen?'':' hidden'}" id="people-filter-row">
+      <span class="prod-filter-chip${!_peopleProdFilter?' active':''}" onclick="setPeopleFilter('')">All</span>
+      ${filterChips}
+    </div>`:''}
+    ${!people.length?`<div class="empty-state"><div class="empty-title">No matches</div><div class="empty-sub">Try adjusting your search or filter</div></div>`:''}
+    <table class="people-table" style="table-layout:fixed;width:100%">
+      <colgroup>
+        <col style="width:40px">
+        <col style="width:190px">
+        <col style="width:280px">
+        <col style="width:110px">
+        <col style="width:90px">
+      </colgroup>
+      <thead><tr>
+        <th></th>
+        <th>Name</th>
+        <th>Product</th>
+        <th style="text-align:right;white-space:nowrap">Last contact</th>
+        <th></th>
+      </tr></thead>
+      <tbody>${tableRows}</tbody>
+    </table>
   `;
 }
+
+function setPeopleSort(s){ _peopleSort=s; renderPeople(); }
+function setPeopleFilter(pid){ _peopleProdFilter=pid; renderPeople(); }
+function togglePeopleFilterRow(){ _peopleFilterOpen=!_peopleFilterOpen; renderPeople(); }
 
 function toggleProduct(id){document.getElementById('pc-'+id).classList.toggle('open');}
 
@@ -1092,16 +1536,21 @@ function markContactedBulk(pid){
 function quickContact(lid){
   const l=data.leads.find(l=>l.id===lid);if(!l)return;
   const now=new Date().toISOString();
-  l.lastContact=now;
-  if(!l.contactHistory)l.contactHistory=[];
-  l.contactHistory.push(now);
-  _touch(l);
+  // Update all leads matching this person (same name or same link)
+  const nameLower=l.name.trim().toLowerCase();
+  const targets=data.leads.filter(x=>x.name.trim().toLowerCase()===nameLower||(l.link&&x.link&&x.link===l.link));
+  targets.forEach(x=>{
+    x.lastContact=now;
+    if(!x.contactHistory)x.contactHistory=[];
+    x.contactHistory.push(now);
+    _touch(x);
+  });
   save();
-  // Re-open product card after render if in product view
-  const pid=l.productId;
+  // Preserve open product cards across re-render
+  const openCards=[...document.querySelectorAll('.product-card.open')].map(c=>c.id.replace('pc-',''));
   render();
-  setTimeout(()=>{const c=document.getElementById('pc-'+pid);if(c&&!c.classList.contains('open'))c.classList.add('open');},10);
-  _sbToast(`✓ ${esc(l.name)} marked contacted`,true);
+  setTimeout(()=>{openCards.forEach(id=>{const c=document.getElementById('pc-'+id);if(c)c.classList.add('open');});},10);
+  _sbToast('✓ '+esc(l.name)+' marked contacted',true);
 }
 
 
@@ -1420,6 +1869,616 @@ function closeImportModal(){document.getElementById('import-modal').classList.re
 });
 
 _sbBoot().finally(function(){ load(); render(); });
+</script>
+<!-- ========= FB GROUP FINDER ========= -->
+<style>
+/* ── FB Group Finder Layout ── */
+.fbg-main-panel{flex:1;overflow-y:auto;padding:28px 32px;display:flex;flex-direction:column;min-width:0}
+.fbg-library-panel{width:320px;flex-shrink:0;background:#0a0c0e;border-left:1px solid #1e2022;display:flex;flex-direction:column;overflow:hidden}
+.fbg-tabs{display:flex;border-bottom:1px solid #1e2022;flex-shrink:0}
+.fbg-tab{flex:1;padding:12px 0;font-size:12px;font-weight:700;letter-spacing:.04em;text-align:center;cursor:pointer;color:#555;border:none;background:none;font-family:'DM Sans',system-ui,sans-serif;transition:all .15s;border-bottom:2px solid transparent;margin-bottom:-1px}
+.fbg-tab.active{color:#2ABFAA;border-bottom-color:#2ABFAA}
+.fbg-tab:hover:not(.active){color:#aaa}
+.fbg-tab-content{display:none;flex:1;overflow-y:auto;flex-direction:column}
+.fbg-tab-content.active{display:flex}
+.fbg-header{margin-bottom:20px}
+.fbg-title{font-size:20px;font-weight:700;color:#fff;letter-spacing:-.01em;margin-bottom:6px}
+.fbg-sub{font-size:12px;color:#666;line-height:1.6}
+.fbg-search-row{display:flex;gap:10px;margin-bottom:10px}
+.fbg-input{flex:1;height:42px;background:#141618;border:1px solid #2e3032;border-radius:8px;padding:0 14px;font-size:13px;color:#fff;font-family:'DM Sans',system-ui,sans-serif;outline:none;transition:border-color .15s}
+.fbg-input::placeholder{color:#555}
+.fbg-input:focus{border-color:#2ABFAA}
+.fbg-btn{height:42px;padding:0 20px;background:#2ABFAA;border:none;border-radius:8px;color:#0a1412;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;transition:opacity .15s;white-space:nowrap}
+.fbg-btn:hover{opacity:.85}
+.fbg-count-select{height:42px;width:110px;flex-shrink:0;background:#141618;border:1px solid #2e3032;border-radius:8px;padding:0 10px;font-size:13px;color:#aaa;font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;outline:none;transition:border-color .15s;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.fbg-count-select:focus{border-color:#2ABFAA}
+.fbg-save-bar{display:none;align-items:center;gap:8px;padding:9px 12px;background:#111315;border:1px solid #1e2022;border-radius:8px;margin-bottom:14px}
+.fbg-save-bar.visible{display:flex}
+.fbg-save-lbl{font-size:11px;color:#666;white-space:nowrap}
+.fbg-save-template-btn{height:34px;padding:0 14px;font-size:11px;font-weight:700;border:1px solid #2ABFAA;border-radius:6px;background:rgba(42,191,170,.1);color:#2ABFAA;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;white-space:nowrap;transition:all .12s}
+.fbg-save-template-btn:hover{background:rgba(42,191,170,.2)}
+.fbg-save-url-btn{height:34px;padding:0 14px;font-size:11px;font-weight:700;border:1px solid #2e3032;border-radius:6px;background:none;color:#888;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;white-space:nowrap;transition:all .12s}
+.fbg-save-url-btn:hover{border-color:#2ABFAA;color:#2ABFAA}
+.fbg-stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.fbg-stat{background:#141618;border-radius:8px;padding:12px 14px;border:1px solid #1e1e1e}
+.fbg-stat-val{font-size:22px;font-weight:700;color:#fff;font-family:monospace}
+.fbg-stat-lbl{font-size:11px;color:#666;margin-top:2px}
+.fbg-results-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.fbg-results-lbl{font-size:12px;color:#666}
+.fbg-sort{font-size:12px;background:#141618;border:1px solid #2e3032;border-radius:6px;padding:5px 10px;color:#aaa;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif}
+.fbg-card{display:grid;grid-template-columns:18px 44px 1fr auto;gap:12px;align-items:start;padding:14px 16px;border:1px solid #1e1e1e;border-radius:10px;background:#141618;margin-bottom:8px;transition:border-color .12s,background .12s}
+.fbg-card:hover{border-color:#2e3032}
+.fbg-avatar{width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;background:#1e2022}
+.fbg-name{font-size:14px;font-weight:700;color:#e0e0e0;margin-bottom:3px}
+.fbg-meta{font-size:12px;color:#666;margin-bottom:5px}
+.fbg-desc{font-size:12px;color:#888;line-height:1.5;margin-bottom:7px}
+.fbg-tags{display:flex;flex-wrap:wrap;gap:5px}
+.fbg-tag{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600}
+.fbg-tag-hot{background:rgba(224,123,40,.15);color:#E07B28}
+.fbg-tag-active{background:rgba(42,191,170,.15);color:#2ABFAA}
+.fbg-tag-brand{background:rgba(83,74,183,.2);color:#9b93f0}
+.fbg-tag-platform{background:rgba(24,95,165,.2);color:#5b9fd4}
+.fbg-score-wrap{text-align:right;min-width:64px}
+.fbg-score{font-size:24px;font-weight:700;color:#fff;font-family:monospace}
+.fbg-score-lbl{font-size:10px;color:#555;margin-top:1px}
+.fbg-open-btn{margin-top:8px;font-size:11px;padding:4px 10px;border:1px solid #2e3032;border-radius:6px;background:transparent;color:#888;cursor:pointer;display:block;width:100%;text-align:center;font-family:'DM Sans',system-ui,sans-serif;transition:all .12s}
+.fbg-open-btn:hover{border-color:#2ABFAA;color:#2ABFAA}
+.fbg-empty{text-align:center;padding:60px 24px;color:#555}
+.fbg-empty-icon{font-size:36px;margin-bottom:12px}
+.fbg-empty-title{font-size:15px;font-weight:600;color:#888;margin-bottom:6px}
+.fbg-empty-sub{font-size:12px;color:#555;line-height:1.7}
+.fbg-actions{display:flex;gap:8px;margin-top:20px;padding-top:20px;border-top:1px solid #1e1e1e}
+.fbg-action-btn{flex:1;height:38px;font-size:12px;border:1px solid #2e3032;border-radius:7px;background:#141618;color:#888;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;transition:all .12s}
+.fbg-action-btn:hover{border-color:#2ABFAA;color:#2ABFAA}
+.fbg-load-more-btn{width:100%;height:42px;font-size:13px;font-weight:600;border:1px dashed #2e3032;border-radius:8px;background:transparent;color:#666;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;transition:all .15s;margin:4px 0 12px}
+.fbg-load-more-btn:hover{border-color:#2ABFAA;color:#2ABFAA;background:rgba(42,191,170,.05)}
+.fbg-load-more-btn:disabled{opacity:.4;cursor:not-allowed}
+.fbg-card.selected{border-color:#2ABFAA!important;background:#0d1f1d!important}
+.fbg-checkbox{width:18px;height:18px;border:2px solid #3a3d40;border-radius:4px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;background:#1a1c1e;margin-top:13px;user-select:none}
+.fbg-checkbox.checked{background:#2ABFAA;border-color:#2ABFAA}
+.fbg-checkbox.checked::after{content:'✓';font-size:11px;color:#0a1412;font-weight:900;line-height:1}
+.fbg-sel-bar{display:flex;align-items:center;gap:10px;padding:8px 14px;background:#0d1f1d;border:1px solid #2ABFAA;border-radius:8px;margin-bottom:12px}
+.fbg-sel-bar-txt{font-size:12px;color:#2ABFAA;flex:1;font-weight:600}
+.fbg-sel-all{font-size:11px;color:#888;background:none;border:1px solid #2e3032;border-radius:5px;padding:3px 10px;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;transition:all .12s}
+.fbg-sel-all:hover{border-color:#2ABFAA;color:#2ABFAA}
+.fbg-export-btn{height:38px;padding:0 16px;font-size:12px;font-weight:700;border:none;border-radius:7px;background:#2ABFAA;color:#0a1412;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;transition:opacity .15s;white-space:nowrap}
+.fbg-export-btn:hover{opacity:.85}
+.fbg-lib-header{padding:16px 16px 0;flex-shrink:0}
+.fbg-lib-title{font-size:13px;font-weight:700;color:#ccc;margin-bottom:2px}
+.fbg-lib-sub{font-size:11px;color:#555;line-height:1.5;margin-bottom:12px}
+.fbg-lib-search{width:100%;height:36px;background:#111315;border:1px solid #222;border-radius:7px;padding:0 12px;font-size:12px;color:#ccc;font-family:'DM Sans',system-ui,sans-serif;outline:none;transition:border-color .15s;margin-bottom:10px}
+.fbg-lib-search::placeholder{color:#444}
+.fbg-lib-search:focus{border-color:#2ABFAA}
+.fbg-car-list{padding:0 10px 10px;flex:1;overflow-y:auto}
+.fbg-car-item{border:1px solid #1a1a1a;border-radius:9px;margin-bottom:8px;overflow:hidden;background:#111315}
+.fbg-car-header{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;transition:background .12s}
+.fbg-car-header:hover{background:#161a1b}
+.fbg-car-icon{font-size:16px;flex-shrink:0}
+.fbg-car-name{flex:1;font-size:13px;font-weight:700;color:#ddd}
+.fbg-car-count{font-size:10px;color:#555;background:#1a1a1a;padding:2px 7px;border-radius:10px;font-weight:600}
+.fbg-car-chevron{font-size:10px;color:#444;transition:transform .2s;flex-shrink:0}
+.fbg-car-chevron.open{transform:rotate(90deg)}
+.fbg-car-body{display:none;padding:0 12px 10px;border-top:1px solid #1a1a1a}
+.fbg-car-body.open{display:block}
+.fbg-car-search-btn{width:100%;height:30px;font-size:11px;font-weight:700;border:1px solid #2e3032;border-radius:6px;background:none;color:#2ABFAA;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;transition:all .12s;margin:8px 0 6px}
+.fbg-car-search-btn:hover{background:rgba(42,191,170,.1);border-color:#2ABFAA}
+.fbg-car-delete-btn{float:right;font-size:10px;color:#444;background:none;border:none;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;padding:2px 4px;transition:color .12s}
+.fbg-car-delete-btn:hover{color:#f87171}
+.fbg-saved-group{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #161616}
+.fbg-saved-group:last-child{border-bottom:none}
+.fbg-saved-group-icon{font-size:14px;flex-shrink:0}
+.fbg-saved-group-info{flex:1;min-width:0}
+.fbg-saved-group-name{font-size:12px;font-weight:600;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fbg-saved-group-url{font-size:10px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fbg-saved-group-actions{display:flex;gap:4px;flex-shrink:0}
+.fbg-saved-group-open{font-size:10px;padding:3px 7px;border:1px solid #2e3032;border-radius:4px;background:none;color:#888;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;transition:all .12s}
+.fbg-saved-group-open:hover{border-color:#2ABFAA;color:#2ABFAA}
+.fbg-saved-group-rm{font-size:10px;padding:3px 7px;border:1px solid #1e1e1e;border-radius:4px;background:none;color:#444;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;transition:color .12s}
+.fbg-saved-group-rm:hover{color:#f87171;border-color:#f87171}
+.fbg-add-url-form{padding:10px 16px;border-top:1px solid #1a1a1a;flex-shrink:0;background:#0a0c0e}
+.fbg-add-url-input{width:100%;height:34px;background:#111315;border:1px solid #222;border-radius:6px;padding:0 10px;font-size:12px;color:#ccc;font-family:'DM Sans',system-ui,sans-serif;outline:none;transition:border-color .15s;margin-bottom:6px}
+.fbg-add-url-input::placeholder{color:#444}
+.fbg-add-url-input:focus{border-color:#2ABFAA}
+.fbg-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9000;display:none;align-items:center;justify-content:center}
+.fbg-modal-overlay.open{display:flex}
+.fbg-modal{background:#111315;border:1px solid #2e3032;border-radius:12px;padding:24px;width:380px;max-width:90vw}
+.fbg-modal-title{font-size:15px;font-weight:700;color:#fff;margin-bottom:4px}
+.fbg-modal-sub{font-size:12px;color:#666;margin-bottom:18px}
+.fbg-modal-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.fbg-modal-input{width:100%;height:36px;background:#1a1c1e;border:1px solid #2e3032;border-radius:7px;padding:0 10px;font-size:13px;color:#fff;font-family:'DM Sans',system-ui,sans-serif;outline:none;transition:border-color .15s}
+.fbg-modal-input::placeholder{color:#555}
+.fbg-modal-input:focus{border-color:#2ABFAA}
+.fbg-modal-btns{display:flex;gap:8px;margin-top:6px}
+.fbg-modal-cancel{flex:1;height:38px;font-size:13px;border:1px solid #2e3032;border-radius:7px;background:none;color:#888;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;transition:all .12s}
+.fbg-modal-cancel:hover{color:#ccc;border-color:#555}
+.fbg-modal-save{flex:1;height:38px;font-size:13px;font-weight:700;border:none;border-radius:7px;background:#2ABFAA;color:#0a1412;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;transition:opacity .12s}
+.fbg-modal-save:hover{opacity:.85}
+.fbg-lib-empty{text-align:center;padding:40px 20px;color:#555}
+.fbg-lib-empty-icon{font-size:28px;margin-bottom:8px}
+.fbg-lib-empty-txt{font-size:12px;color:#444;line-height:1.6}
+.fbg-new-car-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:calc(100% - 20px);margin:0 10px 10px;height:36px;font-size:12px;font-weight:700;border:1px dashed #2e3032;border-radius:7px;background:none;color:#555;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;transition:all .12s;flex-shrink:0}
+.fbg-new-car-btn:hover{border-color:#2ABFAA;color:#2ABFAA;background:rgba(42,191,170,.05)}
+.fbg-toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#2ABFAA;color:#0a1412;font-size:12px;font-weight:700;padding:8px 20px;border-radius:8px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.fbg-toast.show{opacity:1}
+/* API key modal for FB Group Finder */
+#fbg-key-modal{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10000;display:none;align-items:center;justify-content:center}
+#fbg-key-modal.open{display:flex}
+.fbg-key-box{background:#111315;border:1px solid #2e3032;border-radius:14px;padding:28px;width:420px;max-width:90vw}
+.fbg-key-box h3{font-size:15px;font-weight:700;color:#fff;margin-bottom:6px}
+.fbg-key-box p{font-size:12px;color:#666;margin-bottom:18px;line-height:1.6}
+.fbg-key-inp{width:100%;height:40px;background:#1a1c1e;border:1px solid #2e3032;border-radius:8px;padding:0 12px;font-size:13px;color:#fff;font-family:monospace;outline:none;transition:border-color .15s;margin-bottom:14px}
+.fbg-key-inp:focus{border-color:#2ABFAA}
+.fbg-key-row{display:flex;gap:8px}
+.fbg-key-cancel{flex:1;height:38px;font-size:13px;border:1px solid #2e3032;border-radius:7px;background:none;color:#888;cursor:pointer;font-family:inherit}
+.fbg-key-save{flex:2;height:38px;font-size:13px;font-weight:700;border:none;border-radius:7px;background:#2ABFAA;color:#0a1412;cursor:pointer;font-family:inherit}
+</style>
+
+<!-- FB Group Finder inner HTML (injected into #view-fbgroups) -->
+<script>
+(function(){
+  var el = document.getElementById('view-fbgroups');
+  if(!el) return;
+  el.innerHTML = `
+  <div class="fbg-main-panel">
+    <div class="fbg-header">
+      <div class="fbg-title">Facebook Group Finder</div>
+      <div class="fbg-sub">Search any vehicle — AI uses live web search to find real communities. Save groups to car templates in the library →</div>
+    </div>
+    <div class="fbg-search-row">
+      <input class="fbg-input" id="fbg-search" placeholder="e.g. 2016 Audi S6, BMW M3 E46, C8 Corvette..." />
+      <select id="fbg-count" class="fbg-count-select">
+        <option value="5">5 results</option>
+        <option value="10" selected>10 results</option>
+        <option value="20">20 results</option>
+      </select>
+      <button class="fbg-btn" onclick="fbgSearch()">Search</button>
+    </div>
+    <div class="fbg-save-bar" id="fbg-save-bar">
+      <span class="fbg-save-lbl">Results for:</span>
+      <span id="fbg-save-bar-label" style="font-size:12px;color:#ccc;font-weight:600;flex:1"></span>
+      <button class="fbg-save-url-btn" onclick="fbgSaveSelectedToLibrary()">＋ Save selected to car</button>
+      <button class="fbg-save-template-btn" onclick="fbgSaveAllAsTemplate()">💾 Save as template</button>
+    </div>
+    <div id="fbg-results">
+      <div class="fbg-empty">
+        <div class="fbg-empty-icon">👥</div>
+        <div class="fbg-empty-title">Find your audience</div>
+        <div class="fbg-empty-sub">Type a vehicle above to search the web for<br>real active Facebook groups for that platform.</div>
+      </div>
+    </div>
+  </div>
+  <div class="fbg-library-panel">
+    <div class="fbg-tabs">
+      <button class="fbg-tab active" onclick="fbgSwitchLibTab('cars')" id="fbg-lib-tab-cars">🚗 Car Library</button>
+      <button class="fbg-tab" onclick="fbgSwitchLibTab('add')" id="fbg-lib-tab-add">＋ Add URL</button>
+    </div>
+    <div class="fbg-tab-content active" id="fbg-lib-cars">
+      <div class="fbg-lib-header">
+        <div class="fbg-lib-title">Saved Car Templates</div>
+        <div class="fbg-lib-sub">Click a car to see its linked groups. Click a car name to load its groups as a search.</div>
+        <input class="fbg-lib-search" id="fbg-lib-filter" placeholder="Filter cars..." oninput="fbgRenderLibrary()" />
+      </div>
+      <div style="display:flex;gap:6px;width:calc(100% - 20px);margin:0 10px 10px;flex-shrink:0">
+        <button class="fbg-new-car-btn" style="flex:1;margin:0;width:auto" onclick="fbgOpenNewCarModal()">＋ Add Car</button>
+      </div>
+      <div class="fbg-car-list" id="fbg-car-list">
+        <div class="fbg-lib-empty"><div class="fbg-lib-empty-icon">🚗</div><div class="fbg-lib-empty-txt">No cars saved yet.<br>Search a vehicle, then save results as a template.</div></div>
+      </div>
+    </div>
+    <div class="fbg-tab-content" id="fbg-lib-add" style="padding:16px;gap:12px">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#ccc;margin-bottom:4px">Manually Add a Group URL</div>
+        <div style="font-size:11px;color:#555;line-height:1.6;margin-bottom:14px">Paste any Facebook group URL and link it to a saved car.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <input class="fbg-add-url-input" id="fbg-manual-name" placeholder="Group name (e.g. Audi S6 Owners)" />
+        <input class="fbg-add-url-input" id="fbg-manual-url" placeholder="https://www.facebook.com/groups/..." />
+        <input class="fbg-add-url-input" id="fbg-manual-members" placeholder="Members (optional)" type="number" />
+        <select class="fbg-add-url-input" id="fbg-manual-car" style="cursor:pointer;-webkit-appearance:none;appearance:none">
+          <option value="">— Select a car template —</option>
+        </select>
+        <button class="fbg-modal-save" style="height:38px;font-size:12px" onclick="fbgManualAddUrl()">Save Group</button>
+      </div>
+      <div id="fbg-manual-msg" style="font-size:11px;color:#2ABFAA;display:none;margin-top:4px"></div>
+    </div>
+  </div>
+  <div class="fbg-modal-overlay" id="fbg-car-modal">
+    <div class="fbg-modal">
+      <div class="fbg-modal-title">Add New Car</div>
+      <div class="fbg-modal-sub">Enter the year, make, and model to create a template.</div>
+      <div class="fbg-modal-row">
+        <input class="fbg-modal-input" id="fbg-car-year" placeholder="Year" maxlength="4" />
+        <input class="fbg-modal-input" id="fbg-car-make" placeholder="Make" />
+        <input class="fbg-modal-input" id="fbg-car-model" placeholder="Model" />
+      </div>
+      <div class="fbg-modal-btns">
+        <button class="fbg-modal-cancel" onclick="fbgCloseCarModal()">Cancel</button>
+        <button class="fbg-modal-save" onclick="fbgSaveNewCar()">Add Car</button>
+      </div>
+    </div>
+  </div>
+  <div class="fbg-toast" id="fbg-toast"></div>
+  `;
+  document.getElementById('fbg-search').addEventListener('keydown',function(e){if(e.key==='Enter')fbgSearch();});
+  var modal = document.getElementById('fbg-car-modal');
+  if(modal) modal.addEventListener('click',function(e){if(e.target===modal)fbgCloseCarModal();});
+})();
+</script>
+
+<!-- API Key Modal for FB Group Finder -->
+<div id="fbg-key-modal">
+  <div class="fbg-key-box">
+    <h3>Anthropic API Key Required</h3>
+    <p>The FB Group Finder uses the Anthropic API with live web search to find real Facebook groups. Your key is stored locally and never sent anywhere except Anthropic.</p>
+    <input class="fbg-key-inp" id="fbg-key-input" type="password" placeholder="sk-ant-..." />
+    <div class="fbg-key-row">
+      <button class="fbg-key-cancel" onclick="document.getElementById('fbg-key-modal').classList.remove('open')">Cancel</button>
+      <button class="fbg-key-save" onclick="fbgSaveKey()">Save Key</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── FB Group Finder: API Key helpers ──────────────────────────────────────
+var FBG_LIBRARY_KEY = 'tgk_fbg_library_v1';
+var FBG_API_KEY_STORE = 'tgk_api_key';
+
+function fbgGetKey(){ return localStorage.getItem(FBG_API_KEY_STORE)||''; }
+function fbgShowKeyModal(){
+  document.getElementById('fbg-key-modal').classList.add('open');
+  document.getElementById('fbg-key-input').value = fbgGetKey();
+  setTimeout(function(){ document.getElementById('fbg-key-input').focus(); }, 50);
+}
+function fbgSaveKey(){
+  var k = document.getElementById('fbg-key-input').value.trim();
+  localStorage.setItem(FBG_API_KEY_STORE, k);
+  document.getElementById('fbg-key-modal').classList.remove('open');
+  fbgToast('API key saved ✓');
+}
+document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ document.getElementById('fbg-key-modal').classList.remove('open'); fbgCloseCarModal(); } });
+
+// ── FB Group Library (localStorage) ───────────────────────────────────────
+function fbgLibLoad(){
+  try{ return JSON.parse(localStorage.getItem(FBG_LIBRARY_KEY)) || []; } catch(e){ return []; }
+}
+function fbgLibSave(data){
+  try{ localStorage.setItem(FBG_LIBRARY_KEY, JSON.stringify(data)); } catch(e){}
+  // Push to Supabase cloud
+  if (typeof _sbSaveFBG === 'function') {
+    _sbSaveFBG(data).catch(function(e){ console.warn('FBG cloud save failed:', e); });
+  }
+}
+function fbgCarKey(year,make,model){ return [year,make,model].join('_').toLowerCase().replace(/\s+/g,'_'); }
+
+function fbgSwitchLibTab(tab){
+  document.getElementById('fbg-lib-tab-cars').classList.toggle('active',tab==='cars');
+  document.getElementById('fbg-lib-tab-add').classList.toggle('active',tab==='add');
+  document.getElementById('fbg-lib-cars').classList.toggle('active',tab==='cars');
+  document.getElementById('fbg-lib-add').classList.toggle('active',tab==='add');
+  if(tab==='add') fbgPopulateCarDropdowns();
+}
+function fbgOpenNewCarModal(){ document.getElementById('fbg-car-modal').classList.add('open'); document.getElementById('fbg-car-year').focus(); }
+function fbgCloseCarModal(){
+  var m=document.getElementById('fbg-car-modal'); if(m)m.classList.remove('open');
+  ['fbg-car-year','fbg-car-make','fbg-car-model'].forEach(function(id){ var el=document.getElementById(id); if(el)el.value=''; });
+}
+function fbgSaveNewCar(){
+  var year=document.getElementById('fbg-car-year').value.trim();
+  var make=document.getElementById('fbg-car-make').value.trim();
+  var model=document.getElementById('fbg-car-model').value.trim();
+  if(!year||!make||!model){ fbgToast('Please fill in year, make, and model.'); return; }
+  var lib=fbgLibLoad(), key=fbgCarKey(year,make,model);
+  if(lib.find(function(c){ return c.key===key; })){ fbgToast('That car already exists.'); fbgCloseCarModal(); return; }
+  lib.push({key:key,year:year,make:make,model:model,groups:[]});
+  fbgLibSave(lib); fbgCloseCarModal(); fbgRenderLibrary(); fbgPopulateCarDropdowns();
+  fbgToast('Car added: '+year+' '+make+' '+model);
+}
+function fbgRenderLibrary(){
+  var lib=fbgLibLoad();
+  var filterEl=document.getElementById('fbg-lib-filter');
+  var filt=filterEl?(filterEl.value||'').toLowerCase():'';
+  var filtered=filt?lib.filter(function(c){ return (c.year+' '+c.make+' '+c.model).toLowerCase().includes(filt); }):lib;
+  var container=document.getElementById('fbg-car-list'); if(!container)return;
+  if(filtered.length===0){ container.innerHTML='<div class="fbg-lib-empty"><div class="fbg-lib-empty-icon">🚗</div><div class="fbg-lib-empty-txt">'+(filt?'No matches found.':'No cars saved yet.<br>Search a vehicle, then save results as a template.')+'</div></div>'; return; }
+  var html='';
+  filtered.forEach(function(car){
+    var label=car.year+' '+car.make+' '+car.model, count=(car.groups||[]).length;
+    html+='<div class="fbg-car-item" id="fbg-car-'+car.key+'">'
+      +'<div class="fbg-car-header" onclick="fbgToggleCar(\''+car.key+'\')">'
+      +'<span class="fbg-car-icon">🚗</span><span class="fbg-car-name">'+label+'</span>'
+      +'<span class="fbg-car-count">'+count+' group'+(count===1?'':'s')+'</span>'
+      +'<span class="fbg-car-chevron" id="fbg-chev-'+car.key+'">▶</span></div>'
+      +'<div class="fbg-car-body" id="fbg-car-body-'+car.key+'">'
+      +'<button class="fbg-car-search-btn" onclick="fbgLoadCarSearch(\''+car.key+'\')">🔍 Search &ldquo;'+label+'&rdquo;</button>';
+    if(count===0){ html+='<div style="font-size:11px;color:#444;text-align:center;padding:8px 0">No groups linked yet.</div>'; }
+    else { (car.groups||[]).forEach(function(g,gi){ var safeKey=car.key.replace(/'/g,"\\'");
+      html+='<div class="fbg-saved-group"><span class="fbg-saved-group-icon">'+(g.icon||'👥')+'</span>'
+        +'<div class="fbg-saved-group-info"><div class="fbg-saved-group-name">'+g.name+'</div>'
+        +'<div class="fbg-saved-group-url">'+(g.members&&g.members>0?fbgFmt(g.members)+' members · ':'')+((g.url||'').replace('https://',''))+'</div></div>'
+        +'<div class="fbg-saved-group-actions">'
+        +'<button class="fbg-saved-group-open" onclick="window.open(\''+g.url+'\',\'_blank\')">↗</button>'
+        +'<button class="fbg-saved-group-rm" onclick="fbgRemoveGroup(\''+safeKey+'\','+gi+')">✕</button>'
+        +'</div></div>';
+    }); }
+    html+='<button class="fbg-car-delete-btn" onclick="fbgDeleteCar(\''+car.key+'\')">🗑 Delete car</button>';
+    html+='</div></div>';
+  });
+  container.innerHTML=html;
+}
+function fbgToggleCar(key){
+  var body=document.getElementById('fbg-car-body-'+key), chev=document.getElementById('fbg-chev-'+key); if(!body)return;
+  var isOpen=body.classList.contains('open'); body.classList.toggle('open',!isOpen); if(chev)chev.classList.toggle('open',!isOpen);
+}
+function fbgLoadCarSearch(key){
+  var lib=fbgLibLoad(), car=lib.find(function(c){ return c.key===key; }); if(!car)return;
+  document.getElementById('fbg-search').value=car.year+' '+car.make+' '+car.model;
+  fbgSearch();
+}
+function fbgRemoveGroup(carKey,groupIndex){
+  var lib=fbgLibLoad(), car=lib.find(function(c){ return c.key===carKey; }); if(!car)return;
+  car.groups.splice(groupIndex,1); fbgLibSave(lib); fbgRenderLibrary(); fbgToast('Group removed.');
+}
+function fbgDeleteCar(key){
+  var lib=fbgLibLoad(), idx=lib.findIndex(function(c){ return c.key===key; }); if(idx===-1)return;
+  var name=lib[idx].year+' '+lib[idx].make+' '+lib[idx].model;
+  lib.splice(idx,1); fbgLibSave(lib); fbgRenderLibrary(); fbgPopulateCarDropdowns(); fbgToast(name+' deleted.');
+}
+function fbgPopulateCarDropdowns(){
+  var lib=fbgLibLoad(), sel=document.getElementById('fbg-manual-car'); if(!sel)return;
+  sel.innerHTML='<option value="">— Select a car template —</option>';
+  lib.forEach(function(car){ var opt=document.createElement('option'); opt.value=car.key; opt.textContent=car.year+' '+car.make+' '+car.model; sel.appendChild(opt); });
+}
+function fbgSaveAllAsTemplate(){
+  if(!fbgCurrentResults||fbgCurrentResults.length===0){ fbgToast('No results to save.'); return; }
+  var lib=fbgLibLoad();
+  if(lib.length===0){ fbgToast('Add a car first using the library →'); fbgOpenNewCarModal(); return; }
+  var carOptions=lib.map(function(c){ return '<option value="'+c.key+'">'+c.year+' '+c.make+' '+c.model+'</option>'; }).join('');
+  var existingModal=document.getElementById('fbg-template-modal'); if(existingModal)existingModal.remove();
+  var modal=document.createElement('div'); modal.id='fbg-template-modal'; modal.className='fbg-modal-overlay open';
+  modal.innerHTML='<div class="fbg-modal"><div class="fbg-modal-title">Save as Template</div>'
+    +'<div class="fbg-modal-sub">Choose which car to link these '+fbgCurrentResults.length+' groups to.</div>'
+    +'<select class="fbg-modal-input" id="fbg-tmpl-car-sel" style="height:36px;cursor:pointer;-webkit-appearance:none;appearance:none">'+carOptions+'</select>'
+    +'<div class="fbg-modal-btns" style="margin-top:12px">'
+    +'<button class="fbg-modal-cancel" onclick="document.getElementById(\'fbg-template-modal\').remove()">Cancel</button>'
+    +'<button class="fbg-modal-save" onclick="fbgConfirmSaveTemplate()">Save</button>'
+    +'</div></div>';
+  document.body.appendChild(modal);
+}
+function fbgConfirmSaveTemplate(){
+  var carKey=document.getElementById('fbg-tmpl-car-sel').value; if(!carKey){ fbgToast('Please select a car.'); return; }
+  var lib=fbgLibLoad(), car=lib.find(function(c){ return c.key===carKey; }); if(!car)return;
+  var existingNames=new Set((car.groups||[]).map(function(g){ return g.name; })), added=0;
+  fbgCurrentResults.forEach(function(g){ if(!existingNames.has(g.name)){ car.groups.push({name:g.name,url:g.url,members:g.members,icon:g.icon||'👥',desc:g.desc||''}); added++; } });
+  fbgLibSave(lib); document.getElementById('fbg-template-modal').remove(); fbgRenderLibrary();
+  fbgToast(added+' group'+(added===1?'':'s')+' saved to '+car.year+' '+car.make+' '+car.model+'!');
+}
+function fbgSaveSelectedToLibrary(){
+  var toSave=fbgSelected.size>0?fbgCurrentResults.filter(function(g){ return fbgSelected.has(g.name); }):fbgCurrentResults;
+  if(toSave.length===0){ fbgToast('No groups to save.'); return; }
+  var lib=fbgLibLoad();
+  if(lib.length===0){ fbgToast('Add a car first using the library →'); fbgOpenNewCarModal(); return; }
+  var carOptions=lib.map(function(c){ return '<option value="'+c.key+'">'+c.year+' '+c.make+' '+c.model+'</option>'; }).join('');
+  var existingModal=document.getElementById('fbg-sel-modal'); if(existingModal)existingModal.remove();
+  var modal=document.createElement('div'); modal.id='fbg-sel-modal'; modal.className='fbg-modal-overlay open';
+  modal.innerHTML='<div class="fbg-modal"><div class="fbg-modal-title">Save '+toSave.length+' Group'+(toSave.length===1?'':'s')+'</div>'
+    +'<div class="fbg-modal-sub">Link '+(fbgSelected.size>0?'the selected groups':'all results')+' to a car template.</div>'
+    +'<select class="fbg-modal-input" id="fbg-sel-car-sel" style="height:36px;cursor:pointer;-webkit-appearance:none;appearance:none">'+carOptions+'</select>'
+    +'<div class="fbg-modal-btns" style="margin-top:12px">'
+    +'<button class="fbg-modal-cancel" onclick="document.getElementById(\'fbg-sel-modal\').remove()">Cancel</button>'
+    +'<button class="fbg-modal-save" onclick="fbgConfirmSaveSelected()">Save</button>'
+    +'</div></div>';
+  document.body.appendChild(modal);
+  window._fbgPendingSave=toSave;
+}
+function fbgConfirmSaveSelected(){
+  var carKey=document.getElementById('fbg-sel-car-sel').value; if(!carKey){ fbgToast('Please select a car.'); return; }
+  var lib=fbgLibLoad(), car=lib.find(function(c){ return c.key===carKey; }); if(!car)return;
+  var toAdd=window._fbgPendingSave||[], existingNames=new Set((car.groups||[]).map(function(g){ return g.name; })), added=0;
+  toAdd.forEach(function(g){ if(!existingNames.has(g.name)){ car.groups.push({name:g.name,url:g.url,members:g.members,icon:g.icon||'👥',desc:g.desc||''}); added++; } });
+  fbgLibSave(lib); document.getElementById('fbg-sel-modal').remove(); fbgRenderLibrary();
+  fbgToast(added+' group'+(added===1?'':'s')+' saved to '+car.year+' '+car.make+' '+car.model+'!');
+}
+function fbgManualAddUrl(){
+  var name=document.getElementById('fbg-manual-name').value.trim();
+  var url=document.getElementById('fbg-manual-url').value.trim();
+  var members=parseInt(document.getElementById('fbg-manual-members').value)||0;
+  var carKey=document.getElementById('fbg-manual-car').value;
+  if(!name){ fbgToast('Enter a group name.'); return; }
+  if(!url||!url.includes('facebook.com')){ fbgToast('Enter a valid Facebook URL.'); return; }
+  if(!carKey){ fbgToast('Select a car.'); return; }
+  var lib=fbgLibLoad(), car=lib.find(function(c){ return c.key===carKey; });
+  if(!car){ fbgToast('Car not found.'); return; }
+  car.groups=car.groups||[];
+  if(car.groups.find(function(g){ return g.name===name; })){ fbgToast('Group already saved to this car.'); return; }
+  car.groups.push({name:name,url:url,members:members,icon:'👥',desc:''});
+  fbgLibSave(lib); fbgRenderLibrary();
+  document.getElementById('fbg-manual-name').value='';
+  document.getElementById('fbg-manual-url').value='';
+  document.getElementById('fbg-manual-members').value='';
+  var msg=document.getElementById('fbg-manual-msg');
+  if(msg){ msg.style.display='block'; msg.textContent='✓ Saved!'; setTimeout(function(){ msg.style.display='none'; },2500); }
+  fbgToast('Group saved!');
+}
+function fbgToast(msg){
+  var t=document.getElementById('fbg-toast'); if(!t)return;
+  t.textContent=msg; t.classList.add('show'); clearTimeout(t._timer);
+  t._timer=setTimeout(function(){ t.classList.remove('show'); },2500);
+}
+function fbgShowSaveBar(label){
+  var bar=document.getElementById('fbg-save-bar'), lbl=document.getElementById('fbg-save-bar-label');
+  if(bar)bar.classList.add('visible'); if(lbl&&label)lbl.textContent=label;
+}
+function fbgHideSaveBar(){ var bar=document.getElementById('fbg-save-bar'); if(bar)bar.classList.remove('visible'); }
+
+// ── Web-search powered FB group finder ────────────────────────────────────
+var FBG_DB={}, fbgCurrentResults=[], fbgSortBy='score', fbgCurrentLabel='', fbgVisibleCount=10;
+var fbgSelected=new Set();
+var fbgCooldownTimer=null, fbgCooldownEnd=0;
+
+async function fbgCallAIWithWebSearch(systemPrompt,userPrompt,maxTokens){
+  var key=fbgGetKey(); if(!key){ fbgShowKeyModal(); throw new Error('NO_KEY'); }
+  var messages=[{role:'user',content:userPrompt}];
+  var tools=[{type:'web_search_20250305',name:'web_search'}];
+  for(var i=0;i<4;i++){
+    var body={model:'claude-sonnet-4-20250514',max_tokens:maxTokens||3000,system:systemPrompt,tools:tools,messages:messages};
+    var r,d;
+    try{ r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)}); }
+    catch(fe){ throw new Error('NETWORK_ERROR'); }
+    d=await r.json();
+    if(d.error){ if(d.error.type==='authentication_error')throw new Error('AUTH_ERROR'); if(d.error.type==='rate_limit_error')throw new Error('RATE_ERROR'); throw new Error('API: '+d.error.message); }
+    messages.push({role:'assistant',content:d.content});
+    if(d.stop_reason==='end_turn'){ var tb=d.content.find(function(b){ return b.type==='text'; }); return tb?tb.text:''; }
+    var toolUseBlocks=d.content.filter(function(b){ return b.type==='tool_use'; });
+    if(toolUseBlocks.length===0){ var tb2=d.content.find(function(b){ return b.type==='text'; }); return tb2?tb2.text:''; }
+    var toolResults=toolUseBlocks.map(function(block){ return {type:'tool_result',tool_use_id:block.id,content:'Search executed.'}; });
+    messages.push({role:'user',content:toolResults});
+  }
+  throw new Error('Search loop exceeded');
+}
+
+async function fbgCallAI(prompt,maxTokens){
+  var key=fbgGetKey(); if(!key){ fbgShowKeyModal(); throw new Error('NO_KEY'); }
+  var r,d;
+  try{ r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTokens||1200,messages:[{role:'user',content:prompt}]})}); }
+  catch(fe){ throw new Error('NETWORK_ERROR'); }
+  d=await r.json();
+  if(d.error){ if(d.error.type==='authentication_error')throw new Error('AUTH_ERROR'); if(d.error.type==='rate_limit_error')throw new Error('RATE_ERROR'); throw new Error('API: '+d.error.message); }
+  return d.content?.[0]?.text||'';
+}
+
+async function fbgSearch(){
+  var q=document.getElementById('fbg-search').value.trim(); if(!q)return;
+  var qLow=q.toLowerCase();
+  var countEl=document.getElementById('fbg-count'), requestedCount=countEl?parseInt(countEl.value):10;
+  if(FBG_DB[qLow]){ fbgCurrentResults=FBG_DB[qLow].slice(); fbgCurrentLabel=q; fbgVisibleCount=requestedCount; fbgSelected.clear(); fbgShowSaveBar(q); fbgRender(); return; }
+  if(Date.now()<fbgCooldownEnd) return;
+  var key=fbgGetKey(); if(!key){ fbgShowKeyModal(); return; }
+  var btn=document.querySelector('.fbg-btn'); btn.disabled=true; btn.textContent='Searching…';
+  document.getElementById('fbg-results').innerHTML='<div class="fbg-empty"><div class="fbg-empty-icon" style="font-size:28px">⏳</div><div class="fbg-empty-title" style="margin-top:14px">Searching the web for real groups…</div><div class="fbg-empty-sub">Finding real groups for <strong style="color:#fff">'+q+'</strong>. Takes ~20–30 seconds.</div></div>';
+  var systemPrompt='You are an expert in automotive Facebook communities. Your job is to return real Facebook groups for vehicle owners. Use web search to find groups and verify member counts where possible. Always return a populated JSON array. Never return an empty array. Return ONLY the JSON array, no explanation, no markdown.';
+  var userPrompt='Find Facebook groups for owners of: "'+q+'"\n\nUse web search to find groups.\nReturn ONLY a JSON array of '+requestedCount+' groups. Each object must be:\n{"name":"Group Name","members":25000,"activity":"High","icon":"🚗","tags":["brand"],"url":"https://www.facebook.com/groups/groupslug","desc":"One sentence about the group.","score":88}\n\nmembers = best estimate as integer (-1 only if truly unknown). activity = Low/Medium/High/Very High. tags = 1-2 of: hot, active, brand, platform.\nReturn ONLY the JSON array. No text before or after it.';
+  var fbgSearchSuccess=false;
+  try{
+    var raw=await fbgCallAIWithWebSearch(systemPrompt,userPrompt,3500);
+    var clean=raw.replace(/```json|```/g,'').trim();
+    var arrStart=clean.indexOf('['), arrEnd=clean.lastIndexOf(']');
+    if(arrStart===-1||arrEnd===-1) throw new Error('PARSE_FAIL');
+    clean=clean.slice(arrStart,arrEnd+1);
+    var data; try{ data=JSON.parse(clean); } catch(pe){ throw new Error('PARSE_FAIL'); }
+    if(!Array.isArray(data)||data.length===0) throw new Error('PARSE_FAIL');
+    fbgSearchSuccess=true;
+    data=data.map(function(g){
+      var rawUrl=String(g.url||'');
+      if(!rawUrl.startsWith('http')) rawUrl='https://www.facebook.com/groups/'+rawUrl;
+      if(!rawUrl.includes('facebook.com/groups/')) rawUrl='https://www.facebook.com/search/groups/?q='+encodeURIComponent(String(g.name||''));
+      return {name:String(g.name||'Unknown Group'),members:g.members===-1?-1:Math.round(Number(g.members)||0),activity:String(g.activity||'Medium'),icon:String(g.icon||'🚗'),tags:Array.isArray(g.tags)?g.tags:['brand'],url:rawUrl,desc:String(g.desc||''),score:Math.min(99,Math.max(50,Math.round(Number(g.score)||80))),real:true};
+    });
+    FBG_DB[qLow]=data; fbgCurrentResults=data.slice(); fbgCurrentLabel=q; fbgVisibleCount=requestedCount; fbgSelected.clear(); fbgRender(); fbgShowSaveBar(q);
+  } catch(e){
+    var msg=e.message==='AUTH_ERROR'?'API key rejected — click above to update it.':e.message==='NETWORK_ERROR'?'Cannot reach the API. Check your connection.':e.message==='NO_KEY'?'No API key set.':e.message==='RATE_ERROR'?'Rate limit hit. Wait 30–60 seconds and try again.':e.message==='PARSE_FAIL'?'Unexpected AI response. Please retry.':e.message;
+    document.getElementById('fbg-results').innerHTML='<div class="fbg-empty"><div class="fbg-empty-icon">⚠️</div><div class="fbg-empty-title">Search failed</div><div class="fbg-empty-sub">'+msg+'<br><br><button onclick="fbgShowKeyModal()" style="margin-top:8px;padding:6px 16px;background:#2ABFAA;border:none;border-radius:6px;color:#0a1412;font-weight:700;cursor:pointer;font-size:12px">Set API Key</button></div></div>';
+  } finally { fbgStartCooldown(fbgSearchSuccess?45:10); }
+}
+
+function fbgFmt(n){ if(n===-1||n===0)return '?'; return n>=1000000?(n/1000000).toFixed(1)+'M':n>=1000?(n/1000).toFixed(0)+'K':n; }
+function fbgTagClass(t){ if(t==='hot')return 'fbg-tag-hot'; if(t==='active')return 'fbg-tag-active'; if(t==='brand')return 'fbg-tag-brand'; return 'fbg-tag-platform'; }
+function fbgTagLabel(t){ if(t==='hot')return 'Trending'; if(t==='active')return 'Very Active'; if(t==='brand')return 'Brand-Specific'; return 'Platform'; }
+
+function fbgToggle(name){ if(fbgSelected.has(name))fbgSelected.delete(name); else fbgSelected.add(name); fbgRender(); }
+function fbgSelectAll(){
+  var sorted=fbgCurrentResultsSorted(), visible=sorted.slice(0,fbgVisibleCount);
+  var allSel=visible.every(function(g){ return fbgSelected.has(g.name); });
+  if(allSel){ visible.forEach(function(g){ fbgSelected.delete(g.name); }); } else { visible.forEach(function(g){ fbgSelected.add(g.name); }); }
+  fbgRender();
+}
+function fbgCurrentResultsSorted(){
+  var sorted=fbgCurrentResults.slice();
+  if(fbgSortBy==='members')sorted.sort(function(a,b){ return b.members-a.members; });
+  else sorted.sort(function(a,b){ return b.score-a.score; });
+  return sorted;
+}
+function fbgRender(){
+  var sorted=fbgCurrentResultsSorted(), visible=sorted.slice(0,fbgVisibleCount);
+  var total=fbgCurrentResults.reduce(function(s,g){ return s+g.members; },0);
+  var avg=Math.round(fbgCurrentResults.reduce(function(s,g){ return s+g.score; },0)/fbgCurrentResults.length);
+  var selCount=fbgSelected.size, allVisibleSel=visible.length>0&&visible.every(function(g){ return fbgSelected.has(g.name); });
+  var html='<div class="fbg-stats-row">'
+    +'<div class="fbg-stat"><div class="fbg-stat-val">'+fbgCurrentResults.length+'</div><div class="fbg-stat-lbl">Groups found</div></div>'
+    +'<div class="fbg-stat"><div class="fbg-stat-val">'+fbgFmt(total)+'</div><div class="fbg-stat-lbl">Total reach</div></div>'
+    +'<div class="fbg-stat"><div class="fbg-stat-val">'+avg+'</div><div class="fbg-stat-lbl">Avg relevance</div></div>'
+    +'</div>';
+  html+='<div class="fbg-sel-bar"><div class="fbg-sel-bar-txt">'+(selCount>0?selCount+' selected':'Click checkboxes to select groups')+'</div>'
+    +'<button class="fbg-sel-all" onclick="fbgSelectAll()">'+(allVisibleSel?'Deselect all':'Select all')+'</button>'
+    +'<button class="fbg-export-btn" onclick="fbgExportCSV()">⬇ Export CSV'+(selCount>0?' ('+selCount+')':'')+'</button></div>';
+  html+='<div class="fbg-results-header"><span class="fbg-results-lbl">Showing '+visible.length+' of '+sorted.length+' groups for &ldquo;'+fbgCurrentLabel+'&rdquo;</span>'
+    +'<select class="fbg-sort" onchange="fbgSortBy=this.value;fbgRender()"><option value="score">Sort: Relevance</option><option value="members">Sort: Members</option></select></div>';
+  visible.forEach(function(g){
+    var tags=g.tags.map(function(t){ return '<span class="fbg-tag '+fbgTagClass(t)+'">'+fbgTagLabel(t)+'</span>'; }).join('');
+    var isSel=fbgSelected.has(g.name), safeName=g.name.replace(/'/g,"\\'");
+    var searchUrl='https://www.facebook.com/search/groups/?q='+encodeURIComponent(g.name);
+    var openUrl=(g.url&&g.url.includes('facebook.com'))?g.url:searchUrl;
+    var membersStr=(g.members===-1||g.members===0)?'Members unknown':fbgFmt(g.members)+' members';
+    html+='<div class="fbg-card'+(isSel?' selected':'')+'" onclick="fbgToggle(\''+safeName+'\')" style="cursor:pointer">'
+      +'<div class="fbg-checkbox'+(isSel?' checked':'')+'" onclick="event.stopPropagation();fbgToggle(\''+safeName+'\')"></div>'
+      +'<div class="fbg-avatar">'+g.icon+'</div>'
+      +'<div><div class="fbg-name">'+g.name+'</div><div class="fbg-meta">'+membersStr+' &middot; '+g.activity+' activity</div>'
+      +'<div class="fbg-desc">'+g.desc+'</div><div class="fbg-tags">'+tags+'</div></div>'
+      +'<div class="fbg-score-wrap"><div class="fbg-score">'+g.score+'</div><div class="fbg-score-lbl">relevance</div>'
+      +'<button class="fbg-open-btn" onclick="event.stopPropagation();window.open(\''+openUrl+'\',\'_blank\')">Find on FB ↗</button></div>'
+      +'</div>';
+  });
+  var hasMoreCached=fbgVisibleCount<sorted.length;
+  html+='<button class="fbg-load-more-btn" onclick="fbgLoadMore()">'+(hasMoreCached?'Show '+Math.min(5,sorted.length-fbgVisibleCount)+' more':'Search for 5 more groups')+'</button>';
+  html+='<div class="fbg-actions"><button class="fbg-action-btn" onclick="fbgCopy()">Copy group list</button></div>';
+  document.getElementById('fbg-results').innerHTML=html;
+}
+async function fbgLoadMore(){
+  var q=fbgCurrentLabel, qLow=q.toLowerCase(), btn=document.querySelector('.fbg-load-more-btn');
+  if(btn){ btn.disabled=true; btn.textContent='Loading…'; }
+  var sorted=fbgCurrentResultsSorted();
+  if(fbgVisibleCount<sorted.length){ fbgVisibleCount=Math.min(fbgVisibleCount+5,sorted.length); fbgRender(); return; }
+  var existing=fbgCurrentResults.map(function(g){ return g.name; });
+  var key=fbgGetKey(); if(!key){ fbgShowKeyModal(); if(btn){btn.disabled=false;btn.textContent='Search for 5 more groups';} return; }
+  var prompt='Find 5 MORE real Facebook groups for owners of: "'+q+'".\nAlready found — do NOT repeat these:\n'+existing.map(function(n,i){ return (i+1)+'. '+n; }).join('\n')+'\n\nReturn ONLY a JSON array of exactly 5 new groups. Each: {"name":"","members":10000,"activity":"High","icon":"🚗","tags":["brand"],"url":"https://www.facebook.com/groups/slug","desc":"One sentence.","score":85}\nNo markdown, no text outside the array.';
+  try{
+    var raw=await fbgCallAI(prompt,2000);
+    var clean=raw.replace(/```json|```/g,'').trim();
+    var arrStart=clean.indexOf('['), arrEnd=clean.lastIndexOf(']');
+    if(arrStart===-1||arrEnd===-1)throw new Error('no array');
+    var newData=JSON.parse(clean.slice(arrStart,arrEnd+1));
+    if(!Array.isArray(newData)||newData.length===0)throw new Error('Empty');
+    newData=newData.map(function(g){ var rawUrl=String(g.url||''); if(!rawUrl.startsWith('http'))rawUrl='https://www.facebook.com/groups/'+rawUrl; return {name:String(g.name||'Unknown Group'),members:g.members===-1?-1:Math.round(Number(g.members)||10000),activity:String(g.activity||'Medium'),icon:String(g.icon||'🚗'),tags:Array.isArray(g.tags)?g.tags:['brand'],url:rawUrl,desc:String(g.desc||''),score:Math.min(99,Math.max(50,Math.round(Number(g.score)||80)))}; });
+    fbgCurrentResults=fbgCurrentResults.concat(newData); FBG_DB[qLow]=fbgCurrentResults.slice(); fbgVisibleCount=fbgCurrentResults.length; fbgRender();
+  } catch(e){ if(btn){ btn.disabled=false; btn.textContent='Retry'; } }
+}
+function fbgExportCSV(){
+  var toExport=fbgSelected.size>0?fbgCurrentResults.filter(function(g){ return fbgSelected.has(g.name); }):fbgCurrentResults;
+  if(toExport.length===0){ fbgToast('No results to export.'); return; }
+  var header='Group Name,Members,Activity,Tags,Relevance Score,Group URL,Search URL';
+  var rows=toExport.map(function(g){ var searchUrl='https://www.facebook.com/search/groups/?q='+encodeURIComponent(g.name); var groupUrl=g.url||searchUrl; return ['"'+(g.name||'').replace(/"/g,'""')+'"',g.members===-1?'Unknown':(g.members||0),g.activity||'','"'+(Array.isArray(g.tags)?g.tags.map(fbgTagLabel).join(', '): '')+'"',g.score||'',groupUrl,searchUrl].join(','); });
+  var csv=header+'\n'+rows.join('\n');
+  var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}), a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='fb-groups-'+fbgCurrentLabel.replace(/[^a-z0-9]/gi,'-').toLowerCase()+'.csv'; a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); },1000);
+}
+function fbgCopy(){
+  var toUse=fbgSelected.size>0?fbgCurrentResults.filter(function(g){ return fbgSelected.has(g.name); }):fbgCurrentResults;
+  var lines=toUse.map(function(g){ return g.name+' ('+fbgFmt(g.members)+' members) — Search: https://www.facebook.com/search/groups/?q='+encodeURIComponent(g.name); }).join('\n');
+  var text='Facebook Groups for '+fbgCurrentLabel+':\n\n'+lines;
+  navigator.clipboard&&navigator.clipboard.writeText(text);
+  fbgToast('Copied to clipboard!');
+}
+function fbgStartCooldown(seconds){
+  clearInterval(fbgCooldownTimer); fbgCooldownEnd=Date.now()+seconds*1000;
+  var btn=document.querySelector('.fbg-btn'); if(!btn)return; btn.disabled=true;
+  fbgCooldownTimer=setInterval(function(){
+    var remaining=Math.ceil((fbgCooldownEnd-Date.now())/1000);
+    var b=document.querySelector('.fbg-btn'); if(!b){ clearInterval(fbgCooldownTimer); return; }
+    if(remaining<=0){ clearInterval(fbgCooldownTimer); b.disabled=false; b.textContent='Search'; b.style.background=''; }
+    else { b.textContent='Wait '+remaining+'s'; b.style.background='#2a2a2a'; }
+  },250);
+}
+document.addEventListener('DOMContentLoaded',function(){ fbgRenderLibrary(); fbgPopulateCarDropdowns(); });
 </script>
 </body>
 </html>
