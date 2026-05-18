@@ -259,6 +259,15 @@ input,button,textarea,select{font-family:var(--font)}
       </button>
     </div>
 
+    <!-- TOOLS -->
+    <div class="sidebar-section" style="margin-top:6px">Tools</div>
+    <div class="sidebar-pills">
+      <button class="nav-item" id="nav-fbgroups" onclick="switchView('fbgroups',this)">
+        <div class="nav-dot" style="background:#2ABFAA"></div>
+        <span class="nav-label">👥 FB Group Finder</span>
+      </button>
+    </div>
+
     <!-- SYNC -->
     <div class="sidebar-section" style="margin-top:6px">Cloud</div>
     <div class="sidebar-pills">
@@ -310,6 +319,7 @@ input,button,textarea,select{font-family:var(--font)}
       <div class="stats-row" id="stats"></div>
       <div id="view-products"></div>
       <div id="view-people" style="display:none"></div>
+      <div id="view-fbgroups" style="display:none;flex:1;overflow:hidden;background:#0e1012;flex-direction:row;margin:-28px -32px;height:calc(100% + 56px)"></div>
     </div>
   </div>
 
@@ -675,10 +685,12 @@ function switchView(v,el){
   currentView=v;
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   if(el)el.classList.add('active');
+  var isFbg=v==='fbgroups';
   document.getElementById('view-products').style.display=v==='products'?'block':'none';
   document.getElementById('view-people').style.display=v==='people'?'block':'none';
-  document.getElementById('topbar-title').textContent=v==='products'?'By Product':'By Person';
-  render();
+  document.getElementById('view-fbgroups').style.display=isFbg?'flex':'none';
+  document.getElementById('topbar-title').textContent=v==='products'?'By Product':v==='people'?'By Person':'FB Group Finder';
+  if(!isFbg) render();
 }
 
 function render(){renderStats();renderSidebar();if(currentView==='products')renderProducts();else renderPeople();}
@@ -1401,6 +1413,612 @@ function closeImportModal(){document.getElementById('import-modal').classList.re
 });
 
 _sbBoot().finally(function(){ load(); render(); });
+</script>
+<!-- ========= FB GROUP FINDER ========= -->
+<style>
+/* ── FB Group Finder Layout ── */
+.fbg-main-panel{flex:1;overflow-y:auto;padding:28px 32px;display:flex;flex-direction:column;min-width:0}
+.fbg-library-panel{width:320px;flex-shrink:0;background:#0a0c0e;border-left:1px solid #1e2022;display:flex;flex-direction:column;overflow:hidden}
+.fbg-tabs{display:flex;border-bottom:1px solid #1e2022;flex-shrink:0}
+.fbg-tab{flex:1;padding:12px 0;font-size:12px;font-weight:700;letter-spacing:.04em;text-align:center;cursor:pointer;color:#555;border:none;background:none;font-family:'DM Sans',system-ui,sans-serif;transition:all .15s;border-bottom:2px solid transparent;margin-bottom:-1px}
+.fbg-tab.active{color:#2ABFAA;border-bottom-color:#2ABFAA}
+.fbg-tab:hover:not(.active){color:#aaa}
+.fbg-tab-content{display:none;flex:1;overflow-y:auto;flex-direction:column}
+.fbg-tab-content.active{display:flex}
+.fbg-header{margin-bottom:20px}
+.fbg-title{font-size:20px;font-weight:700;color:#fff;letter-spacing:-.01em;margin-bottom:6px}
+.fbg-sub{font-size:12px;color:#666;line-height:1.6}
+.fbg-search-row{display:flex;gap:10px;margin-bottom:10px}
+.fbg-input{flex:1;height:42px;background:#141618;border:1px solid #2e3032;border-radius:8px;padding:0 14px;font-size:13px;color:#fff;font-family:'DM Sans',system-ui,sans-serif;outline:none;transition:border-color .15s}
+.fbg-input::placeholder{color:#555}
+.fbg-input:focus{border-color:#2ABFAA}
+.fbg-btn{height:42px;padding:0 20px;background:#2ABFAA;border:none;border-radius:8px;color:#0a1412;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;transition:opacity .15s;white-space:nowrap}
+.fbg-btn:hover{opacity:.85}
+.fbg-count-select{height:42px;width:110px;flex-shrink:0;background:#141618;border:1px solid #2e3032;border-radius:8px;padding:0 10px;font-size:13px;color:#aaa;font-family:'DM Sans',system-ui,sans-serif;cursor:pointer;outline:none;transition:border-color .15s;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.fbg-count-select:focus{border-color:#2ABFAA}
+.fbg-save-bar{display:none;align-items:center;gap:8px;padding:9px 12px;background:#111315;border:1px solid #1e2022;border-radius:8px;margin-bottom:14px}
+.fbg-save-bar.visible{display:flex}
+.fbg-save-lbl{font-size:11px;color:#666;white-space:nowrap}
+.fbg-save-template-btn{height:34px;padding:0 14px;font-size:11px;font-weight:700;border:1px solid #2ABFAA;border-radius:6px;background:rgba(42,191,170,.1);color:#2ABFAA;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;white-space:nowrap;transition:all .12s}
+.fbg-save-template-btn:hover{background:rgba(42,191,170,.2)}
+.fbg-save-url-btn{height:34px;padding:0 14px;font-size:11px;font-weight:700;border:1px solid #2e3032;border-radius:6px;background:none;color:#888;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;white-space:nowrap;transition:all .12s}
+.fbg-save-url-btn:hover{border-color:#2ABFAA;color:#2ABFAA}
+.fbg-stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.fbg-stat{background:#141618;border-radius:8px;padding:12px 14px;border:1px solid #1e1e1e}
+.fbg-stat-val{font-size:22px;font-weight:700;color:#fff;font-family:monospace}
+.fbg-stat-lbl{font-size:11px;color:#666;margin-top:2px}
+.fbg-results-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.fbg-results-lbl{font-size:12px;color:#666}
+.fbg-sort{font-size:12px;background:#141618;border:1px solid #2e3032;border-radius:6px;padding:5px 10px;color:#aaa;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif}
+.fbg-card{display:grid;grid-template-columns:18px 44px 1fr auto;gap:12px;align-items:start;padding:14px 16px;border:1px solid #1e1e1e;border-radius:10px;background:#141618;margin-bottom:8px;transition:border-color .12s,background .12s}
+.fbg-card:hover{border-color:#2e3032}
+.fbg-avatar{width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;background:#1e2022}
+.fbg-name{font-size:14px;font-weight:700;color:#e0e0e0;margin-bottom:3px}
+.fbg-meta{font-size:12px;color:#666;margin-bottom:5px}
+.fbg-desc{font-size:12px;color:#888;line-height:1.5;margin-bottom:7px}
+.fbg-tags{display:flex;flex-wrap:wrap;gap:5px}
+.fbg-tag{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600}
+.fbg-tag-hot{background:rgba(224,123,40,.15);color:#E07B28}
+.fbg-tag-active{background:rgba(42,191,170,.15);color:#2ABFAA}
+.fbg-tag-brand{background:rgba(83,74,183,.2);color:#9b93f0}
+.fbg-tag-platform{background:rgba(24,95,165,.2);color:#5b9fd4}
+.fbg-score-wrap{text-align:right;min-width:64px}
+.fbg-score{font-size:24px;font-weight:700;color:#fff;font-family:monospace}
+.fbg-score-lbl{font-size:10px;color:#555;margin-top:1px}
+.fbg-open-btn{margin-top:8px;font-size:11px;padding:4px 10px;border:1px solid #2e3032;border-radius:6px;background:transparent;color:#888;cursor:pointer;display:block;width:100%;text-align:center;font-family:'DM Sans',system-ui,sans-serif;transition:all .12s}
+.fbg-open-btn:hover{border-color:#2ABFAA;color:#2ABFAA}
+.fbg-empty{text-align:center;padding:60px 24px;color:#555}
+.fbg-empty-icon{font-size:36px;margin-bottom:12px}
+.fbg-empty-title{font-size:15px;font-weight:600;color:#888;margin-bottom:6px}
+.fbg-empty-sub{font-size:12px;color:#555;line-height:1.7}
+.fbg-actions{display:flex;gap:8px;margin-top:20px;padding-top:20px;border-top:1px solid #1e1e1e}
+.fbg-action-btn{flex:1;height:38px;font-size:12px;border:1px solid #2e3032;border-radius:7px;background:#141618;color:#888;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;transition:all .12s}
+.fbg-action-btn:hover{border-color:#2ABFAA;color:#2ABFAA}
+.fbg-load-more-btn{width:100%;height:42px;font-size:13px;font-weight:600;border:1px dashed #2e3032;border-radius:8px;background:transparent;color:#666;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;transition:all .15s;margin:4px 0 12px}
+.fbg-load-more-btn:hover{border-color:#2ABFAA;color:#2ABFAA;background:rgba(42,191,170,.05)}
+.fbg-load-more-btn:disabled{opacity:.4;cursor:not-allowed}
+.fbg-card.selected{border-color:#2ABFAA!important;background:#0d1f1d!important}
+.fbg-checkbox{width:18px;height:18px;border:2px solid #3a3d40;border-radius:4px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;background:#1a1c1e;margin-top:13px;user-select:none}
+.fbg-checkbox.checked{background:#2ABFAA;border-color:#2ABFAA}
+.fbg-checkbox.checked::after{content:'✓';font-size:11px;color:#0a1412;font-weight:900;line-height:1}
+.fbg-sel-bar{display:flex;align-items:center;gap:10px;padding:8px 14px;background:#0d1f1d;border:1px solid #2ABFAA;border-radius:8px;margin-bottom:12px}
+.fbg-sel-bar-txt{font-size:12px;color:#2ABFAA;flex:1;font-weight:600}
+.fbg-sel-all{font-size:11px;color:#888;background:none;border:1px solid #2e3032;border-radius:5px;padding:3px 10px;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;transition:all .12s}
+.fbg-sel-all:hover{border-color:#2ABFAA;color:#2ABFAA}
+.fbg-export-btn{height:38px;padding:0 16px;font-size:12px;font-weight:700;border:none;border-radius:7px;background:#2ABFAA;color:#0a1412;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;transition:opacity .15s;white-space:nowrap}
+.fbg-export-btn:hover{opacity:.85}
+.fbg-lib-header{padding:16px 16px 0;flex-shrink:0}
+.fbg-lib-title{font-size:13px;font-weight:700;color:#ccc;margin-bottom:2px}
+.fbg-lib-sub{font-size:11px;color:#555;line-height:1.5;margin-bottom:12px}
+.fbg-lib-search{width:100%;height:36px;background:#111315;border:1px solid #222;border-radius:7px;padding:0 12px;font-size:12px;color:#ccc;font-family:'DM Sans',system-ui,sans-serif;outline:none;transition:border-color .15s;margin-bottom:10px}
+.fbg-lib-search::placeholder{color:#444}
+.fbg-lib-search:focus{border-color:#2ABFAA}
+.fbg-car-list{padding:0 10px 10px;flex:1;overflow-y:auto}
+.fbg-car-item{border:1px solid #1a1a1a;border-radius:9px;margin-bottom:8px;overflow:hidden;background:#111315}
+.fbg-car-header{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;transition:background .12s}
+.fbg-car-header:hover{background:#161a1b}
+.fbg-car-icon{font-size:16px;flex-shrink:0}
+.fbg-car-name{flex:1;font-size:13px;font-weight:700;color:#ddd}
+.fbg-car-count{font-size:10px;color:#555;background:#1a1a1a;padding:2px 7px;border-radius:10px;font-weight:600}
+.fbg-car-chevron{font-size:10px;color:#444;transition:transform .2s;flex-shrink:0}
+.fbg-car-chevron.open{transform:rotate(90deg)}
+.fbg-car-body{display:none;padding:0 12px 10px;border-top:1px solid #1a1a1a}
+.fbg-car-body.open{display:block}
+.fbg-car-search-btn{width:100%;height:30px;font-size:11px;font-weight:700;border:1px solid #2e3032;border-radius:6px;background:none;color:#2ABFAA;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;transition:all .12s;margin:8px 0 6px}
+.fbg-car-search-btn:hover{background:rgba(42,191,170,.1);border-color:#2ABFAA}
+.fbg-car-delete-btn{float:right;font-size:10px;color:#444;background:none;border:none;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;padding:2px 4px;transition:color .12s}
+.fbg-car-delete-btn:hover{color:#f87171}
+.fbg-saved-group{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #161616}
+.fbg-saved-group:last-child{border-bottom:none}
+.fbg-saved-group-icon{font-size:14px;flex-shrink:0}
+.fbg-saved-group-info{flex:1;min-width:0}
+.fbg-saved-group-name{font-size:12px;font-weight:600;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fbg-saved-group-url{font-size:10px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fbg-saved-group-actions{display:flex;gap:4px;flex-shrink:0}
+.fbg-saved-group-open{font-size:10px;padding:3px 7px;border:1px solid #2e3032;border-radius:4px;background:none;color:#888;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;transition:all .12s}
+.fbg-saved-group-open:hover{border-color:#2ABFAA;color:#2ABFAA}
+.fbg-saved-group-rm{font-size:10px;padding:3px 7px;border:1px solid #1e1e1e;border-radius:4px;background:none;color:#444;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;transition:color .12s}
+.fbg-saved-group-rm:hover{color:#f87171;border-color:#f87171}
+.fbg-add-url-form{padding:10px 16px;border-top:1px solid #1a1a1a;flex-shrink:0;background:#0a0c0e}
+.fbg-add-url-input{width:100%;height:34px;background:#111315;border:1px solid #222;border-radius:6px;padding:0 10px;font-size:12px;color:#ccc;font-family:'DM Sans',system-ui,sans-serif;outline:none;transition:border-color .15s;margin-bottom:6px}
+.fbg-add-url-input::placeholder{color:#444}
+.fbg-add-url-input:focus{border-color:#2ABFAA}
+.fbg-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9000;display:none;align-items:center;justify-content:center}
+.fbg-modal-overlay.open{display:flex}
+.fbg-modal{background:#111315;border:1px solid #2e3032;border-radius:12px;padding:24px;width:380px;max-width:90vw}
+.fbg-modal-title{font-size:15px;font-weight:700;color:#fff;margin-bottom:4px}
+.fbg-modal-sub{font-size:12px;color:#666;margin-bottom:18px}
+.fbg-modal-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.fbg-modal-input{width:100%;height:36px;background:#1a1c1e;border:1px solid #2e3032;border-radius:7px;padding:0 10px;font-size:13px;color:#fff;font-family:'DM Sans',system-ui,sans-serif;outline:none;transition:border-color .15s}
+.fbg-modal-input::placeholder{color:#555}
+.fbg-modal-input:focus{border-color:#2ABFAA}
+.fbg-modal-btns{display:flex;gap:8px;margin-top:6px}
+.fbg-modal-cancel{flex:1;height:38px;font-size:13px;border:1px solid #2e3032;border-radius:7px;background:none;color:#888;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;transition:all .12s}
+.fbg-modal-cancel:hover{color:#ccc;border-color:#555}
+.fbg-modal-save{flex:1;height:38px;font-size:13px;font-weight:700;border:none;border-radius:7px;background:#2ABFAA;color:#0a1412;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;transition:opacity .12s}
+.fbg-modal-save:hover{opacity:.85}
+.fbg-lib-empty{text-align:center;padding:40px 20px;color:#555}
+.fbg-lib-empty-icon{font-size:28px;margin-bottom:8px}
+.fbg-lib-empty-txt{font-size:12px;color:#444;line-height:1.6}
+.fbg-new-car-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:calc(100% - 20px);margin:0 10px 10px;height:36px;font-size:12px;font-weight:700;border:1px dashed #2e3032;border-radius:7px;background:none;color:#555;cursor:pointer;font-family:'DM Sans',system-ui,sans-serif;transition:all .12s;flex-shrink:0}
+.fbg-new-car-btn:hover{border-color:#2ABFAA;color:#2ABFAA;background:rgba(42,191,170,.05)}
+.fbg-toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#2ABFAA;color:#0a1412;font-size:12px;font-weight:700;padding:8px 20px;border-radius:8px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.fbg-toast.show{opacity:1}
+/* API key modal for FB Group Finder */
+#fbg-key-modal{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10000;display:none;align-items:center;justify-content:center}
+#fbg-key-modal.open{display:flex}
+.fbg-key-box{background:#111315;border:1px solid #2e3032;border-radius:14px;padding:28px;width:420px;max-width:90vw}
+.fbg-key-box h3{font-size:15px;font-weight:700;color:#fff;margin-bottom:6px}
+.fbg-key-box p{font-size:12px;color:#666;margin-bottom:18px;line-height:1.6}
+.fbg-key-inp{width:100%;height:40px;background:#1a1c1e;border:1px solid #2e3032;border-radius:8px;padding:0 12px;font-size:13px;color:#fff;font-family:monospace;outline:none;transition:border-color .15s;margin-bottom:14px}
+.fbg-key-inp:focus{border-color:#2ABFAA}
+.fbg-key-row{display:flex;gap:8px}
+.fbg-key-cancel{flex:1;height:38px;font-size:13px;border:1px solid #2e3032;border-radius:7px;background:none;color:#888;cursor:pointer;font-family:inherit}
+.fbg-key-save{flex:2;height:38px;font-size:13px;font-weight:700;border:none;border-radius:7px;background:#2ABFAA;color:#0a1412;cursor:pointer;font-family:inherit}
+</style>
+
+<!-- FB Group Finder inner HTML (injected into #view-fbgroups) -->
+<script>
+(function(){
+  var el = document.getElementById('view-fbgroups');
+  if(!el) return;
+  el.innerHTML = `
+  <div class="fbg-main-panel">
+    <div class="fbg-header">
+      <div class="fbg-title">Facebook Group Finder</div>
+      <div class="fbg-sub">Search any vehicle — AI uses live web search to find real communities. Save groups to car templates in the library →</div>
+    </div>
+    <div class="fbg-search-row">
+      <input class="fbg-input" id="fbg-search" placeholder="e.g. 2016 Audi S6, BMW M3 E46, C8 Corvette..." />
+      <select id="fbg-count" class="fbg-count-select">
+        <option value="5">5 results</option>
+        <option value="10" selected>10 results</option>
+        <option value="20">20 results</option>
+      </select>
+      <button class="fbg-btn" onclick="fbgSearch()">Search</button>
+    </div>
+    <div class="fbg-save-bar" id="fbg-save-bar">
+      <span class="fbg-save-lbl">Results for:</span>
+      <span id="fbg-save-bar-label" style="font-size:12px;color:#ccc;font-weight:600;flex:1"></span>
+      <button class="fbg-save-url-btn" onclick="fbgSaveSelectedToLibrary()">＋ Save selected to car</button>
+      <button class="fbg-save-template-btn" onclick="fbgSaveAllAsTemplate()">💾 Save as template</button>
+    </div>
+    <div id="fbg-results">
+      <div class="fbg-empty">
+        <div class="fbg-empty-icon">👥</div>
+        <div class="fbg-empty-title">Find your audience</div>
+        <div class="fbg-empty-sub">Type a vehicle above to search the web for<br>real active Facebook groups for that platform.</div>
+      </div>
+    </div>
+  </div>
+  <div class="fbg-library-panel">
+    <div class="fbg-tabs">
+      <button class="fbg-tab active" onclick="fbgSwitchLibTab('cars')" id="fbg-lib-tab-cars">🚗 Car Library</button>
+      <button class="fbg-tab" onclick="fbgSwitchLibTab('add')" id="fbg-lib-tab-add">＋ Add URL</button>
+    </div>
+    <div class="fbg-tab-content active" id="fbg-lib-cars">
+      <div class="fbg-lib-header">
+        <div class="fbg-lib-title">Saved Car Templates</div>
+        <div class="fbg-lib-sub">Click a car to see its linked groups. Click a car name to load its groups as a search.</div>
+        <input class="fbg-lib-search" id="fbg-lib-filter" placeholder="Filter cars..." oninput="fbgRenderLibrary()" />
+      </div>
+      <div style="display:flex;gap:6px;width:calc(100% - 20px);margin:0 10px 10px;flex-shrink:0">
+        <button class="fbg-new-car-btn" style="flex:1;margin:0;width:auto" onclick="fbgOpenNewCarModal()">＋ Add Car</button>
+      </div>
+      <div class="fbg-car-list" id="fbg-car-list">
+        <div class="fbg-lib-empty"><div class="fbg-lib-empty-icon">🚗</div><div class="fbg-lib-empty-txt">No cars saved yet.<br>Search a vehicle, then save results as a template.</div></div>
+      </div>
+    </div>
+    <div class="fbg-tab-content" id="fbg-lib-add" style="padding:16px;gap:12px">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#ccc;margin-bottom:4px">Manually Add a Group URL</div>
+        <div style="font-size:11px;color:#555;line-height:1.6;margin-bottom:14px">Paste any Facebook group URL and link it to a saved car.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <input class="fbg-add-url-input" id="fbg-manual-name" placeholder="Group name (e.g. Audi S6 Owners)" />
+        <input class="fbg-add-url-input" id="fbg-manual-url" placeholder="https://www.facebook.com/groups/..." />
+        <input class="fbg-add-url-input" id="fbg-manual-members" placeholder="Members (optional)" type="number" />
+        <select class="fbg-add-url-input" id="fbg-manual-car" style="cursor:pointer;-webkit-appearance:none;appearance:none">
+          <option value="">— Select a car template —</option>
+        </select>
+        <button class="fbg-modal-save" style="height:38px;font-size:12px" onclick="fbgManualAddUrl()">Save Group</button>
+      </div>
+      <div id="fbg-manual-msg" style="font-size:11px;color:#2ABFAA;display:none;margin-top:4px"></div>
+    </div>
+  </div>
+  <div class="fbg-modal-overlay" id="fbg-car-modal">
+    <div class="fbg-modal">
+      <div class="fbg-modal-title">Add New Car</div>
+      <div class="fbg-modal-sub">Enter the year, make, and model to create a template.</div>
+      <div class="fbg-modal-row">
+        <input class="fbg-modal-input" id="fbg-car-year" placeholder="Year" maxlength="4" />
+        <input class="fbg-modal-input" id="fbg-car-make" placeholder="Make" />
+        <input class="fbg-modal-input" id="fbg-car-model" placeholder="Model" />
+      </div>
+      <div class="fbg-modal-btns">
+        <button class="fbg-modal-cancel" onclick="fbgCloseCarModal()">Cancel</button>
+        <button class="fbg-modal-save" onclick="fbgSaveNewCar()">Add Car</button>
+      </div>
+    </div>
+  </div>
+  <div class="fbg-toast" id="fbg-toast"></div>
+  `;
+  document.getElementById('fbg-search').addEventListener('keydown',function(e){if(e.key==='Enter')fbgSearch();});
+  var modal = document.getElementById('fbg-car-modal');
+  if(modal) modal.addEventListener('click',function(e){if(e.target===modal)fbgCloseCarModal();});
+})();
+</script>
+
+<!-- API Key Modal for FB Group Finder -->
+<div id="fbg-key-modal">
+  <div class="fbg-key-box">
+    <h3>Anthropic API Key Required</h3>
+    <p>The FB Group Finder uses the Anthropic API with live web search to find real Facebook groups. Your key is stored locally and never sent anywhere except Anthropic.</p>
+    <input class="fbg-key-inp" id="fbg-key-input" type="password" placeholder="sk-ant-..." />
+    <div class="fbg-key-row">
+      <button class="fbg-key-cancel" onclick="document.getElementById('fbg-key-modal').classList.remove('open')">Cancel</button>
+      <button class="fbg-key-save" onclick="fbgSaveKey()">Save Key</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── FB Group Finder: API Key helpers ──────────────────────────────────────
+var FBG_LIBRARY_KEY = 'tgk_fbg_library_v1';
+var FBG_API_KEY_STORE = 'tgk_api_key';
+
+function fbgGetKey(){ return localStorage.getItem(FBG_API_KEY_STORE)||''; }
+function fbgShowKeyModal(){
+  document.getElementById('fbg-key-modal').classList.add('open');
+  document.getElementById('fbg-key-input').value = fbgGetKey();
+  setTimeout(function(){ document.getElementById('fbg-key-input').focus(); }, 50);
+}
+function fbgSaveKey(){
+  var k = document.getElementById('fbg-key-input').value.trim();
+  localStorage.setItem(FBG_API_KEY_STORE, k);
+  document.getElementById('fbg-key-modal').classList.remove('open');
+  fbgToast('API key saved ✓');
+}
+document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ document.getElementById('fbg-key-modal').classList.remove('open'); fbgCloseCarModal(); } });
+
+// ── FB Group Library (localStorage) ───────────────────────────────────────
+function fbgLibLoad(){
+  try{ return JSON.parse(localStorage.getItem(FBG_LIBRARY_KEY)) || []; } catch(e){ return []; }
+}
+function fbgLibSave(data){
+  try{ localStorage.setItem(FBG_LIBRARY_KEY, JSON.stringify(data)); } catch(e){}
+}
+function fbgCarKey(year,make,model){ return [year,make,model].join('_').toLowerCase().replace(/\s+/g,'_'); }
+
+function fbgSwitchLibTab(tab){
+  document.getElementById('fbg-lib-tab-cars').classList.toggle('active',tab==='cars');
+  document.getElementById('fbg-lib-tab-add').classList.toggle('active',tab==='add');
+  document.getElementById('fbg-lib-cars').classList.toggle('active',tab==='cars');
+  document.getElementById('fbg-lib-add').classList.toggle('active',tab==='add');
+  if(tab==='add') fbgPopulateCarDropdowns();
+}
+function fbgOpenNewCarModal(){ document.getElementById('fbg-car-modal').classList.add('open'); document.getElementById('fbg-car-year').focus(); }
+function fbgCloseCarModal(){
+  var m=document.getElementById('fbg-car-modal'); if(m)m.classList.remove('open');
+  ['fbg-car-year','fbg-car-make','fbg-car-model'].forEach(function(id){ var el=document.getElementById(id); if(el)el.value=''; });
+}
+function fbgSaveNewCar(){
+  var year=document.getElementById('fbg-car-year').value.trim();
+  var make=document.getElementById('fbg-car-make').value.trim();
+  var model=document.getElementById('fbg-car-model').value.trim();
+  if(!year||!make||!model){ fbgToast('Please fill in year, make, and model.'); return; }
+  var lib=fbgLibLoad(), key=fbgCarKey(year,make,model);
+  if(lib.find(function(c){ return c.key===key; })){ fbgToast('That car already exists.'); fbgCloseCarModal(); return; }
+  lib.push({key:key,year:year,make:make,model:model,groups:[]});
+  fbgLibSave(lib); fbgCloseCarModal(); fbgRenderLibrary(); fbgPopulateCarDropdowns();
+  fbgToast('Car added: '+year+' '+make+' '+model);
+}
+function fbgRenderLibrary(){
+  var lib=fbgLibLoad();
+  var filterEl=document.getElementById('fbg-lib-filter');
+  var filt=filterEl?(filterEl.value||'').toLowerCase():'';
+  var filtered=filt?lib.filter(function(c){ return (c.year+' '+c.make+' '+c.model).toLowerCase().includes(filt); }):lib;
+  var container=document.getElementById('fbg-car-list'); if(!container)return;
+  if(filtered.length===0){ container.innerHTML='<div class="fbg-lib-empty"><div class="fbg-lib-empty-icon">🚗</div><div class="fbg-lib-empty-txt">'+(filt?'No matches found.':'No cars saved yet.<br>Search a vehicle, then save results as a template.')+'</div></div>'; return; }
+  var html='';
+  filtered.forEach(function(car){
+    var label=car.year+' '+car.make+' '+car.model, count=(car.groups||[]).length;
+    html+='<div class="fbg-car-item" id="fbg-car-'+car.key+'">'
+      +'<div class="fbg-car-header" onclick="fbgToggleCar(\''+car.key+'\')">'
+      +'<span class="fbg-car-icon">🚗</span><span class="fbg-car-name">'+label+'</span>'
+      +'<span class="fbg-car-count">'+count+' group'+(count===1?'':'s')+'</span>'
+      +'<span class="fbg-car-chevron" id="fbg-chev-'+car.key+'">▶</span></div>'
+      +'<div class="fbg-car-body" id="fbg-car-body-'+car.key+'">'
+      +'<button class="fbg-car-search-btn" onclick="fbgLoadCarSearch(\''+car.key+'\')">🔍 Search &ldquo;'+label+'&rdquo;</button>';
+    if(count===0){ html+='<div style="font-size:11px;color:#444;text-align:center;padding:8px 0">No groups linked yet.</div>'; }
+    else { (car.groups||[]).forEach(function(g,gi){ var safeKey=car.key.replace(/'/g,"\\'");
+      html+='<div class="fbg-saved-group"><span class="fbg-saved-group-icon">'+(g.icon||'👥')+'</span>'
+        +'<div class="fbg-saved-group-info"><div class="fbg-saved-group-name">'+g.name+'</div>'
+        +'<div class="fbg-saved-group-url">'+(g.members&&g.members>0?fbgFmt(g.members)+' members · ':'')+((g.url||'').replace('https://',''))+'</div></div>'
+        +'<div class="fbg-saved-group-actions">'
+        +'<button class="fbg-saved-group-open" onclick="window.open(\''+g.url+'\',\'_blank\')">↗</button>'
+        +'<button class="fbg-saved-group-rm" onclick="fbgRemoveGroup(\''+safeKey+'\','+gi+')">✕</button>'
+        +'</div></div>';
+    }); }
+    html+='<button class="fbg-car-delete-btn" onclick="fbgDeleteCar(\''+car.key+'\')">🗑 Delete car</button>';
+    html+='</div></div>';
+  });
+  container.innerHTML=html;
+}
+function fbgToggleCar(key){
+  var body=document.getElementById('fbg-car-body-'+key), chev=document.getElementById('fbg-chev-'+key); if(!body)return;
+  var isOpen=body.classList.contains('open'); body.classList.toggle('open',!isOpen); if(chev)chev.classList.toggle('open',!isOpen);
+}
+function fbgLoadCarSearch(key){
+  var lib=fbgLibLoad(), car=lib.find(function(c){ return c.key===key; }); if(!car)return;
+  document.getElementById('fbg-search').value=car.year+' '+car.make+' '+car.model;
+  fbgSearch();
+}
+function fbgRemoveGroup(carKey,groupIndex){
+  var lib=fbgLibLoad(), car=lib.find(function(c){ return c.key===carKey; }); if(!car)return;
+  car.groups.splice(groupIndex,1); fbgLibSave(lib); fbgRenderLibrary(); fbgToast('Group removed.');
+}
+function fbgDeleteCar(key){
+  var lib=fbgLibLoad(), idx=lib.findIndex(function(c){ return c.key===key; }); if(idx===-1)return;
+  var name=lib[idx].year+' '+lib[idx].make+' '+lib[idx].model;
+  lib.splice(idx,1); fbgLibSave(lib); fbgRenderLibrary(); fbgPopulateCarDropdowns(); fbgToast(name+' deleted.');
+}
+function fbgPopulateCarDropdowns(){
+  var lib=fbgLibLoad(), sel=document.getElementById('fbg-manual-car'); if(!sel)return;
+  sel.innerHTML='<option value="">— Select a car template —</option>';
+  lib.forEach(function(car){ var opt=document.createElement('option'); opt.value=car.key; opt.textContent=car.year+' '+car.make+' '+car.model; sel.appendChild(opt); });
+}
+function fbgSaveAllAsTemplate(){
+  if(!fbgCurrentResults||fbgCurrentResults.length===0){ fbgToast('No results to save.'); return; }
+  var lib=fbgLibLoad();
+  if(lib.length===0){ fbgToast('Add a car first using the library →'); fbgOpenNewCarModal(); return; }
+  var carOptions=lib.map(function(c){ return '<option value="'+c.key+'">'+c.year+' '+c.make+' '+c.model+'</option>'; }).join('');
+  var existingModal=document.getElementById('fbg-template-modal'); if(existingModal)existingModal.remove();
+  var modal=document.createElement('div'); modal.id='fbg-template-modal'; modal.className='fbg-modal-overlay open';
+  modal.innerHTML='<div class="fbg-modal"><div class="fbg-modal-title">Save as Template</div>'
+    +'<div class="fbg-modal-sub">Choose which car to link these '+fbgCurrentResults.length+' groups to.</div>'
+    +'<select class="fbg-modal-input" id="fbg-tmpl-car-sel" style="height:36px;cursor:pointer;-webkit-appearance:none;appearance:none">'+carOptions+'</select>'
+    +'<div class="fbg-modal-btns" style="margin-top:12px">'
+    +'<button class="fbg-modal-cancel" onclick="document.getElementById(\'fbg-template-modal\').remove()">Cancel</button>'
+    +'<button class="fbg-modal-save" onclick="fbgConfirmSaveTemplate()">Save</button>'
+    +'</div></div>';
+  document.body.appendChild(modal);
+}
+function fbgConfirmSaveTemplate(){
+  var carKey=document.getElementById('fbg-tmpl-car-sel').value; if(!carKey){ fbgToast('Please select a car.'); return; }
+  var lib=fbgLibLoad(), car=lib.find(function(c){ return c.key===carKey; }); if(!car)return;
+  var existingNames=new Set((car.groups||[]).map(function(g){ return g.name; })), added=0;
+  fbgCurrentResults.forEach(function(g){ if(!existingNames.has(g.name)){ car.groups.push({name:g.name,url:g.url,members:g.members,icon:g.icon||'👥',desc:g.desc||''}); added++; } });
+  fbgLibSave(lib); document.getElementById('fbg-template-modal').remove(); fbgRenderLibrary();
+  fbgToast(added+' group'+(added===1?'':'s')+' saved to '+car.year+' '+car.make+' '+car.model+'!');
+}
+function fbgSaveSelectedToLibrary(){
+  var toSave=fbgSelected.size>0?fbgCurrentResults.filter(function(g){ return fbgSelected.has(g.name); }):fbgCurrentResults;
+  if(toSave.length===0){ fbgToast('No groups to save.'); return; }
+  var lib=fbgLibLoad();
+  if(lib.length===0){ fbgToast('Add a car first using the library →'); fbgOpenNewCarModal(); return; }
+  var carOptions=lib.map(function(c){ return '<option value="'+c.key+'">'+c.year+' '+c.make+' '+c.model+'</option>'; }).join('');
+  var existingModal=document.getElementById('fbg-sel-modal'); if(existingModal)existingModal.remove();
+  var modal=document.createElement('div'); modal.id='fbg-sel-modal'; modal.className='fbg-modal-overlay open';
+  modal.innerHTML='<div class="fbg-modal"><div class="fbg-modal-title">Save '+toSave.length+' Group'+(toSave.length===1?'':'s')+'</div>'
+    +'<div class="fbg-modal-sub">Link '+(fbgSelected.size>0?'the selected groups':'all results')+' to a car template.</div>'
+    +'<select class="fbg-modal-input" id="fbg-sel-car-sel" style="height:36px;cursor:pointer;-webkit-appearance:none;appearance:none">'+carOptions+'</select>'
+    +'<div class="fbg-modal-btns" style="margin-top:12px">'
+    +'<button class="fbg-modal-cancel" onclick="document.getElementById(\'fbg-sel-modal\').remove()">Cancel</button>'
+    +'<button class="fbg-modal-save" onclick="fbgConfirmSaveSelected()">Save</button>'
+    +'</div></div>';
+  document.body.appendChild(modal);
+  window._fbgPendingSave=toSave;
+}
+function fbgConfirmSaveSelected(){
+  var carKey=document.getElementById('fbg-sel-car-sel').value; if(!carKey){ fbgToast('Please select a car.'); return; }
+  var lib=fbgLibLoad(), car=lib.find(function(c){ return c.key===carKey; }); if(!car)return;
+  var toAdd=window._fbgPendingSave||[], existingNames=new Set((car.groups||[]).map(function(g){ return g.name; })), added=0;
+  toAdd.forEach(function(g){ if(!existingNames.has(g.name)){ car.groups.push({name:g.name,url:g.url,members:g.members,icon:g.icon||'👥',desc:g.desc||''}); added++; } });
+  fbgLibSave(lib); document.getElementById('fbg-sel-modal').remove(); fbgRenderLibrary();
+  fbgToast(added+' group'+(added===1?'':'s')+' saved to '+car.year+' '+car.make+' '+car.model+'!');
+}
+function fbgManualAddUrl(){
+  var name=document.getElementById('fbg-manual-name').value.trim();
+  var url=document.getElementById('fbg-manual-url').value.trim();
+  var members=parseInt(document.getElementById('fbg-manual-members').value)||0;
+  var carKey=document.getElementById('fbg-manual-car').value;
+  if(!name){ fbgToast('Enter a group name.'); return; }
+  if(!url||!url.includes('facebook.com')){ fbgToast('Enter a valid Facebook URL.'); return; }
+  if(!carKey){ fbgToast('Select a car.'); return; }
+  var lib=fbgLibLoad(), car=lib.find(function(c){ return c.key===carKey; });
+  if(!car){ fbgToast('Car not found.'); return; }
+  car.groups=car.groups||[];
+  if(car.groups.find(function(g){ return g.name===name; })){ fbgToast('Group already saved to this car.'); return; }
+  car.groups.push({name:name,url:url,members:members,icon:'👥',desc:''});
+  fbgLibSave(lib); fbgRenderLibrary();
+  document.getElementById('fbg-manual-name').value='';
+  document.getElementById('fbg-manual-url').value='';
+  document.getElementById('fbg-manual-members').value='';
+  var msg=document.getElementById('fbg-manual-msg');
+  if(msg){ msg.style.display='block'; msg.textContent='✓ Saved!'; setTimeout(function(){ msg.style.display='none'; },2500); }
+  fbgToast('Group saved!');
+}
+function fbgToast(msg){
+  var t=document.getElementById('fbg-toast'); if(!t)return;
+  t.textContent=msg; t.classList.add('show'); clearTimeout(t._timer);
+  t._timer=setTimeout(function(){ t.classList.remove('show'); },2500);
+}
+function fbgShowSaveBar(label){
+  var bar=document.getElementById('fbg-save-bar'), lbl=document.getElementById('fbg-save-bar-label');
+  if(bar)bar.classList.add('visible'); if(lbl&&label)lbl.textContent=label;
+}
+function fbgHideSaveBar(){ var bar=document.getElementById('fbg-save-bar'); if(bar)bar.classList.remove('visible'); }
+
+// ── Web-search powered FB group finder ────────────────────────────────────
+var FBG_DB={}, fbgCurrentResults=[], fbgSortBy='score', fbgCurrentLabel='', fbgVisibleCount=10;
+var fbgSelected=new Set();
+var fbgCooldownTimer=null, fbgCooldownEnd=0;
+
+async function fbgCallAIWithWebSearch(systemPrompt,userPrompt,maxTokens){
+  var key=fbgGetKey(); if(!key){ fbgShowKeyModal(); throw new Error('NO_KEY'); }
+  var messages=[{role:'user',content:userPrompt}];
+  var tools=[{type:'web_search_20250305',name:'web_search'}];
+  for(var i=0;i<4;i++){
+    var body={model:'claude-sonnet-4-20250514',max_tokens:maxTokens||3000,system:systemPrompt,tools:tools,messages:messages};
+    var r,d;
+    try{ r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify(body)}); }
+    catch(fe){ throw new Error('NETWORK_ERROR'); }
+    d=await r.json();
+    if(d.error){ if(d.error.type==='authentication_error')throw new Error('AUTH_ERROR'); if(d.error.type==='rate_limit_error')throw new Error('RATE_ERROR'); throw new Error('API: '+d.error.message); }
+    messages.push({role:'assistant',content:d.content});
+    if(d.stop_reason==='end_turn'){ var tb=d.content.find(function(b){ return b.type==='text'; }); return tb?tb.text:''; }
+    var toolUseBlocks=d.content.filter(function(b){ return b.type==='tool_use'; });
+    if(toolUseBlocks.length===0){ var tb2=d.content.find(function(b){ return b.type==='text'; }); return tb2?tb2.text:''; }
+    var toolResults=toolUseBlocks.map(function(block){ return {type:'tool_result',tool_use_id:block.id,content:'Search executed.'}; });
+    messages.push({role:'user',content:toolResults});
+  }
+  throw new Error('Search loop exceeded');
+}
+
+async function fbgCallAI(prompt,maxTokens){
+  var key=fbgGetKey(); if(!key){ fbgShowKeyModal(); throw new Error('NO_KEY'); }
+  var r,d;
+  try{ r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTokens||1200,messages:[{role:'user',content:prompt}]})}); }
+  catch(fe){ throw new Error('NETWORK_ERROR'); }
+  d=await r.json();
+  if(d.error){ if(d.error.type==='authentication_error')throw new Error('AUTH_ERROR'); if(d.error.type==='rate_limit_error')throw new Error('RATE_ERROR'); throw new Error('API: '+d.error.message); }
+  return d.content?.[0]?.text||'';
+}
+
+async function fbgSearch(){
+  var q=document.getElementById('fbg-search').value.trim(); if(!q)return;
+  var qLow=q.toLowerCase();
+  var countEl=document.getElementById('fbg-count'), requestedCount=countEl?parseInt(countEl.value):10;
+  if(FBG_DB[qLow]){ fbgCurrentResults=FBG_DB[qLow].slice(); fbgCurrentLabel=q; fbgVisibleCount=requestedCount; fbgSelected.clear(); fbgShowSaveBar(q); fbgRender(); return; }
+  if(Date.now()<fbgCooldownEnd) return;
+  var key=fbgGetKey(); if(!key){ fbgShowKeyModal(); return; }
+  var btn=document.querySelector('.fbg-btn'); btn.disabled=true; btn.textContent='Searching…';
+  document.getElementById('fbg-results').innerHTML='<div class="fbg-empty"><div class="fbg-empty-icon" style="font-size:28px">⏳</div><div class="fbg-empty-title" style="margin-top:14px">Searching the web for real groups…</div><div class="fbg-empty-sub">Finding real groups for <strong style="color:#fff">'+q+'</strong>. Takes ~20–30 seconds.</div></div>';
+  var systemPrompt='You are an expert in automotive Facebook communities. Your job is to return real Facebook groups for vehicle owners. Use web search to find groups and verify member counts where possible. Always return a populated JSON array. Never return an empty array. Return ONLY the JSON array, no explanation, no markdown.';
+  var userPrompt='Find Facebook groups for owners of: "'+q+'"\n\nUse web search to find groups.\nReturn ONLY a JSON array of '+requestedCount+' groups. Each object must be:\n{"name":"Group Name","members":25000,"activity":"High","icon":"🚗","tags":["brand"],"url":"https://www.facebook.com/groups/groupslug","desc":"One sentence about the group.","score":88}\n\nmembers = best estimate as integer (-1 only if truly unknown). activity = Low/Medium/High/Very High. tags = 1-2 of: hot, active, brand, platform.\nReturn ONLY the JSON array. No text before or after it.';
+  var fbgSearchSuccess=false;
+  try{
+    var raw=await fbgCallAIWithWebSearch(systemPrompt,userPrompt,3500);
+    var clean=raw.replace(/```json|```/g,'').trim();
+    var arrStart=clean.indexOf('['), arrEnd=clean.lastIndexOf(']');
+    if(arrStart===-1||arrEnd===-1) throw new Error('PARSE_FAIL');
+    clean=clean.slice(arrStart,arrEnd+1);
+    var data; try{ data=JSON.parse(clean); } catch(pe){ throw new Error('PARSE_FAIL'); }
+    if(!Array.isArray(data)||data.length===0) throw new Error('PARSE_FAIL');
+    fbgSearchSuccess=true;
+    data=data.map(function(g){
+      var rawUrl=String(g.url||'');
+      if(!rawUrl.startsWith('http')) rawUrl='https://www.facebook.com/groups/'+rawUrl;
+      if(!rawUrl.includes('facebook.com/groups/')) rawUrl='https://www.facebook.com/search/groups/?q='+encodeURIComponent(String(g.name||''));
+      return {name:String(g.name||'Unknown Group'),members:g.members===-1?-1:Math.round(Number(g.members)||0),activity:String(g.activity||'Medium'),icon:String(g.icon||'🚗'),tags:Array.isArray(g.tags)?g.tags:['brand'],url:rawUrl,desc:String(g.desc||''),score:Math.min(99,Math.max(50,Math.round(Number(g.score)||80))),real:true};
+    });
+    FBG_DB[qLow]=data; fbgCurrentResults=data.slice(); fbgCurrentLabel=q; fbgVisibleCount=requestedCount; fbgSelected.clear(); fbgRender(); fbgShowSaveBar(q);
+  } catch(e){
+    var msg=e.message==='AUTH_ERROR'?'API key rejected — click above to update it.':e.message==='NETWORK_ERROR'?'Cannot reach the API. Check your connection.':e.message==='NO_KEY'?'No API key set.':e.message==='RATE_ERROR'?'Rate limit hit. Wait 30–60 seconds and try again.':e.message==='PARSE_FAIL'?'Unexpected AI response. Please retry.':e.message;
+    document.getElementById('fbg-results').innerHTML='<div class="fbg-empty"><div class="fbg-empty-icon">⚠️</div><div class="fbg-empty-title">Search failed</div><div class="fbg-empty-sub">'+msg+'<br><br><button onclick="fbgShowKeyModal()" style="margin-top:8px;padding:6px 16px;background:#2ABFAA;border:none;border-radius:6px;color:#0a1412;font-weight:700;cursor:pointer;font-size:12px">Set API Key</button></div></div>';
+  } finally { fbgStartCooldown(fbgSearchSuccess?45:10); }
+}
+
+function fbgFmt(n){ if(n===-1||n===0)return '?'; return n>=1000000?(n/1000000).toFixed(1)+'M':n>=1000?(n/1000).toFixed(0)+'K':n; }
+function fbgTagClass(t){ if(t==='hot')return 'fbg-tag-hot'; if(t==='active')return 'fbg-tag-active'; if(t==='brand')return 'fbg-tag-brand'; return 'fbg-tag-platform'; }
+function fbgTagLabel(t){ if(t==='hot')return 'Trending'; if(t==='active')return 'Very Active'; if(t==='brand')return 'Brand-Specific'; return 'Platform'; }
+
+function fbgToggle(name){ if(fbgSelected.has(name))fbgSelected.delete(name); else fbgSelected.add(name); fbgRender(); }
+function fbgSelectAll(){
+  var sorted=fbgCurrentResultsSorted(), visible=sorted.slice(0,fbgVisibleCount);
+  var allSel=visible.every(function(g){ return fbgSelected.has(g.name); });
+  if(allSel){ visible.forEach(function(g){ fbgSelected.delete(g.name); }); } else { visible.forEach(function(g){ fbgSelected.add(g.name); }); }
+  fbgRender();
+}
+function fbgCurrentResultsSorted(){
+  var sorted=fbgCurrentResults.slice();
+  if(fbgSortBy==='members')sorted.sort(function(a,b){ return b.members-a.members; });
+  else sorted.sort(function(a,b){ return b.score-a.score; });
+  return sorted;
+}
+function fbgRender(){
+  var sorted=fbgCurrentResultsSorted(), visible=sorted.slice(0,fbgVisibleCount);
+  var total=fbgCurrentResults.reduce(function(s,g){ return s+g.members; },0);
+  var avg=Math.round(fbgCurrentResults.reduce(function(s,g){ return s+g.score; },0)/fbgCurrentResults.length);
+  var selCount=fbgSelected.size, allVisibleSel=visible.length>0&&visible.every(function(g){ return fbgSelected.has(g.name); });
+  var html='<div class="fbg-stats-row">'
+    +'<div class="fbg-stat"><div class="fbg-stat-val">'+fbgCurrentResults.length+'</div><div class="fbg-stat-lbl">Groups found</div></div>'
+    +'<div class="fbg-stat"><div class="fbg-stat-val">'+fbgFmt(total)+'</div><div class="fbg-stat-lbl">Total reach</div></div>'
+    +'<div class="fbg-stat"><div class="fbg-stat-val">'+avg+'</div><div class="fbg-stat-lbl">Avg relevance</div></div>'
+    +'</div>';
+  html+='<div class="fbg-sel-bar"><div class="fbg-sel-bar-txt">'+(selCount>0?selCount+' selected':'Click checkboxes to select groups')+'</div>'
+    +'<button class="fbg-sel-all" onclick="fbgSelectAll()">'+(allVisibleSel?'Deselect all':'Select all')+'</button>'
+    +'<button class="fbg-export-btn" onclick="fbgExportCSV()">⬇ Export CSV'+(selCount>0?' ('+selCount+')':'')+'</button></div>';
+  html+='<div class="fbg-results-header"><span class="fbg-results-lbl">Showing '+visible.length+' of '+sorted.length+' groups for &ldquo;'+fbgCurrentLabel+'&rdquo;</span>'
+    +'<select class="fbg-sort" onchange="fbgSortBy=this.value;fbgRender()"><option value="score">Sort: Relevance</option><option value="members">Sort: Members</option></select></div>';
+  visible.forEach(function(g){
+    var tags=g.tags.map(function(t){ return '<span class="fbg-tag '+fbgTagClass(t)+'">'+fbgTagLabel(t)+'</span>'; }).join('');
+    var isSel=fbgSelected.has(g.name), safeName=g.name.replace(/'/g,"\\'");
+    var searchUrl='https://www.facebook.com/search/groups/?q='+encodeURIComponent(g.name);
+    var openUrl=(g.url&&g.url.includes('facebook.com'))?g.url:searchUrl;
+    var membersStr=(g.members===-1||g.members===0)?'Members unknown':fbgFmt(g.members)+' members';
+    html+='<div class="fbg-card'+(isSel?' selected':'')+'" onclick="fbgToggle(\''+safeName+'\')" style="cursor:pointer">'
+      +'<div class="fbg-checkbox'+(isSel?' checked':'')+'" onclick="event.stopPropagation();fbgToggle(\''+safeName+'\')"></div>'
+      +'<div class="fbg-avatar">'+g.icon+'</div>'
+      +'<div><div class="fbg-name">'+g.name+'</div><div class="fbg-meta">'+membersStr+' &middot; '+g.activity+' activity</div>'
+      +'<div class="fbg-desc">'+g.desc+'</div><div class="fbg-tags">'+tags+'</div></div>'
+      +'<div class="fbg-score-wrap"><div class="fbg-score">'+g.score+'</div><div class="fbg-score-lbl">relevance</div>'
+      +'<button class="fbg-open-btn" onclick="event.stopPropagation();window.open(\''+openUrl+'\',\'_blank\')">Find on FB ↗</button></div>'
+      +'</div>';
+  });
+  var hasMoreCached=fbgVisibleCount<sorted.length;
+  html+='<button class="fbg-load-more-btn" onclick="fbgLoadMore()">'+(hasMoreCached?'Show '+Math.min(5,sorted.length-fbgVisibleCount)+' more':'Search for 5 more groups')+'</button>';
+  html+='<div class="fbg-actions"><button class="fbg-action-btn" onclick="fbgCopy()">Copy group list</button></div>';
+  document.getElementById('fbg-results').innerHTML=html;
+}
+async function fbgLoadMore(){
+  var q=fbgCurrentLabel, qLow=q.toLowerCase(), btn=document.querySelector('.fbg-load-more-btn');
+  if(btn){ btn.disabled=true; btn.textContent='Loading…'; }
+  var sorted=fbgCurrentResultsSorted();
+  if(fbgVisibleCount<sorted.length){ fbgVisibleCount=Math.min(fbgVisibleCount+5,sorted.length); fbgRender(); return; }
+  var existing=fbgCurrentResults.map(function(g){ return g.name; });
+  var key=fbgGetKey(); if(!key){ fbgShowKeyModal(); if(btn){btn.disabled=false;btn.textContent='Search for 5 more groups';} return; }
+  var prompt='Find 5 MORE real Facebook groups for owners of: "'+q+'".\nAlready found — do NOT repeat these:\n'+existing.map(function(n,i){ return (i+1)+'. '+n; }).join('\n')+'\n\nReturn ONLY a JSON array of exactly 5 new groups. Each: {"name":"","members":10000,"activity":"High","icon":"🚗","tags":["brand"],"url":"https://www.facebook.com/groups/slug","desc":"One sentence.","score":85}\nNo markdown, no text outside the array.';
+  try{
+    var raw=await fbgCallAI(prompt,2000);
+    var clean=raw.replace(/```json|```/g,'').trim();
+    var arrStart=clean.indexOf('['), arrEnd=clean.lastIndexOf(']');
+    if(arrStart===-1||arrEnd===-1)throw new Error('no array');
+    var newData=JSON.parse(clean.slice(arrStart,arrEnd+1));
+    if(!Array.isArray(newData)||newData.length===0)throw new Error('Empty');
+    newData=newData.map(function(g){ var rawUrl=String(g.url||''); if(!rawUrl.startsWith('http'))rawUrl='https://www.facebook.com/groups/'+rawUrl; return {name:String(g.name||'Unknown Group'),members:g.members===-1?-1:Math.round(Number(g.members)||10000),activity:String(g.activity||'Medium'),icon:String(g.icon||'🚗'),tags:Array.isArray(g.tags)?g.tags:['brand'],url:rawUrl,desc:String(g.desc||''),score:Math.min(99,Math.max(50,Math.round(Number(g.score)||80)))}; });
+    fbgCurrentResults=fbgCurrentResults.concat(newData); FBG_DB[qLow]=fbgCurrentResults.slice(); fbgVisibleCount=fbgCurrentResults.length; fbgRender();
+  } catch(e){ if(btn){ btn.disabled=false; btn.textContent='Retry'; } }
+}
+function fbgExportCSV(){
+  var toExport=fbgSelected.size>0?fbgCurrentResults.filter(function(g){ return fbgSelected.has(g.name); }):fbgCurrentResults;
+  if(toExport.length===0){ fbgToast('No results to export.'); return; }
+  var header='Group Name,Members,Activity,Tags,Relevance Score,Group URL,Search URL';
+  var rows=toExport.map(function(g){ var searchUrl='https://www.facebook.com/search/groups/?q='+encodeURIComponent(g.name); var groupUrl=g.url||searchUrl; return ['"'+(g.name||'').replace(/"/g,'""')+'"',g.members===-1?'Unknown':(g.members||0),g.activity||'','"'+(Array.isArray(g.tags)?g.tags.map(fbgTagLabel).join(', '): '')+'"',g.score||'',groupUrl,searchUrl].join(','); });
+  var csv=header+'\n'+rows.join('\n');
+  var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}), a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='fb-groups-'+fbgCurrentLabel.replace(/[^a-z0-9]/gi,'-').toLowerCase()+'.csv'; a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); },1000);
+}
+function fbgCopy(){
+  var toUse=fbgSelected.size>0?fbgCurrentResults.filter(function(g){ return fbgSelected.has(g.name); }):fbgCurrentResults;
+  var lines=toUse.map(function(g){ return g.name+' ('+fbgFmt(g.members)+' members) — Search: https://www.facebook.com/search/groups/?q='+encodeURIComponent(g.name); }).join('\n');
+  var text='Facebook Groups for '+fbgCurrentLabel+':\n\n'+lines;
+  navigator.clipboard&&navigator.clipboard.writeText(text);
+  fbgToast('Copied to clipboard!');
+}
+function fbgStartCooldown(seconds){
+  clearInterval(fbgCooldownTimer); fbgCooldownEnd=Date.now()+seconds*1000;
+  var btn=document.querySelector('.fbg-btn'); if(!btn)return; btn.disabled=true;
+  fbgCooldownTimer=setInterval(function(){
+    var remaining=Math.ceil((fbgCooldownEnd-Date.now())/1000);
+    var b=document.querySelector('.fbg-btn'); if(!b){ clearInterval(fbgCooldownTimer); return; }
+    if(remaining<=0){ clearInterval(fbgCooldownTimer); b.disabled=false; b.textContent='Search'; b.style.background=''; }
+    else { b.textContent='Wait '+remaining+'s'; b.style.background='#2a2a2a'; }
+  },250);
+}
+document.addEventListener('DOMContentLoaded',function(){ fbgRenderLibrary(); fbgPopulateCarDropdowns(); });
 </script>
 </body>
 </html>
