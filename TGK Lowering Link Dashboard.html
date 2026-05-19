@@ -662,7 +662,8 @@ a{color:var(--teal);text-decoration:none;}
           <div class="fl"><label>Rear Link Length (mm)</label><input id="a_lenR" placeholder="e.g. 195 (if different)"></div>
           <div class="fl"><label>Thread Size</label><input id="a_thread" placeholder="e.g. M8x1.25"></div>
           <div class="fl"><label>Adjuster Range (mm)</label><input id="a_adjrange" placeholder="e.g. 185-215"></div>
-          <div class="fl"><label>End Fitting</label><input id="a_endfitting" placeholder="e.g. Ball joint / rod end"></div>
+          <div class="fl"><label>Upper End Fitting <span style="font-size:9px;color:var(--txt3);">sensor end</span></label><input id="a_endfitting" placeholder="e.g. Ball joint / rod end"></div>
+          <div class="fl"><label>Lower End Fitting <span style="font-size:9px;color:var(--txt3);">arm end</span></label><input id="a_endfittingLower" placeholder="e.g. Ball joint / clevis"></div>
           <div class="fl"><label>Position</label>
             <select id="a_pos"><option value="">—</option><option>Front Only</option><option>Rear Only</option><option>Front & Rear</option><option>All 4 Corners</option></select>
           </div>
@@ -696,6 +697,14 @@ a{color:var(--teal);text-decoration:none;}
             <select id="a_conf"><option value="">—</option><option>High</option><option>Medium</option><option>Low</option></select>
           </div>
           <div class="fl"><label>Dimension Source</label><input id="a_dimSource" placeholder="e.g. OEM EPC, Dorman catalog, forum measurement…"></div>
+          <div class="fl"><label>Data Found Via <span style="font-size:9px;color:var(--txt3);font-weight:400;">how dims were found</span></label>
+            <select id="a_confSource"><option value="">—</option><option value="diagram">OEM Diagram</option><option value="parts-listing">Parts Listing</option><option value="forum-measurement">Forum Measurement</option><option value="inferred">Inferred</option></select>
+          </div>
+          <div class="fl"><label>Rod Diameter (mm)</label><input id="a_rodDiameterMM" placeholder="e.g. 8" type="number" step="0.1"></div>
+          <div class="fl"><label>End Hole Type</label>
+            <select id="a_endHoleType"><option value="">—</option><option>fixed round</option><option>slotted</option><option>splined</option></select>
+          </div>
+          <div class="fl" style="grid-column:1/-1"><label>Shared Platforms <span style="font-size:9px;color:var(--txt3);font-weight:400;">other models using the same rod</span></label><input id="a_sharedPlatforms" placeholder="e.g. Audi A7 C8, Porsche Cayenne 9YA"></div>
           <div class="fl"><label>Cross-Compatible SKU <span style="font-size:9px;color:var(--txt3);font-weight:400;">existing TGK SKU that fits this vehicle</span></label><select id="a_crossSku" style="font-family:'JetBrains Mono',monospace;font-size:11px;"><option value="">— None —</option></select></div>
           <div class="fl" style="grid-column:1/-1"><label>Notes</label><textarea id="a_notes" placeholder="Platform notes, competitor info, sourcing ideas…"></textarea></div>
         </div>
@@ -915,7 +924,8 @@ a{color:var(--teal);text-decoration:none;}
         <div class="fl"><label>Rear Link Length (mm)</label><input id="e_lenR" placeholder="e.g. 195 (if different)"></div>
         <div class="fl"><label>Thread Size</label><input id="e_thread"></div>
         <div class="fl"><label>Adjuster Range (mm)</label><input id="e_adjrange"></div>
-        <div class="fl"><label>End Fitting</label><input id="e_endfitting"></div>
+        <div class="fl"><label>Upper End Fitting <span style="font-size:9px;color:var(--txt3);">sensor end</span></label><input id="e_endfitting"></div>
+        <div class="fl"><label>Lower End Fitting <span style="font-size:9px;color:var(--txt3);">arm end</span></label><input id="e_endfittingLower"></div>
         <div class="fl"><label>Position</label><select id="e_pos"><option value="">—</option><option>Front Only</option><option>Rear Only</option><option>Front & Rear</option><option>All 4 Corners</option></select></div>
         <div class="fl"><label>Typical Drop (mm)</label><input id="e_drop"></div>
         <div class="fl"><label>Coverage Status</label>
@@ -934,6 +944,14 @@ a{color:var(--teal);text-decoration:none;}
         <div class="fl"><label>Dev Complexity</label><select id="e_dev"><option value="">—</option><option>Easy</option><option>Medium</option><option>Hard</option></select></div>
         <div class="fl"><label>AI Confidence</label><select id="e_conf"><option value="">—</option><option>High</option><option>Medium</option><option>Low</option></select></div>
         <div class="fl"><label>Dimension Source</label><input id="e_dimSource" placeholder="e.g. OEM EPC, Dorman catalog, forum measurement…"></div>
+        <div class="fl"><label>Data Found Via</label>
+          <select id="e_confSource"><option value="">—</option><option value="diagram">OEM Diagram</option><option value="parts-listing">Parts Listing</option><option value="forum-measurement">Forum Measurement</option><option value="inferred">Inferred</option></select>
+        </div>
+        <div class="fl"><label>Rod Diameter (mm)</label><input id="e_rodDiameterMM" placeholder="e.g. 8" type="number" step="0.1"></div>
+        <div class="fl"><label>End Hole Type</label>
+          <select id="e_endHoleType"><option value="">—</option><option>fixed round</option><option>slotted</option><option>splined</option></select>
+        </div>
+        <div class="fl" style="grid-column:1/-1"><label>Shared Platforms</label><input id="e_sharedPlatforms" placeholder="e.g. Audi A7 C8, Porsche Cayenne 9YA"></div>
         <div class="fl"><label>Cross-Compatible SKU</label><select id="e_crossSku" style="font-family:'JetBrains Mono',monospace;font-size:11px;"><option value="">— None —</option></select></div>
         <div class="fl" style="grid-column:1/-1"><label>Aftermarket Lowering Link URL</label><input id="e_aftermarketLink" placeholder="https://www.arnottindustries.com/..."></div>
         <div class="fl" style="grid-column:1/-1"><label>📸 Sensor Rod Photo / Diagram URL</label><input id="e_photoUrl" placeholder="https://... link to photo or diagram of the sensor rod location"></div>
@@ -1825,8 +1843,14 @@ function buildCard(r, i) {
               <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:${r.thread?'var(--teal)':'var(--border2)'};">${r.thread||'—'}</span>
               <span style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;">Adj Range</span>
               <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:${r.adjrange?'var(--teal)':'var(--border2)'};">${r.adjrange?r.adjrange+' mm':'—'}</span>
-              <span style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;">End Fitting</span>
+              <span style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;">Upper Fitting</span>
               <span style="font-size:12px;color:var(--txt2);">${r.endfitting||'—'}</span>
+              ${r.endfittingLower ? `<span style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;">Lower Fitting</span>
+              <span style="font-size:12px;color:var(--txt2);">${r.endfittingLower}</span>` : ''}
+              ${r.rodDiameterMM ? `<span style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;">Rod Ø</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--txt2);">${r.rodDiameterMM} mm</span>` : ''}
+              ${r.endHoleType ? `<span style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;">Hole Type</span>
+              <span style="font-size:12px;color:var(--txt2);">${r.endHoleType}</span>` : ''}
               <span style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px;">Position</span>
               <span style="font-size:12px;color:var(--txt2);">${r.pos||'—'}</span>
             </div>
@@ -1870,6 +1894,10 @@ function buildCard(r, i) {
               <div><div style="font-size:9px;color:var(--txt3);margin-bottom:1px;">Dev Complexity</div><div style="font-size:12px;font-weight:700;color:${r.dev==='Easy'?'var(--green)':r.dev==='Hard'?'var(--red)':'var(--txt)'};">${r.dev||'—'}</div></div>
               <div><div style="font-size:9px;color:var(--txt3);margin-bottom:1px;">Confidence</div><div style="font-size:12px;font-weight:700;color:${r.conf==='High'?'var(--green)':r.conf==='Low'?'var(--red)':'var(--txt)'};">${r.conf||'—'}</div></div>
             </div>
+            ${(r.dimSource||r.confSource) ? `<div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:3px;">
+              ${r.dimSource ? `<div style="font-size:9px;color:var(--txt3);">📐 Dim source: <span style="color:var(--txt2);">${r.dimSource}</span></div>` : ''}
+              ${r.confSource ? `<div style="font-size:9px;color:var(--txt3);">🔎 Data found via: <span style="font-style:italic;color:${r.confSource.includes('diagram')?'var(--green)':r.confSource.includes('listing')?'var(--teal)':r.confSource.includes('forum')?'var(--blue)':'var(--txt2)'};">${r.confSource}</span></div>` : ''}
+            </div>` : ''}
             <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
               <div style="font-size:9px;color:var(--txt3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;">AI Research</div>
               ${r.aiSearched ? (() => {
@@ -1895,6 +1923,12 @@ function buildCard(r, i) {
 
         <!-- ── NOTES ── -->
         ${r.notes ? `<div style="font-size:11px;color:var(--txt2);background:var(--card2);border:1px solid var(--border);border-left:3px solid var(--teal);border-radius:4px;padding:8px 12px;margin-bottom:12px;line-height:1.6;">${r.notes}</div>` : ''}
+
+        <!-- ── SHARED PLATFORMS ── -->
+        ${r.sharedPlatforms ? `<div style="background:rgba(91,141,238,.06);border:1px solid rgba(91,141,238,.2);border-radius:4px;padding:7px 10px;margin-bottom:12px;">
+          <div style="font-size:9px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">🔗 Shared Rod Platform</div>
+          <div style="font-size:11px;color:var(--txt2);">${r.sharedPlatforms}</div>
+        </div>` : ''}
 
         <!-- ── WEBSITE TOGGLE + ACTIONS ── -->
         <div style="display:flex;flex-direction:column;gap:8px;">
@@ -2348,9 +2382,13 @@ function vehicleFromForm(prefix) {
     make:g('make'),model:g('model'),chassis:g('chassis'),
     ys:parseInt(g('ys'))||null,ye:parseInt(g('ye'))||null,region:g('region'),
     suspsys:g('suspsys'),senstype:g('senstype'),senscount:g('senscount'),senspn:g('senspn'),
-    lenF:g('lenF'),lenR:g('lenR'),thread:g('thread'),adjrange:g('adjrange'),endfitting:g('endfitting'),pos:g('pos'),drop:g('drop'),
+    lenF:g('lenF'),lenR:g('lenR'),thread:g('thread'),adjrange:g('adjrange'),endfitting:g('endfitting'),endfittingLower:g('endfittingLower'),
+    rodDiameterMM:g('rodDiameterMM'),endHoleType:g('endHoleType'),
+    pos:g('pos'),drop:g('drop'),
     status:g('status')||'Research Needed',tgksku:g('tgksku'),crossSku:g('crossSku'),
-    priority:g('priority'),mktsize:g('mktsize'),dev:g('dev'),conf:g('conf'),dimSource:g('dimSource'),notes:g('notes'),
+    sharedPlatforms:g('sharedPlatforms'),
+    priority:g('priority'),mktsize:g('mktsize'),dev:g('dev'),conf:g('conf'),
+    dimSource:g('dimSource'),confSource:g('confSource'),notes:g('notes'),
     aftermarketLink:g('aftermarketLink'),
     listedOn:g('listedOn'),
     productUrl:g('productUrl'),
@@ -2369,7 +2407,7 @@ async function saveVehicle() {
   toast(`✓ Added ${v.make} ${v.model}`,'ok');
 }
 function clearAdd() {
-  ['make','model','chassis','ys','ye','region','suspsys','senstype','senscount','senspn','lenF','lenR','thread','adjrange','endfitting','pos','drop','status','tgksku','priority','mktsize','dev','conf','notes','aftermarketLink','listedOn','productUrl','installDocs','photoUrl'].forEach(k=>{
+  ['make','model','chassis','ys','ye','region','suspsys','senstype','senscount','senspn','lenF','lenR','thread','adjrange','endfitting','endfittingLower','rodDiameterMM','endHoleType','pos','drop','status','tgksku','priority','mktsize','dev','conf','dimSource','confSource','sharedPlatforms','notes','aftermarketLink','listedOn','productUrl','installDocs','photoUrl'].forEach(k=>{
     const el=document.getElementById('a_'+k); if(el)el.value='';
   });
   document.getElementById('a_status').value='Research Needed';
@@ -2378,7 +2416,7 @@ function clearAdd() {
 function openEdit(i) {
   editIdx=i; const r=db[i]; if(!r)return;
   document.getElementById('editTitle').textContent = `Edit — ${r.make} ${r.model}`;
-  ['make','model','chassis','ys','ye','region','suspsys','senstype','senscount','senspn','lenF','lenR','thread','adjrange','endfitting','pos','drop','status','tgksku','crossSku','priority','mktsize','dev','conf','dimSource','notes','aftermarketLink','listedOn','productUrl','installDocs','photoUrl'].forEach(k=>{
+  ['make','model','chassis','ys','ye','region','suspsys','senstype','senscount','senspn','lenF','lenR','thread','adjrange','endfitting','endfittingLower','rodDiameterMM','endHoleType','pos','drop','status','tgksku','crossSku','priority','mktsize','dev','conf','dimSource','confSource','sharedPlatforms','notes','aftermarketLink','listedOn','productUrl','installDocs','photoUrl'].forEach(k=>{
     const el=document.getElementById('e_'+k); if(el) el.value=r[k]||'';
   });
   document.getElementById('editModal').classList.add('open');
@@ -4895,10 +4933,15 @@ function migrateLenFields(arr) {
   const isBad = v => v && typeof v==='string' && badPhrases.some(p=>v.toLowerCase().includes(p));
   arr.forEach(r => {
     if (r.len && !r.lenF) r.lenF = r.len;
-    if (!('lenF'     in r)) r.lenF     = '';
-    if (!('lenR'     in r)) r.lenR     = '';
-    if (!('crossSku' in r)) r.crossSku = '';
-    if (!('dimSource'in r)) r.dimSource= '';
+    if (!('lenF'          in r)) r.lenF          = '';
+    if (!('lenR'          in r)) r.lenR          = '';
+    if (!('crossSku'      in r)) r.crossSku      = '';
+    if (!('dimSource'     in r)) r.dimSource     = '';
+    if (!('confSource'    in r)) r.confSource    = '';
+    if (!('rodDiameterMM' in r)) r.rodDiameterMM = '';
+    if (!('endHoleType'   in r)) r.endHoleType   = '';
+    if (!('endfittingLower' in r)) r.endfittingLower = '';
+    if (!('sharedPlatforms' in r)) r.sharedPlatforms = '';
     if (!('aftermarketLink' in r)) r.aftermarketLink = '';
     if (isBad(r.lenF)) r.lenF = '';
     if (isBad(r.lenR)) r.lenR = '';
@@ -4982,7 +5025,7 @@ async function runVehicleLookup() {
   const covered = skuDB.filter(s=>!s.billetOf).map(s=>s.id+': '+s.label).join('; ');
 
   const termStr = getBrandTerm(make);
-  const prompt = `You are an expert automotive parts researcher. Find the ${termStr} for:
+  const prompt = `You are an expert automotive OEM parts researcher with deep knowledge of air suspension systems. Find the ${termStr} for:
 
 Make: ${make}
 Model: ${model}
@@ -4990,7 +5033,15 @@ Chassis/Generation: ${chassis || 'unknown'}
 Years: ${ys||''}${ye && ye!==ys ? '–'+ye : ''}
 Engine: ${eng || 'all variants'}
 
-⚡ TOP PRIORITY: The PHYSICAL CENTER-TO-CENTER LENGTH in millimeters. This single number determines whether an aftermarket adjustable lowering link will fit. Search every source for a measurement — OEM parts diagrams with dimensions, Dorman/RockAuto listings with physical dimensions, autodoc.co.uk product specs, eBay aftermarket listings, forum user measurements.
+⚡ TOP PRIORITY — PHYSICAL DIMENSIONS (search every source):
+1. CENTER-TO-CENTER LENGTH (hole center to hole center, not overall body length) — this is the fitment-critical measurement
+2. OVERALL BODY LENGTH — record separately if found; clearly label which is which
+3. ROD DIAMETER (shaft/body diameter in mm)
+4. BALL JOINT / PIN DIAMETER at each end (upper and lower if different)
+5. THREAD SIZE and thread pitch (e.g. M8x1.25)
+6. ADJUSTMENT RANGE in mm (how much longer/shorter it can be set)
+7. END FITTING TYPE: ball joint / rod end / clevis / pin / snap-in clip — specify EACH END separately
+Sources to search for dimensions: OEM parts diagrams with callouts, Dorman/RockAuto listings with physical specs, autodoc.co.uk product pages, eBay aftermarket listings with measurements, enthusiast forum threads where users measured their OEM rods.
 
 IMPORTANT — search using the CORRECT BRAND TERM:
 - BMW/Rolls-Royce: "Regulating Rod" (Regulierstange) — 7zap category "Level Control / EHC", part numbers like 37146752797, 37146875082
@@ -5001,17 +5052,60 @@ IMPORTANT — search using the CORRECT BRAND TERM:
 
 Search: 7zap.com, oempartsonline.com, epc-data.com, fcpeuro.com, autodoc.co.uk, dormanproducts.com.
 
-The part physically connects the suspension arm to the ride height sensor body. It may be called a regulating rod, coupling rod, sensor link, or sensor arm depending on the brand.
+PLATFORM SHARING: Check if this exact rod part number (or an identical rod) is also used on related chassis/platforms. E.g. Audi A6 C8 and A7 C8 may share the same rod. List any shared platforms in sharedPlatforms[].
+
+RODS PER CORNER: Specify exactly how many rods per corner/axle. Some vehicles use 2 rods per corner (primary + secondary), some use 1. Specify in rodsPerCorner field.
+
+END HOLE TYPE: Note if the rod end uses a fixed round hole, slotted hole, or splined connection at the sensor attachment point — slotted holes allow some in-built adjustment.
 
 ALSO search for aftermarket lowering links for this specific vehicle on: arnottindustries.com, ecstunin.com, fcpeuro.com, h-r.com, kwsuspensions.com, tirerack.com, autohausaz.com. Find a DIRECT product page URL if one exists.
 
 CRITICAL: The "sensorAssemblyPNs" field must contain ONLY the part numbers for the SENSOR BODY/ASSEMBLY (e.g. 4M0907503 for Audi, 37146875082 for BMW) — NOT the connecting rod OE number. The rods[] array contains the rod OE numbers.
 
-Return ONLY JSON: {"vehicle":"${vehicle}","hasAirSuspension":true,"suspSystem":"","sensorConfig":"","rods":[{"position":"Front Left/Front Right/Rear Left/Rear Right/Front (both)/Rear (both)/All Corners","oeNumber":"","altOE":[],"description":"","lengthFrontMM":"mm","lengthRearMM":"mm","threadSize":"","adjustRange":"","endFitting":"","source":"","confidence":"High/Medium/Low","notes":""}],"sensorAssemblyPNs":["OEM sensor BODY/ASSEMBLY part numbers (NOT the rod) — e.g. 4M0907503, 37146875082"],"tgkCoverage":{"status":"Covered/Needs New SKU/Gap/Research Needed","matchingSku":null,"reason":""},
+TGK SKUs on file: ${covered}
+
+Return ONLY valid JSON (no markdown, no backticks, no preamble):
+{
+  "vehicle": "${vehicle}",
+  "hasAirSuspension": true,
+  "suspSystem": "e.g. 4-corner air / rear air / CDC / EHC",
+  "sensorConfig": "e.g. 4 sensors / front+rear / rear only",
+  "rods": [
+    {
+      "position": "Front Left/Front Right/Rear Left/Rear Right/Front (both)/Rear (both)/All Corners",
+      "oeNumber": "",
+      "altOE": [],
+      "description": "exact OEM part description",
+      "centerToCenterMM": "hole-center to hole-center length in mm — THE KEY FITMENT DIMENSION",
+      "overallLengthMM": "overall body length in mm if different from center-to-center",
+      "lengthFrontMM": "center-to-center length for front position in mm (use centerToCenterMM if not position-specific)",
+      "lengthRearMM": "center-to-center length for rear position in mm if different",
+      "rodDiameterMM": "shaft/body diameter in mm",
+      "upperEndDiameterMM": "ball joint or pin diameter at upper/sensor end in mm",
+      "lowerEndDiameterMM": "ball joint or pin diameter at lower/arm end in mm",
+      "threadSize": "e.g. M8x1.25",
+      "adjustRange": "total adjustment range in mm",
+      "endFittingUpper": "ball joint / rod end / clevis / pin / snap-in — at sensor body end",
+      "endFittingLower": "ball joint / rod end / clevis / pin — at suspension arm end",
+      "endHoleType": "fixed round / slotted / splined",
+      "rodsPerCorner": 1,
+      "source": "which site confirmed this",
+      "confidenceSource": "diagram / parts-listing / forum-measurement / inferred",
+      "confidence": "High/Medium/Low",
+      "notes": ""
+    }
+  ],
+  "sensorAssemblyPNs": ["OEM sensor BODY/ASSEMBLY part numbers only — e.g. 4M0907503"],
+  "sharedPlatforms": ["other chassis/models that use the IDENTICAL rod, e.g. Audi A7 C8 (4K)"],
+  "tgkCoverage": {
+    "status": "Covered/Needs New SKU/Gap/Research Needed",
+    "matchingSku": null,
+    "reason": "why this status — reference specific dimension match or mismatch"
+  },
   "aftermarketLoweringLink": {
     "available": true,
-    "url": "direct URL to an aftermarket lowering link product page for this vehicle (Arnott, H&R, KW, ECS Tuning, FCP Euro, etc.) or empty string if none found",
-    "vendor": "vendor name e.g. Arnott",
+    "url": "direct product page URL or empty string",
+    "vendor": "e.g. Arnott",
     "notes": "product name or brief description"
   },
   "verifyLinks": {
@@ -5020,7 +5114,7 @@ Return ONLY JSON: {"vehicle":"${vehicle}","hasAirSuspension":true,"suspSystem":"
     "oemParts": "https://www.oempartsonline.com/"
   },
   "confidence": "High / Medium / Low",
-  "notes": "any platform-wide notes"
+  "notes": "any platform-wide notes or caveats"
 }`;
 
   try {
@@ -5071,15 +5165,23 @@ function renderVLResult(r, make, model, chassis, ys, ye) {
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
           <div class="vl-rod-oe" onclick="lookupOE('${rod.oeNumber}','${make}')" title="Click to deep-dive this OE number">${rod.oeNumber} <span style="font-size:10px;color:var(--txt3);font-family:'Barlow',sans-serif;">↗ look up</span></div>
           <span class="fit-badge ${rConf}">${rod.confidence}</span>
+          ${rod.confidenceSource ? `<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--txt3);background:var(--card2);border:1px solid var(--border);padding:1px 6px;border-radius:3px;" title="How this data was found">${rod.confidenceSource}</span>` : ''}
           ${rod.qty > 1 ? `<span style="font-size:10px;color:var(--txt3);">Qty: ${rod.qty}</span>` : ''}
           ${rod.source ? `<span style="font-size:10px;color:var(--txt3);">via ${rod.source}</span>` : ''}
         </div>
         ${rod.description ? `<div style="font-size:11px;color:var(--txt2);margin-bottom:8px;">${rod.description}</div>` : ''}
         <div class="dim-strip">
-          <div class="dim-cell"><div class="dim-lbl">Length</div><div class="dim-v hi">${rod.lengthFrontMM ? rod.lengthFrontMM+' mm' : rod.lengthMM ? rod.lengthMM+' mm' : rod.lengthRearMM ? rod.lengthRearMM+' mm' : '<span class="na">—</span>'}</div></div>
+          <div class="dim-cell"><div class="dim-lbl">C-to-C Length</div><div class="dim-v hi" title="Center-to-center hole distance — the key fitment dimension">${rod.centerToCenterMM ? rod.centerToCenterMM+' mm ★' : rod.lengthFrontMM ? rod.lengthFrontMM+' mm' : rod.lengthMM ? rod.lengthMM+' mm' : rod.lengthRearMM ? rod.lengthRearMM+' mm' : '<span class="na">—</span>'}</div></div>
+          ${rod.overallLengthMM ? `<div class="dim-cell"><div class="dim-lbl">Overall Length</div><div class="dim-v">${rod.overallLengthMM} mm</div></div>` : ''}
           <div class="dim-cell"><div class="dim-lbl">Thread</div><div class="dim-v hi">${rod.threadSize || '<span class="na">—</span>'}</div></div>
           <div class="dim-cell"><div class="dim-lbl">Adj Range</div><div class="dim-v hi">${rod.adjustRange ? rod.adjustRange+' mm' : '<span class="na">—</span>'}</div></div>
-          <div class="dim-cell"><div class="dim-lbl">End Fitting</div><div class="dim-v">${rod.endFitting || '<span class="na">—</span>'}</div></div>
+          ${rod.rodDiameterMM ? `<div class="dim-cell"><div class="dim-lbl">Rod Ø</div><div class="dim-v">${rod.rodDiameterMM} mm</div></div>` : ''}
+          ${rod.upperEndDiameterMM ? `<div class="dim-cell"><div class="dim-lbl">Upper End Ø</div><div class="dim-v">${rod.upperEndDiameterMM} mm</div></div>` : ''}
+          ${rod.lowerEndDiameterMM ? `<div class="dim-cell"><div class="dim-lbl">Lower End Ø</div><div class="dim-v">${rod.lowerEndDiameterMM} mm</div></div>` : ''}
+          <div class="dim-cell"><div class="dim-lbl">Upper Fitting</div><div class="dim-v">${rod.endFittingUpper || rod.endFitting || '<span class="na">—</span>'}</div></div>
+          <div class="dim-cell"><div class="dim-lbl">Lower Fitting</div><div class="dim-v">${rod.endFittingLower || '<span class="na">—</span>'}</div></div>
+          ${rod.endHoleType ? `<div class="dim-cell"><div class="dim-lbl">Hole Type</div><div class="dim-v">${rod.endHoleType}</div></div>` : ''}
+          ${rod.rodsPerCorner && rod.rodsPerCorner > 1 ? `<div class="dim-cell"><div class="dim-lbl">Rods/Corner</div><div class="dim-v c-amber">${rod.rodsPerCorner}</div></div>` : ''}
         </div>
         ${altChips ? `<div style="margin-top:8px;"><span style="font-size:9px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-right:6px;">Alt / Supersession:</span>${altChips}</div>` : ''}
         ${rod.notes ? `<div style="font-size:10px;color:var(--amber);margin-top:6px;">⚠ ${rod.notes}</div>` : ''}
@@ -5091,12 +5193,34 @@ function renderVLResult(r, make, model, chassis, ys, ye) {
 
   if (r.notes) html += `<div style="font-size:11px;color:var(--txt2);margin-top:10px;line-height:1.6;">📝 ${r.notes}</div>`;
 
+  // Shared platforms
+  if (r.sharedPlatforms?.length) {
+    html += `<div style="margin-top:10px;background:rgba(91,141,238,.06);border:1px solid rgba(91,141,238,.2);border-radius:4px;padding:8px 10px;">
+      <div style="font-size:9px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;">🔗 Shared Rod — Also Fits These Platforms</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;">${r.sharedPlatforms.map(p=>`<span style="font-size:11px;background:var(--card2);border:1px solid rgba(91,141,238,.25);border-radius:3px;padding:3px 9px;color:var(--blue);">${p}</span>`).join('')}</div>
+    </div>`;
+  }
+
+  // Build brand-specific 7Zap deep link
+  const sevenZapBrandSlug = {
+    'audi':'audi','bmw':'bmw','mercedes':'mercedes-benz','mercedes-benz':'mercedes-benz',
+    'porsche':'porsche','volkswagen':'volkswagen','vw':'volkswagen','land rover':'land-rover',
+    'jaguar':'jaguar','bentley':'bentley','rolls-royce':'rolls-royce','lamborghini':'lamborghini',
+    'lexus':'lexus','cadillac':'cadillac','lincoln':'lincoln','genesis':'genesis',
+    'volvo':'volvo','maserati':'maserati','rivian':'rivian','jeep':'jeep'
+  };
+  const makeSlug = sevenZapBrandSlug[make.toLowerCase()];
+  const sevenZapURL = makeSlug
+    ? `https://www.7zap.com/en/${makeSlug}/`
+    : (r.verifyLinks?.sevenZap || `https://www.7zap.com/en/search/?q=${encodeURIComponent(make+' '+model)}`);
+
   // Verify links
   html += `<div class="verify-row">
-    <a class="vlink" href="${r.verifyLinks?.sevenZap || 'https://www.7zap.com/en/search/?q='+encodeURIComponent(make+' '+model)}" target="_blank">↗ Google</a>
+    <a class="vlink" href="${sevenZapURL}" target="_blank">↗ 7Zap</a>
     <a class="vlink" href="${r.verifyLinks?.epcData || 'https://epc-data.com/'}" target="_blank">↗ EPC-Data</a>
     <a class="vlink" href="${r.verifyLinks?.oemParts || 'https://www.oempartsonline.com/'}" target="_blank">↗ OEM Parts Online</a>
     <a class="vlink" href="https://www.fcpeuro.com/search?query=${encodeURIComponent(make+' '+model+' ride height sensor rod')}" target="_blank">↗ FCP Euro</a>
+    <a class="vlink" href="https://www.autodoc.co.uk/search?query=${encodeURIComponent(make+' '+model+' height sensor rod')}" target="_blank">↗ Autodoc</a>
   </div>`;
 
   // Save to DB button
@@ -5116,7 +5240,7 @@ function saveVLtoDB() {
     const { r, make, model, chassis, ys, ye } = stored;
     const rods = r.rods || [];
 
-    // Collect lengths — handle all field name variants the AI might return
+    // Collect lengths — prefer centerToCenterMM over other length fields
     const cleanLen = v => isRealDim(v) ? v.replace(/[^\d.\/\-]/g,'').trim() : '';
     let fronts = [], rears = [];
     rods.forEach(rod => {
@@ -5124,9 +5248,9 @@ function saveVLtoDB() {
       const isAll   = pos.includes('all corner') || pos.includes('all 4') || (!pos.includes('front') && !pos.includes('rear'));
       const isFront = pos.includes('front') || isAll;
       const isRear  = pos.includes('rear')  || isAll;
-      // Try every possible length field name
-      const len = cleanLen(rod.lengthFrontMM || rod.lengthMM || rod.length || rod.lengthCenterMM || '');
-      const rLen = cleanLen(rod.lengthRearMM || rod.lengthRear || '');
+      // Prefer center-to-center over other length fields
+      const len = cleanLen(rod.centerToCenterMM || rod.lengthFrontMM || rod.lengthMM || rod.length || rod.lengthCenterMM || '');
+      const rLen = cleanLen(rod.lengthRearMM || rod.centerToCenterRearMM || rod.lengthRear || '');
       if (len) { if (isFront) fronts.push(len); if (isRear) rears.push(len); }
       if (rLen) rears.push(rLen);
     });
@@ -5135,9 +5259,13 @@ function saveVLtoDB() {
 
     // Find best thread/adj/fitting across all rods
     const findBest = key => { for (const rod of rods) { const v = rod[key]||''; if (isRealVal(v)) return v; } return ''; };
-    const bestThread  = findBest('threadSize');
-    const bestAdj     = rods.map(rod=>rod.adjustRange||'').find(v=>isRealDim(v)) || '';
-    const bestFitting = findBest('endFitting');
+    const bestThread       = findBest('threadSize');
+    const bestAdj          = rods.map(rod=>rod.adjustRange||'').find(v=>isRealDim(v)) || '';
+    const bestFittingUpper = findBest('endFittingUpper') || findBest('endFitting');
+    const bestFittingLower = findBest('endFittingLower');
+    const bestRodDiam      = findBest('rodDiameterMM');
+    const bestEndHoleType  = findBest('endHoleType');
+    const bestConfSrc      = findBest('confidenceSource');
 
     // Collect OE numbers for notes and senspn
     const oeNotes = rods.filter(rod=>isRealVal(rod.oeNumber))
@@ -5156,15 +5284,20 @@ function saveVLtoDB() {
       senspn:     (r.sensorAssemblyPNs||[]).filter(Boolean).join(', ') || '',
       lenF:       frontLen,
       lenR:       rearLen,
-      thread:     isRealDim(bestThread)  ? bestThread  : '',
-      adjrange:   isRealDim(bestAdj)     ? bestAdj     : '',
-      endfitting: bestFitting,
+      thread:     isRealDim(bestThread)        ? bestThread        : '',
+      adjrange:   isRealDim(bestAdj)           ? bestAdj           : '',
+      endfitting: bestFittingUpper,
+      endfittingLower: bestFittingLower,
+      rodDiameterMM:   isRealVal(bestRodDiam)   ? bestRodDiam       : '',
+      endHoleType:     isRealVal(bestEndHoleType)? bestEndHoleType   : '',
       pos:        rods[0]?.position || '',
       drop:       '',
       status:     r.tgkCoverage?.status || 'Research Needed',
       tgksku:     r.tgkCoverage?.matchingSku || '',
       crossSku:   '',
-      dimSource:  rods.find(rod => isRealVal(rod.source||'') && isRealDim(rod.lengthFrontMM||rod.lengthMM||rod.length||''))?.source || '',
+      sharedPlatforms: (r.sharedPlatforms||[]).filter(Boolean).join(', '),
+      dimSource:  rods.find(rod => isRealVal(rod.source||'') && isRealDim(rod.centerToCenterMM||rod.lengthFrontMM||rod.lengthMM||rod.length||''))?.source || '',
+      confSource: bestConfSrc,
       priority:   '', mktsize: '', dev: '',
       conf:       r.confidence || '',
       notes:      oeNotes,
@@ -5251,35 +5384,59 @@ async function runOELookup() {
   document.getElementById('thinkOEMsg').textContent = `Searching for ${oeNum} on 7Zap, EPC-Data, OEM Parts Online…`;
   saveOEHistory(oeNum);
 
-  const prompt = `You are an OEM automotive parts expert. Look up OE part number "${oeNum}"${make?' for '+make:''} and determine if it is an OEM Ride Height Sensor Connecting Rod (also called ride height sensor link, level sensor rod, suspension sensor connecting rod, or Niveauregulierung Stange).
+  const prompt = `You are an OEM automotive parts expert with deep knowledge of air suspension components. Look up OE part number "${oeNum}"${make?' for '+make:''} and determine if it is an OEM Ride Height Sensor Connecting Rod (also called ride height sensor link, level sensor rod, suspension sensor connecting rod, or Niveauregulierung Stange).
 
 Search 7zap.com, epc-data.com, oempartsonline.com, fcpeuro.com, autodoc.co.uk, and pelicanparts.com for this exact part number.
 
-Return ONLY this JSON (no markdown, no backticks):
+DIMENSION PRIORITY — search specifically for:
+1. CENTER-TO-CENTER LENGTH: hole center to hole center, NOT overall body length. These differ by 5–15mm on most parts. This is the fitment-critical number for aftermarket lowering links.
+2. OVERALL BODY LENGTH: record separately if found, clearly labeled
+3. ROD SHAFT DIAMETER in mm
+4. UPPER END fitting type (at sensor body) and ball joint / pin seat diameter
+5. LOWER END fitting type (at suspension arm) and ball joint / pin seat diameter
+6. THREAD SIZE with pitch (e.g. M8x1.25) — check if rod end is threaded or fixed
+7. END HOLE TYPE: fixed round hole / slotted / splined at sensor attachment
+
+SUPPLIER DETECTION: Check if this is an OEM-branded number or a Tier-1 supplier part (TRW, ZF, Lemförder, Meyle, SKF, Febi). If supplier-branded, note the OEM cross-reference PN.
+
+PLATFORM SHARING: Note any other models/chassis that use this exact part number.
+
+Return ONLY valid JSON (no markdown, no backticks):
 {
   "oeNumber": "${oeNum}",
   "isRideHeightRod": true,
   "description": "exact OEM part description",
   "make": "brand",
   "models": ["Model 1 (chassis, years)", "Model 2 (chassis, years)"],
-  "position": "Front Left / Rear Right / etc",
+  "position": "Front Left / Rear Right / All Corners / etc",
+  "supplierBrand": "OEM / TRW / ZF / Lemförder / Meyle / Febi / etc",
+  "oemCrossRef": "OEM part number if this is a supplier-branded part",
   "dimensions": {
-    "lengthFrontMM": "front link length in mm if position-specific, else overall length",
-    "lengthRearMM": "rear link length in mm if different from front, else null",
+    "centerToCenterMM": "hole-center to hole-center in mm — KEY fitment dimension",
+    "overallLengthMM": "overall body length in mm if different from center-to-center",
+    "lengthFrontMM": "center-to-center for front if position-specific",
+    "lengthRearMM": "center-to-center for rear if different",
+    "rodDiameterMM": "shaft/body diameter in mm",
+    "upperEndDiameterMM": "ball joint or pin diameter at upper/sensor end in mm",
+    "lowerEndDiameterMM": "ball joint or pin diameter at lower/arm end in mm",
     "threadSize": "e.g. M8x1.25",
-    "adjustRange": "e.g. 25 (total adjustment range in mm)",
-    "endFitting": "ball joint / rod end / clevis / pin",
+    "adjustRange": "total adjustment range in mm",
+    "endFittingUpper": "ball joint / rod end / clevis / pin / snap-in — at sensor body end",
+    "endFittingLower": "ball joint / rod end / clevis / pin — at suspension arm end",
+    "endHoleType": "fixed round / slotted / splined",
     "material": "steel / aluminum / plastic",
     "weight": "grams if known"
   },
-  "supersededBy": "newer OE number if this one is superseded, else null",
-  "supersedes": "older OE number this one replaced, else null",
+  "supersededBy": "newer OE number if superseded, else null",
+  "supersedes": "older OE number this replaced, else null",
   "altNumbers": ["cross-reference 1", "aftermarket equivalent"],
+  "sharedPlatforms": ["other chassis/models using this identical part"],
   "pricingUSD": "approximate OEM price if found",
   "source": "which sites confirmed this",
+  "confidenceSource": "diagram / parts-listing / forum-measurement / inferred",
   "confidence": "High / Medium / Low",
   "verifyURL": "direct URL to part on 7zap or best source",
-  "notes": "any important notes about this part"
+  "notes": "any important notes about fitment, supersessions, or caveats"
 }`;
 
   try {
@@ -5320,16 +5477,24 @@ function renderOEResult(r, oeNum, make) {
     </div>
     <div class="oe-panel-body">
       ${r.description ? `<div style="font-size:13px;font-weight:600;color:var(--txt);margin-bottom:12px;">${r.description}</div>` : ''}
+      ${(r.supplierBrand && r.supplierBrand !== 'OEM') ? `<div style="margin-bottom:10px;font-size:11px;color:var(--txt2);background:var(--card2);border:1px solid var(--border);border-radius:4px;padding:6px 10px;">Supplier: <strong style="color:var(--teal);">${r.supplierBrand}</strong>${r.oemCrossRef ? ` — OEM Cross-Ref: <span style="font-family:'JetBrains Mono',monospace;color:var(--txt);">${r.oemCrossRef}</span>` : ''}</div>` : ''}
 
         <div class="dim-strip">
-        <div class="dim-cell"><div class="dim-lbl">Length</div><div class="dim-v hi">${dims.lengthFrontMM ? dims.lengthFrontMM+' mm' : dims.lengthMM ? dims.lengthMM+' mm' : dims.lengthRearMM ? dims.lengthRearMM+' mm' : '<span class="na">—</span>'}</div></div>
-        ${dims.lengthRearMM && dims.lengthRearMM !== dims.lengthFrontMM ? `<div class="dim-cell"><div class="dim-lbl">Alt Length</div><div class="dim-v hi">${dims.lengthRearMM} mm</div></div>` : ''}
+        <div class="dim-cell"><div class="dim-lbl">C-to-C Length ★</div><div class="dim-v hi" title="Center-to-center hole distance — key fitment dimension">${dims.centerToCenterMM ? dims.centerToCenterMM+' mm' : dims.lengthFrontMM ? dims.lengthFrontMM+' mm' : dims.lengthMM ? dims.lengthMM+' mm' : dims.lengthRearMM ? dims.lengthRearMM+' mm' : '<span class="na">—</span>'}</div></div>
+        ${dims.overallLengthMM ? `<div class="dim-cell"><div class="dim-lbl">Overall Length</div><div class="dim-v">${dims.overallLengthMM} mm</div></div>` : ''}
+        ${dims.lengthRearMM && dims.lengthRearMM !== dims.lengthFrontMM ? `<div class="dim-cell"><div class="dim-lbl">Rear C-to-C</div><div class="dim-v hi">${dims.lengthRearMM} mm</div></div>` : ''}
           <div class="dim-cell"><div class="dim-lbl">Thread Size</div><div class="dim-v hi">${dims.threadSize || '<span class="na">—</span>'}</div></div>
           <div class="dim-cell"><div class="dim-lbl">Adj Range</div><div class="dim-v hi">${dims.adjustRange ? dims.adjustRange+' mm' : '<span class="na">—</span>'}</div></div>
-          <div class="dim-cell"><div class="dim-lbl">End Fitting</div><div class="dim-v">${dims.endFitting || '<span class="na">—</span>'}</div></div>
+          ${dims.rodDiameterMM ? `<div class="dim-cell"><div class="dim-lbl">Rod Ø</div><div class="dim-v">${dims.rodDiameterMM} mm</div></div>` : ''}
+          ${dims.upperEndDiameterMM ? `<div class="dim-cell"><div class="dim-lbl">Upper End Ø</div><div class="dim-v">${dims.upperEndDiameterMM} mm</div></div>` : ''}
+          ${dims.lowerEndDiameterMM ? `<div class="dim-cell"><div class="dim-lbl">Lower End Ø</div><div class="dim-v">${dims.lowerEndDiameterMM} mm</div></div>` : ''}
+          <div class="dim-cell"><div class="dim-lbl">Upper Fitting</div><div class="dim-v">${dims.endFittingUpper || dims.endFitting || '<span class="na">—</span>'}</div></div>
+          <div class="dim-cell"><div class="dim-lbl">Lower Fitting</div><div class="dim-v">${dims.endFittingLower || '<span class="na">—</span>'}</div></div>
+          ${dims.endHoleType ? `<div class="dim-cell"><div class="dim-lbl">Hole Type</div><div class="dim-v">${dims.endHoleType}</div></div>` : ''}
           <div class="dim-cell"><div class="dim-lbl">Material</div><div class="dim-v">${dims.material || '<span class="na">—</span>'}</div></div>
           <div class="dim-cell"><div class="dim-lbl">Position</div><div class="dim-v">${r.position || '<span class="na">—</span>'}</div></div>
         </div>
+        ${r.confidenceSource ? `<div style="margin-top:4px;margin-bottom:8px;font-size:10px;color:var(--txt3);">Data source: <strong style="color:var(--txt2);">${r.confidenceSource}</strong></div>` : ''}
 
       ${(r.supersededBy || r.supersedes) ? `<div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
         ${r.supersedes ? `<div style="font-size:11px;color:var(--txt3);">Replaces: <span class="alt-chip" onclick="document.getElementById('oe_num').value='${r.supersedes}';runOELookup();">${r.supersedes}</span></div>` : ''}
@@ -5340,6 +5505,11 @@ function renderOEResult(r, oeNum, make) {
 
       ${r.models?.length ? `<div style="margin-bottom:10px;"><div style="font-size:9px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;">Fits Vehicles</div>
         <div style="display:flex;flex-wrap:wrap;gap:5px;">${r.models.map(m=>`<span style="font-size:11px;background:var(--card2);border:1px solid var(--border2);border-radius:3px;padding:3px 9px;color:var(--txt2);">${m}</span>`).join('')}</div>
+      </div>` : ''}
+
+      ${r.sharedPlatforms?.length ? `<div style="margin-bottom:10px;background:rgba(91,141,238,.06);border:1px solid rgba(91,141,238,.2);border-radius:4px;padding:8px 10px;">
+        <div style="font-size:9px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;">🔗 Shared Rod — Also Fits</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;">${r.sharedPlatforms.map(p=>`<span style="font-size:11px;background:var(--card2);border:1px solid rgba(91,141,238,.25);border-radius:3px;padding:3px 9px;color:var(--blue);">${p}</span>`).join('')}</div>
       </div>` : ''}
 
       ${matchingDBEntries.length ? `<div style="margin-bottom:10px;background:rgba(62,207,114,.06);border:1px solid rgba(62,207,114,.2);border-radius:4px;padding:8px 10px;">
@@ -5375,7 +5545,8 @@ function saveOEtoDB() {
     if (!r) { toast('No OE lookup result — run OE Number Lookup first', 'err'); return; }
     const dims = r.dimensions || {};
     const cleanLen = v => isRealDim(v) ? v.replace(/[^\d.\/\-]/g,'').trim() : '';
-    const fL = cleanLen(dims.lengthFrontMM || dims.lengthMM || dims.length || '');
+    // Prefer center-to-center over other length fields
+    const fL = cleanLen(dims.centerToCenterMM || dims.lengthFrontMM || dims.lengthMM || dims.length || '');
     const rL = cleanLen(dims.lengthRearMM || '');
 
     let updated = 0, totalSaved = [];
@@ -5391,10 +5562,16 @@ function saveOEtoDB() {
       const fieldSaved = [];
       if (fL && v.lenF !== fL) { v.lenF = fL; fieldSaved.push('lenF'); }
       if (rL && v.lenR !== rL) { v.lenR = rL; fieldSaved.push('lenR'); }
-      if (isRealDim(dims.threadSize)  && v.thread     !== dims.threadSize)  { v.thread     = dims.threadSize;  fieldSaved.push('thread'); }
-      if (isRealDim(dims.adjustRange) && v.adjrange    !== dims.adjustRange) { v.adjrange   = dims.adjustRange; fieldSaved.push('adjrange'); }
-      if (isRealVal(dims.endFitting)  && !v.endfitting) { v.endfitting = dims.endFitting;  fieldSaved.push('endfitting'); }
-      if (isRealVal(r.position)       && !v.pos)        { v.pos        = r.position;        fieldSaved.push('pos'); }
+      if (isRealDim(dims.threadSize)    && v.thread        !== dims.threadSize)    { v.thread        = dims.threadSize;    fieldSaved.push('thread'); }
+      if (isRealDim(dims.adjustRange)   && v.adjrange       !== dims.adjustRange)   { v.adjrange       = dims.adjustRange;   fieldSaved.push('adjrange'); }
+      const upperFit = dims.endFittingUpper || dims.endFitting;
+      if (isRealVal(upperFit)           && !v.endfitting)   { v.endfitting       = upperFit;           fieldSaved.push('endfitting'); }
+      if (isRealVal(dims.endFittingLower) && !v.endfittingLower) { v.endfittingLower = dims.endFittingLower; fieldSaved.push('endfittingLower'); }
+      if (isRealVal(dims.rodDiameterMM) && !v.rodDiameterMM){ v.rodDiameterMM   = dims.rodDiameterMM; fieldSaved.push('rodDiam'); }
+      if (isRealVal(dims.endHoleType)   && !v.endHoleType)  { v.endHoleType     = dims.endHoleType;   fieldSaved.push('endHoleType'); }
+      if (isRealVal(r.position)         && !v.pos)          { v.pos             = r.position;          fieldSaved.push('pos'); }
+      if (r.sharedPlatforms?.length && !v.sharedPlatforms)  { v.sharedPlatforms = r.sharedPlatforms.join(', '); fieldSaved.push('sharedPlatforms'); }
+      if (isRealVal(r.confidenceSource) && !v.confSource)   { v.confSource      = r.confidenceSource;  fieldSaved.push('confSource'); }
       // Save OE number to notes
       const oeEntry = `OE ${r.oeNumber}${isRealDim(fL)?` — ${fL}mm`:''}${isRealDim(dims.threadSize)?' '+dims.threadSize:''}`;
       if (r.oeNumber && (!v.notes || !v.notes.includes(r.oeNumber))) {
@@ -5423,10 +5600,10 @@ async function callAIWithSearch(prompt) {
   const k = getKey(); if (!k) { showAPIModal(); return null; }
   _abort = new AbortController();
 
-  // Hard 45-second timeout — if Haiku hasn't responded by then, abort
+  // Hard 75-second timeout — Sonnet 4 with web search can take longer
   const timeoutId = setTimeout(() => {
     if (_abort) { _abort.abort(); }
-  }, 45000);
+  }, 75000);
 
   try {
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
@@ -5439,8 +5616,8 @@ async function callAIWithSearch(prompt) {
         'anthropic-beta': 'web-search-2025-03-05'
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 3000,
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
         system: 'You are an expert automotive OEM parts researcher. CRITICAL: Your ENTIRE response must be valid JSON only — no introduction, no explanation, no markdown, no backticks, no headers, no bullet points. Start your response directly with { or [ and end with } or ]. If you cannot find specific data, still return the JSON structure with empty strings or "Unknown" values. ANY text outside the JSON will break the application and is strictly forbidden.',
         messages: [{ role: 'user', content: prompt }]
@@ -5510,7 +5687,7 @@ async function callAIWithSearch(prompt) {
   }
   } catch(fetchErr) {
     clearTimeout(timeoutId);
-    if (fetchErr.name === 'AbortError') throw new Error('Request timed out after 45s — try again');
+    if (fetchErr.name === 'AbortError') throw new Error('Request timed out after 75s — try again');
     throw fetchErr;
   }
 }
