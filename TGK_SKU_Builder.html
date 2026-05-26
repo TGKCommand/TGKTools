@@ -143,6 +143,22 @@ select.form-input{cursor:pointer}
 .sku-table th:hover{color:var(--text2)}
 .sku-table td{border-bottom:1px solid var(--border);padding:9px 12px;font-size:12px;vertical-align:middle}
 .sku-table tbody tr:hover td{background:rgba(255,255,255,.012)}
+.sku-table tbody tr.row-checked td{background:rgba(42,191,170,.05)}
+.sku-table tbody tr.row-checked td:first-child{border-left:2px solid var(--teal)}
+/* checkbox column */
+.th-check,.td-check{width:36px;min-width:36px;padding:8px 10px !important;text-align:center}
+.row-cb{width:15px;height:15px;accent-color:var(--teal);cursor:pointer}
+/* selection action bar */
+.sel-bar{display:none;align-items:center;gap:10px;padding:8px 16px;background:rgba(42,191,170,.08);border-bottom:1px solid rgba(42,191,170,.25);flex-shrink:0}
+.sel-bar.visible{display:flex}
+.sel-bar-label{font-size:12px;font-weight:700;color:var(--teal);font-family:var(--mono)}
+.sel-bar-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;font-size:11px;font-weight:700;border-radius:var(--r);border:1px solid rgba(42,191,170,.35);background:rgba(42,191,170,.12);color:var(--teal);cursor:pointer;transition:all .12s}
+.sel-bar-btn:hover{background:rgba(42,191,170,.22)}
+.sel-bar-btn.danger{border-color:rgba(224,85,85,.3);background:rgba(224,85,85,.1);color:var(--red)}
+.sel-bar-btn.danger:hover{background:rgba(224,85,85,.2)}
+.sel-bar-sep{width:1px;height:18px;background:rgba(42,191,170,.2)}
+.sel-bar-dismiss{margin-left:auto;font-size:11px;color:var(--text3);cursor:pointer;padding:4px 8px;border-radius:var(--r);transition:all .12s}
+.sel-bar-dismiss:hover{color:var(--text2);background:var(--bg4)}
 .sku-new{color:var(--teal);font-weight:600;font-family:var(--mono);font-size:12px;white-space:nowrap}
 .sku-legacy{color:var(--text3);font-size:11px;font-family:var(--mono)}
 .sku-desc{color:var(--text2);max-width:280px;font-size:12px}
@@ -343,9 +359,24 @@ select.form-input{cursor:pointer}
         <span id="result-count" style="font-size:11px;font-family:var(--mono);color:var(--text3);margin-left:auto"></span>
       </div>
 
+      <!-- Selection action bar — shown when rows are checked -->
+      <div class="sel-bar" id="sel-bar">
+        <span class="sel-bar-label" id="sel-bar-label">0 selected</span>
+        <div class="sel-bar-sep"></div>
+        <button class="sel-bar-btn" onclick="exportSelectedCSV()">⬇ CSV</button>
+        <button class="sel-bar-btn" onclick="exportSelectedJSON()">⬇ JSON</button>
+        <div class="sel-bar-sep"></div>
+        <button class="sel-bar-btn" onclick="selectAllVisible()">Select All Visible</button>
+        <button class="sel-bar-btn" onclick="deselectAll()">Deselect All</button>
+        <div class="sel-bar-sep"></div>
+        <button class="sel-bar-btn danger" onclick="deleteSelected()">✕ Delete Selected</button>
+        <span class="sel-bar-dismiss" onclick="deselectAll()">✕ dismiss</span>
+      </div>
+
       <table class="sku-table" id="sku-table">
         <thead>
           <tr>
+            <th class="th-check"><input type="checkbox" class="row-cb" id="select-all-cb" title="Select all visible" onchange="toggleSelectAll(this.checked)"></th>
             <th onclick="sortBy('newSku')" style="cursor:pointer">NEW SKU ↕</th>
             <th onclick="sortBy('legacy')" style="cursor:pointer">LEGACY SKU ↕</th>
             <th>DESCRIPTION</th>
@@ -710,22 +741,27 @@ function renderTable(){
   const list = getFiltered();
   document.getElementById('result-count').textContent = `${list.length} of ${skus.length}`;
   const tbody = document.getElementById('sku-tbody');
-  if(!list.length){tbody.innerHTML=`<tr><td colspan="6"><div class="empty">No results</div></td></tr>`;return;}
-  tbody.innerHTML = list.map((s,i)=>`
-    <tr id="row-${s.newSku.replace(/-/g,'_')}">
+  if(!list.length){tbody.innerHTML=`<tr><td colspan="7"><div class="empty">No results</div></td></tr>`;return;}
+  tbody.innerHTML = list.map((s,i)=>{
+    const safeId = s.newSku.replace(/-/g,'_');
+    const checked = selectedSkus.has(s.newSku);
+    return `<tr id="row-${safeId}" class="${checked?'row-checked':''}">
+      <td class="td-check"><input type="checkbox" class="row-cb" data-sku="${s.newSku}" ${checked?'checked':''} onchange="toggleRowSelect(this)"></td>
       <td><div class="sku-new">${s.newSku}</div></td>
       <td><div class="sku-legacy">${s.legacy||'<span style="color:var(--text3);font-style:italic">none</span>'}</div></td>
       <td><div class="sku-desc">${s.desc||'<span style="color:var(--text3);font-style:italic">no description</span>'}</div></td>
       <td>
         <span class="badge badge-cat">${s.cat||'—'}</span>
-        ${s.sub?`<span class="badge badge-sub">${s.sub}</span>`:''}
+        ${s.sub?`<span class="badge badge-sub">${s.sub}`:''}
       </td>
       <td>${liveBadge(s.live)}</td>
       <td>
         <button class="action-btn" onclick="openEdit('${s.newSku}')">EDIT</button>
         <button class="action-btn del" onclick="deleteSku('${s.newSku}')">DEL</button>
       </td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
+  syncSelectAllCheckbox();
 }
 
 function liveBadge(v){
@@ -841,6 +877,96 @@ function renderStats(){
   });
   html += '</tbody></table>';
   document.getElementById('stats-content').innerHTML = html;
+}
+
+// ── SELECTION STATE ─────────────────────────────────────────────────
+let selectedSkus = new Set();
+
+function toggleRowSelect(cb){
+  const id = cb.dataset.sku;
+  const row = cb.closest('tr');
+  if(cb.checked){ selectedSkus.add(id); row.classList.add('row-checked'); }
+  else { selectedSkus.delete(id); row.classList.remove('row-checked'); }
+  syncSelectionBar();
+  syncSelectAllCheckbox();
+}
+
+function toggleSelectAll(checked){
+  const visible = getFiltered().map(s=>s.newSku);
+  if(checked){ visible.forEach(id=>selectedSkus.add(id)); }
+  else { visible.forEach(id=>selectedSkus.delete(id)); }
+  renderTable();
+  syncSelectionBar();
+}
+
+function selectAllVisible(){
+  getFiltered().forEach(s=>selectedSkus.add(s.newSku));
+  renderTable(); syncSelectionBar();
+}
+
+function deselectAll(){
+  selectedSkus.clear();
+  renderTable(); syncSelectionBar();
+}
+
+function syncSelectAllCheckbox(){
+  const cb = document.getElementById('select-all-cb');
+  if(!cb) return;
+  const visible = getFiltered().map(s=>s.newSku);
+  const allChecked = visible.length > 0 && visible.every(id=>selectedSkus.has(id));
+  const someChecked = visible.some(id=>selectedSkus.has(id));
+  cb.checked = allChecked;
+  cb.indeterminate = !allChecked && someChecked;
+}
+
+function syncSelectionBar(){
+  const bar = document.getElementById('sel-bar');
+  const lbl = document.getElementById('sel-bar-label');
+  const n = selectedSkus.size;
+  if(n > 0){
+    bar.classList.add('visible');
+    lbl.textContent = `${n} selected`;
+  } else {
+    bar.classList.remove('visible');
+  }
+}
+
+function getSelectedData(){
+  return skus.filter(s=>selectedSkus.has(s.newSku));
+}
+
+function exportSelectedCSV(){
+  const data = getSelectedData();
+  if(!data.length){ showNotif('No SKUs selected'); return; }
+  const headers = ['New SKU','Legacy SKU','Description','Category','Sub-Category','Sub-Sub Category','Live'];
+  const rows = data.map(s=>[s.newSku,s.legacy,s.desc,s.cat,s.sub,s.subsub,s.live].map(v=>`"${(v||'').replace(/"/g,'""')}"`).join(','));
+  const csv = [headers.join(','),...rows].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download = 'TGK_SKU_Selected_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  showNotif(`Exported ${data.length} selected SKU${data.length===1?'':'s'}`);
+}
+
+function exportSelectedJSON(){
+  const data = getSelectedData();
+  if(!data.length){ showNotif('No SKUs selected'); return; }
+  const a = document.createElement('a');
+  a.href = 'data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(data,null,2));
+  a.download = 'TGK_SKU_Selected_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();
+  showNotif(`Exported ${data.length} selected SKU${data.length===1?'':'s'} as JSON`);
+}
+
+function deleteSelected(){
+  const n = selectedSkus.size;
+  if(!n){ showNotif('No SKUs selected'); return; }
+  if(!confirm(`Delete ${n} selected SKU${n===1?'':'s'}? This cannot be undone.`)) return;
+  skus = skus.filter(s=>!selectedSkus.has(s.newSku));
+  selectedSkus.clear();
+  document.getElementById('total-count').textContent = skus.length+' SKUs';
+  renderTable(); syncSelectionBar();
+  showNotif(`Deleted ${n} SKU${n===1?'':'s'}`);
 }
 
 function exportCSV(){
