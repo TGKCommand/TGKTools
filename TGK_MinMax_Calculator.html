@@ -168,6 +168,17 @@ select.form-input{cursor:pointer}
 .filter-btn{display:inline-flex;align-items:center;padding:5px 11px;font-size:11px;font-weight:600;border-radius:var(--r);border:1px solid var(--border2);background:var(--bg4);color:var(--text3);cursor:pointer;transition:all .12s;white-space:nowrap}
 .filter-btn:hover{background:var(--bg5);color:var(--text);border-color:var(--border2)}
 .filter-btn.on{background:var(--teal-dim);color:var(--teal);border-color:rgba(42,191,170,.3)}
+/* SELECTION BAR */
+.sel-bar{display:none;align-items:center;gap:10px;padding:8px 16px;background:rgba(42,191,170,.07);border-bottom:1px solid rgba(42,191,170,.2);flex-shrink:0}
+.sel-bar.visible{display:flex}
+.sel-bar-label{font-size:12px;font-weight:700;color:var(--teal);font-family:var(--mono);white-space:nowrap}
+.sel-bar-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;font-size:11px;font-weight:600;border-radius:var(--r);border:1px solid rgba(42,191,170,.3);background:rgba(42,191,170,.1);color:var(--teal);cursor:pointer;transition:all .12s;white-space:nowrap}
+.sel-bar-btn:hover{background:rgba(42,191,170,.2)}
+.sel-bar-btn.danger{border-color:rgba(224,85,85,.3);background:rgba(224,85,85,.1);color:var(--red)}
+.sel-bar-btn.danger:hover{background:rgba(224,85,85,.2)}
+.sel-bar-sep{width:1px;height:16px;background:rgba(42,191,170,.2);flex-shrink:0}
+.sel-bar-dismiss{margin-left:auto;font-size:11px;color:var(--text3);cursor:pointer;padding:3px 8px;border-radius:var(--r);transition:all .12s}
+.sel-bar-dismiss:hover{color:var(--text2);background:var(--bg4)}
 /* SORT HEADERS */
 .th-sort{cursor:pointer;user-select:none;white-space:nowrap}
 .th-sort:hover{color:var(--text)!important;background:var(--bg4)}
@@ -385,6 +396,22 @@ select.form-input{cursor:pointer}
             <button class="btn btn-sm" onclick="clearAll()">🗑 Clear All</button>
           </div>
         </div>
+
+        <!-- Selection action bar — appears when rows are checked -->
+        <div class="sel-bar" id="sel-bar">
+          <span class="sel-bar-label" id="sel-bar-label">0 selected</span>
+          <div class="sel-bar-sep"></div>
+          <button class="sel-bar-btn" onclick="exportSelectedCSV()">⬇ Export CSV</button>
+          <button class="sel-bar-btn" onclick="exportSelectedOdoo()">⬇ Export Odoo CSV</button>
+          <button class="sel-bar-btn" onclick="exportSelectedJSON()">⬇ JSON</button>
+          <div class="sel-bar-sep"></div>
+          <button class="sel-bar-btn" onclick="selectAllVisible()">Select All Visible</button>
+          <button class="sel-bar-btn" onclick="deselectAll()">Deselect All</button>
+          <div class="sel-bar-sep"></div>
+          <button class="sel-bar-btn danger" onclick="deleteSelected()">✕ Delete Selected</button>
+          <span class="sel-bar-dismiss" onclick="deselectAll()">✕ dismiss</span>
+        </div>
+
         <div class="tbl-wrap">
           <table class="sku-table" id="main-table">
             <thead id="table-head">
@@ -1463,8 +1490,7 @@ function saveModalSKU() {
 
 function toggleSelect(id, checked) {
   if (checked) selectedIds.add(id); else selectedIds.delete(id);
-  updateDeleteBtn();
-  // update select-all checkbox state
+  updateSelectionBar();
   const allChk = document.getElementById('chk-all');
   if (allChk) {
     const visible = [...document.querySelectorAll('.row-chk')].map(c => c.dataset.id);
@@ -1478,20 +1504,91 @@ function toggleSelectAll(checked) {
     if (checked) selectedIds.add(c.dataset.id); else selectedIds.delete(c.dataset.id);
     c.checked = checked;
   });
-  updateDeleteBtn();
+  updateSelectionBar();
   renderTable(_lastSearch);
 }
 
-function updateDeleteBtn() {
-  const btn = document.getElementById('btn-delete-selected');
-  if (!btn) return;
+function selectAllVisible() {
+  document.querySelectorAll('.row-chk').forEach(c => { selectedIds.add(c.dataset.id); c.checked = true; });
+  updateSelectionBar();
+  renderTable(_lastSearch);
+}
+
+function deselectAll() {
+  selectedIds.clear();
+  updateSelectionBar();
+  renderTable(_lastSearch);
+}
+
+function updateSelectionBar() {
+  // Keep legacy delete button hidden (replaced by bar)
+  const legacyBtn = document.getElementById('btn-delete-selected');
+  if (legacyBtn) legacyBtn.style.display = 'none';
+  // Update selection bar
+  const bar = document.getElementById('sel-bar');
+  const lbl = document.getElementById('sel-bar-label');
+  if (!bar) return;
   const n = selectedIds.size;
   if (n > 0) {
-    btn.style.display = 'inline-flex';
-    btn.textContent = `🗑 Delete ${n} Selected`;
+    bar.classList.add('visible');
+    lbl.textContent = `${n} selected`;
   } else {
-    btn.style.display = 'none';
+    bar.classList.remove('visible');
   }
+}
+
+// Legacy alias so existing code doesn't break
+function updateDeleteBtn() { updateSelectionBar(); }
+
+function getSelectedSKUs() {
+  return skus.filter(s => selectedIds.has(s.id));
+}
+
+function exportSelectedCSV() {
+  const data = getSelectedSKUs();
+  if (!data.length) { showNotif('No SKUs selected'); return; }
+  const headers = ['SKU','Product Name','Category','4wk Avg','24wk Avg','On Hand','Lead Days','Min Weeks','Tgt Weeks','MOQ','Route','UOM','Odoo Min','Odoo Max'];
+  const rows = data.map(s => {
+    const c = calcSKU(s);
+    return [s.sku, s.name, s.category, s.avg4wk, s.avg24wk, s.onHand,
+            s.leadDays||settings.leadDays, s.minWks||settings.minWks,
+            s.tgtWks||settings.tgtWks, s.moq||settings.moq,
+            s.route||settings.route, s.uom||settings.uom,
+            c.odooMin, c.odooMax]
+      .map(v => `"${String(v||'').replace(/"/g,'""')}"`).join(',');
+  });
+  downloadCSV([headers.join(','), ...rows].join('\n'), 'TGK_MinMax_Selected_' + dateStr() + '.csv');
+  showNotif(`Exported ${data.length} selected SKU${data.length>1?'s':''}`);
+}
+
+function exportSelectedOdoo() {
+  const data = getSelectedSKUs();
+  if (!data.length) { showNotif('No SKUs selected'); return; }
+  const rows = data.map(s => {
+    const c = calcSKU(s);
+    const route = s.route || settings.route;
+    return {
+      'Internal Reference': s.sku,
+      'Reordering Min Qty': c.odooMin,
+      'Reordering Max Qty': c.odooMax,
+      'Routes': route,
+    };
+  });
+  const headers = Object.keys(rows[0]);
+  const csv = [headers.join(','), ...rows.map(r => headers.map(h => `"${String(r[h]||'').replace(/"/g,'""')}"`).join(','))].join('\n');
+  downloadCSV(csv, 'TGK_OdooRules_Selected_' + dateStr() + '.csv');
+  showNotif(`Exported ${rows.length} Odoo rule${rows.length>1?'s':''}`);
+}
+
+function exportSelectedJSON() {
+  const data = getSelectedSKUs();
+  if (!data.length) { showNotif('No SKUs selected'); return; }
+  const out = data.map(s => { const c = calcSKU(s); return {...s, odooMin: c.odooMin, odooMax: c.odooMax}; });
+  const a = document.createElement('a');
+  a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(out, null, 2));
+  a.download = 'TGK_MinMax_Selected_' + dateStr() + '.json';
+  a.click();
+  showNotif(`Exported ${data.length} selected SKU${data.length>1?'s':''} as JSON`);
 }
 
 function deleteSelected() {
@@ -1503,6 +1600,7 @@ function deleteSelected() {
   persist();
   updateCounts();
   renderTable(_lastSearch);
+  updateSelectionBar();
   showNotif(`Deleted ${n} SKU${n>1?'s':''}`);
 }
 
@@ -1523,6 +1621,7 @@ function clearAll() {
   renderTable();
   renderDashboard();
   updateCounts();
+  updateSelectionBar();
   showNotif('Cleared all SKUs');
 }
 
@@ -1954,6 +2053,7 @@ function exportFiltered(type) {
 }
 
 function exportOdooCSV() { exportFiltered('odoo'); }
+function exportRawCSV()  { exportFiltered('all-raw'); }
 
 // exportOdooCSV_old removed — replaced by exportFiltered()
 
