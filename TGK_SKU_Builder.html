@@ -611,7 +611,8 @@ function saveSku(){
     live:builder.live,
     cat:builder.cat,
     sub:builder.sub,
-    subsub:''
+    subsub:'',
+    updated:new Date().toISOString()
   };
   skus.push(entry);
   recentlyAdded.unshift(entry);
@@ -619,7 +620,18 @@ function saveSku(){
   renderRecent();
   document.getElementById('total-count').textContent = skus.length+' SKUs';
   document.getElementById('sb-count').textContent = skus.length+' SKUs tracked';
-  showNotif('Saved: '+sku);
+  // Persist locally immediately
+  try { localStorage.setItem(SK_SKUS, JSON.stringify(_skuPayload())); } catch(e) {}
+  // Push to cloud in background
+  if(_sbReady){
+    _updateSyncBadge('syncing');
+    _sbSet(SK_SKUS, _skuPayload()).then(function(ok){
+      _updateSyncBadge(ok ? 'ok' : 'offline');
+      _sbToast(ok ? '✓ Saved: '+sku : '⚠ Saved locally, cloud failed', ok);
+    }).catch(function(){ _updateSyncBadge('offline'); showNotif('Saved: '+sku); });
+  } else {
+    showNotif('Saved: '+sku);
+  }
   resetBuilder();
   renderSidebar();
 }
@@ -828,9 +840,24 @@ function saveEdit(id){
   s.cat = document.getElementById('e-cat').value.trim();
   s.sub = document.getElementById('e-sub').value.trim();
   s.live = document.getElementById('e-live').value;
+  s.updated = new Date().toISOString();
   closeModal();
   renderTable();
-  showNotif('Updated: '+id);
+  renderSidebar();
+  document.getElementById('total-count').textContent = skus.length+' SKUs';
+  document.getElementById('sb-count').textContent = skus.length+' SKUs tracked';
+  // Persist locally immediately
+  try { localStorage.setItem(SK_SKUS, JSON.stringify(_skuPayload())); } catch(e) {}
+  // Push to cloud in background
+  if(_sbReady){
+    _updateSyncBadge('syncing');
+    _sbSet(SK_SKUS, _skuPayload()).then(function(ok){
+      _updateSyncBadge(ok ? 'ok' : 'offline');
+      _sbToast(ok ? '✓ Saved & synced' : '⚠ Saved locally, cloud failed', ok);
+    }).catch(function(){ _updateSyncBadge('offline'); });
+  } else {
+    showNotif('Updated: '+id);
+  }
 }
 
 function closeModal(e){
@@ -1356,7 +1383,10 @@ async function saveWithMerge() {
 }
 
 // Load from localStorage as fallback before cloud boot
+// Also stamp any seed entries that lack an updated timestamp
 (function() {
+  // Stamp seed entries so merge logic can treat them as older than real edits
+  skus.forEach(function(s){ if(!s.updated) s.updated = '2024-01-01T00:00:00.000Z'; });
   try {
     var stored = localStorage.getItem(SK_SKUS);
     if (stored) {
