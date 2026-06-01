@@ -796,26 +796,49 @@ function openEdit(id){
   const s = skus.find(x=>x.newSku===id);
   if(!s) return;
   document.getElementById('modal-title').textContent = 'Edit: '+id;
+
+  // Build category options
+  const catOpts = Object.keys(TAXONOMY).map(c=>
+    `<option value="${c}" ${s.cat===c?'selected':''}>${c}</option>`
+  ).join('');
+
+  // Build sub options for current cat
+  const subOpts = s.cat && TAXONOMY[s.cat]
+    ? Object.keys(TAXONOMY[s.cat].subs).map(sub=>
+        `<option value="${sub}" ${s.sub===sub?'selected':''}>${sub}</option>`
+      ).join('')
+    : '';
+
   document.getElementById('modal-body').innerHTML = `
     <div class="form-group">
-      <label class="form-label">New SKU</label>
-      <input class="form-input" id="e-newSku" value="${s.newSku}" readonly style="opacity:.6">
+      <label class="form-label">New SKU <span style="color:var(--text3);font-size:10px;font-weight:400">(rename will update all references)</span></label>
+      <input class="form-input" id="e-newSku" value="${s.newSku}" placeholder="e.g. TGK-0101-01">
     </div>
     <div class="form-group">
       <label class="form-label">Legacy SKU</label>
-      <input class="form-input" id="e-legacy" value="${s.legacy}">
+      <input class="form-input" id="e-legacy" value="${s.legacy||''}">
     </div>
     <div class="form-group">
       <label class="form-label">Description</label>
-      <textarea class="form-input" id="e-desc">${s.desc}</textarea>
+      <textarea class="form-input" id="e-desc" rows="3">${s.desc||''}</textarea>
     </div>
     <div class="form-group">
       <label class="form-label">Category</label>
-      <input class="form-input" id="e-cat" value="${s.cat}">
+      <select class="form-input" id="e-cat" onchange="editUpdateSubs()">
+        <option value="">— Select —</option>
+        ${catOpts}
+      </select>
     </div>
     <div class="form-group">
       <label class="form-label">Sub-Category</label>
-      <input class="form-input" id="e-sub" value="${s.sub}">
+      <select class="form-input" id="e-sub" onchange="editUpdateSubsub()">
+        <option value="">— Select —</option>
+        ${subOpts}
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Sub-Sub Category <span style="color:var(--text3);font-size:10px;font-weight:400">(optional)</span></label>
+      <input class="form-input" id="e-subsub" value="${s.subsub||''}" placeholder="e.g. Oil Change Kit">
     </div>
     <div class="form-group">
       <label class="form-label">Live Status</label>
@@ -832,20 +855,48 @@ function openEdit(id){
   document.getElementById('modal-bg').classList.add('open');
 }
 
+function editUpdateSubs(){
+  const cat = document.getElementById('e-cat').value;
+  const subSel = document.getElementById('e-sub');
+  if(!cat || !TAXONOMY[cat]){ subSel.innerHTML='<option value="">— Select —</option>'; return; }
+  subSel.innerHTML = '<option value="">— Select —</option>' +
+    Object.keys(TAXONOMY[cat].subs).map(sub=>`<option value="${sub}">${sub}</option>`).join('');
+}
+
+function editUpdateSubsub(){
+  // subsub is free-text; nothing to cascade
+}
+
 function saveEdit(id){
   const s = skus.find(x=>x.newSku===id);
   if(!s) return;
-  s.legacy = document.getElementById('e-legacy').value.trim();
-  s.desc = document.getElementById('e-desc').value.trim();
-  s.cat = document.getElementById('e-cat').value.trim();
-  s.sub = document.getElementById('e-sub').value.trim();
-  s.live = document.getElementById('e-live').value;
-  s.updated = new Date().toISOString();
+
+  const newSkuVal = document.getElementById('e-newSku').value.trim();
+
+  // Validate new SKU isn't empty
+  if(!newSkuVal){ showNotif('New SKU cannot be empty'); return; }
+
+  // If renaming, check no collision with a DIFFERENT sku
+  if(newSkuVal !== id && skus.find(x=>x.newSku===newSkuVal)){
+    showNotif('SKU '+newSkuVal+' already exists!'); return;
+  }
+
+  s.newSku   = newSkuVal;
+  s.legacy   = document.getElementById('e-legacy').value.trim();
+  s.desc     = document.getElementById('e-desc').value.trim();
+  s.cat      = document.getElementById('e-cat').value.trim();
+  s.sub      = document.getElementById('e-sub').value.trim();
+  s.subsub   = document.getElementById('e-subsub').value.trim();
+  s.live     = document.getElementById('e-live').value;
+  s.updated  = new Date().toISOString();
+
   closeModal();
-  renderTable();
+  resequenceTaxonomy();
   renderSidebar();
+  renderTable();
   document.getElementById('total-count').textContent = skus.length+' SKUs';
   document.getElementById('sb-count').textContent = skus.length+' SKUs tracked';
+
   // Persist locally immediately
   try { localStorage.setItem(SK_SKUS, JSON.stringify(_skuPayload())); } catch(e) {}
   // Push to cloud in background
@@ -856,7 +907,7 @@ function saveEdit(id){
       _sbToast(ok ? '✓ Saved & synced' : '⚠ Saved locally, cloud failed', ok);
     }).catch(function(){ _updateSyncBadge('offline'); });
   } else {
-    showNotif('Updated: '+id);
+    showNotif('Updated: '+newSkuVal);
   }
 }
 
