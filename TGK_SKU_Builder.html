@@ -233,7 +233,9 @@ select.form-input{cursor:pointer}
         <button class="export-btn" onclick="triggerImport()">⬆ Import CSV</button>
         <input type="file" id="csv-file-input" accept=".csv" style="display:none" onchange="importCSV(event)">
         <button class="export-btn" onclick="exportCSV()">⬇ Export CSV</button>
+        <button class="export-btn" onclick="saveWithMerge()" id="sync-save-btn">☁ Save & Sync</button>
         <div class="count-badge" id="total-count">201 SKUs</div>
+        <span id="sync-badge" style="font-size:10px;font-weight:700;font-family:var(--mono);color:var(--text3)"></span>
       </div>
     </div>
 
@@ -1215,12 +1217,162 @@ function parseCSVLine(line){
   return result;
 }
 
+// ── CLOUD SYNC (Supabase) ─────────────────────────────────────────────
+var TGK_SB_URL = 'https://piamamighqiielfztgic.supabase.co';
+var TGK_SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpYW1hbWlnaHFpaWVsZnp0Z2ljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4NjkxMzUsImV4cCI6MjA5MzQ0NTEzNX0.YwLflTw6F4cRzmY78QoAY6Zud2IHGVP5xL_yvMFxheA';
+var _sbReady = false;
+var _sbCache = null;
+var _syncInterval = null;
+const SK_SKUS = 'tgk_skus_v1';
+
+async function _sbGet(id) {
+  var res = await fetch(TGK_SB_URL + '/rest/v1/workspace?id=eq.' + encodeURIComponent(id) + '&select=data&limit=1', {
+    headers: { 'apikey': TGK_SB_KEY, 'Authorization': 'Bearer ' + TGK_SB_KEY }
+  });
+  if (!res.ok) throw new Error('Supabase ' + res.status);
+  var rows = await res.json();
+  return (rows && rows[0]) ? rows[0].data : null;
+}
+
+async function _sbSet(id, payload) {
+  var res = await fetch(TGK_SB_URL + '/rest/v1/workspace', {
+    method: 'POST',
+    headers: { 'apikey': TGK_SB_KEY, 'Authorization': 'Bearer ' + TGK_SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify({ id: id, data: payload, updated_at: new Date().toISOString() })
+  });
+  return res.ok;
+}
+
+function _sbToast(msg, ok) {
+  var el = document.getElementById('_sb_toast');
+  if (!el) { el = document.createElement('div'); el.id = '_sb_toast'; el.style.cssText = 'position:fixed;bottom:20px;left:20px;padding:8px 14px;border-radius:7px;font-size:11px;font-weight:700;z-index:9999;transition:opacity .4s;font-family:var(--mono);pointer-events:none'; document.body.appendChild(el); }
+  el.textContent = msg;
+  el.style.background = ok ? 'rgba(42,191,170,.9)' : 'rgba(224,85,85,.9)';
+  el.style.color = '#fff'; el.style.opacity = '1';
+  setTimeout(function(){ el.style.opacity = '0'; }, 3000);
+}
+
+function _updateSyncBadge(status) {
+  var el = document.getElementById('sync-badge');
+  if (!el) return;
+  if (status === 'syncing') { el.textContent = '↻ Syncing…'; el.style.color = 'var(--text3)'; }
+  else if (status === 'ok') { el.textContent = '✓ Synced ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); el.style.color = 'var(--teal)'; }
+  else if (status === 'offline') { el.textContent = '⚠ Offline'; el.style.color = '#f87171'; }
+}
+
+function _skuPayload() {
+  return { skus: skus, taxonomy: TAXONOMY, updated_at: new Date().toISOString() };
+}
+
+function _mergeSkuData(local, cloud) {
+  var merged = { taxonomy: JSON.parse(JSON.stringify(cloud.taxonomy || {})), skus: [...(cloud.skus || [])] };
+  Object.keys(local.taxonomy || {}).forEach(function(cat) {
+    if (!merged.taxonomy[cat]) merged.taxonomy[cat] = local.taxonomy[cat];
+    else Object.keys(local.taxonomy[cat].subs || {}).forEach(function(sub) {
+      if (merged.taxonomy[cat].subs[sub] === undefined) merged.taxonomy[cat].subs[sub] = local.taxonomy[cat].subs[sub];
+    });
+  });
+  (local.skus || []).forEach(function(ls) {
+    if (!ls.newSku) return;
+    var idx = merged.skus.findIndex(function(cs){ return cs.newSku === ls.newSku; });
+    if (idx > -1) {
+      var cloudUp = new Date(merged.skus[idx].updated || 0);
+      var localUp = new Date(ls.updated || 0);
+      if (localUp > cloudUp) merged.skus[idx] = ls;
+    } else { merged.skus.push(ls); }
+  });
+  return merged;
+}
+
+async function _sbBoot() {
+  _updateSyncBadge('syncing');
+  try {
+    var cloud = await _sbGet(SK_SKUS);
+    if (cloud && (cloud.skus || []).length > 0) {
+      var merged = _mergeSkuData({ skus: skus, taxonomy: TAXONOMY }, cloud);
+      skus = merged.skus;
+      TAXONOMY = merged.taxonomy;
+      try { localStorage.setItem(SK_SKUS, JSON.stringify({ skus: skus, taxonomy: TAXONOMY })); } catch(e) {}
+      resequenceTaxonomy();
+      renderSidebar();
+      renderTable();
+      document.getElementById('total-count').textContent = skus.length + ' SKUs';
+      document.getElementById('sb-count').textContent = skus.length + ' SKUs tracked';
+    }
+    _sbReady = true;
+    _updateSyncBadge('ok');
+    _sbToast('✓ Synced — ' + skus.length + ' SKUs', true);
+    _syncInterval = setInterval(_backgroundSync, 300000);
+  } catch(e) {
+    _updateSyncBadge('offline');
+    _sbToast('⚠ Cloud offline — local only', false);
+  }
+}
+
+async function _backgroundSync() {
+  if (!_sbReady) return;
+  try {
+    var cloud = await _sbGet(SK_SKUS);
+    if (!cloud) return;
+    var cloudCount = (cloud.skus || []).length;
+    var cloudNewest = (cloud.skus || []).reduce(function(m, s){ return (s.updated||'') > m ? (s.updated||'') : m; }, '');
+    var localNewest = skus.reduce(function(m, s){ return (s.updated||'') > m ? (s.updated||'') : m; }, '');
+    if (cloudCount !== skus.length || cloudNewest > localNewest) {
+      var merged = _mergeSkuData({ skus: skus, taxonomy: TAXONOMY }, cloud);
+      skus = merged.skus; TAXONOMY = merged.taxonomy;
+      try { localStorage.setItem(SK_SKUS, JSON.stringify({ skus: skus, taxonomy: TAXONOMY })); } catch(e) {}
+      resequenceTaxonomy(); renderSidebar(); renderTable();
+      document.getElementById('total-count').textContent = skus.length + ' SKUs';
+      document.getElementById('sb-count').textContent = skus.length + ' SKUs tracked';
+      _sbToast('↻ Updated from cloud', true);
+    }
+    _updateSyncBadge('ok');
+  } catch(e) { _updateSyncBadge('offline'); }
+}
+
+async function saveWithMerge() {
+  var btn = document.getElementById('sync-save-btn');
+  if (btn) { var orig = btn.textContent; btn.textContent = '↻ Syncing…'; }
+  _updateSyncBadge('syncing');
+  try {
+    var cloud = await _sbGet(SK_SKUS);
+    if (cloud && (cloud.skus || []).length > 0) {
+      var merged = _mergeSkuData({ skus: skus, taxonomy: TAXONOMY }, cloud);
+      skus = merged.skus; TAXONOMY = merged.taxonomy;
+    }
+    var payload = _skuPayload();
+    try { localStorage.setItem(SK_SKUS, JSON.stringify(payload)); } catch(e) {}
+    var ok = await _sbSet(SK_SKUS, payload);
+    _updateSyncBadge(ok ? 'ok' : 'offline');
+    _sbToast(ok ? '✓ Saved & synced' : '⚠ Save failed', ok);
+    resequenceTaxonomy(); renderSidebar(); renderTable();
+    document.getElementById('total-count').textContent = skus.length + ' SKUs';
+    document.getElementById('sb-count').textContent = skus.length + ' SKUs tracked';
+  } catch(e) {
+    _updateSyncBadge('offline');
+    _sbToast('⚠ Sync failed — ' + e.message, false);
+  }
+  if (btn) btn.textContent = orig;
+}
+
+// Load from localStorage as fallback before cloud boot
+(function() {
+  try {
+    var stored = localStorage.getItem(SK_SKUS);
+    if (stored) {
+      var parsed = JSON.parse(stored);
+      if (parsed.skus && parsed.skus.length > 0) { skus = parsed.skus; if (parsed.taxonomy) TAXONOMY = parsed.taxonomy; }
+    }
+  } catch(e) {}
+})();
+
 // ── INIT ─────────────────────────────────────────────────────────────
 renderSidebar();
 renderStep();
 renderRecent();
 document.getElementById('total-count').textContent = skus.length+' SKUs';
 document.getElementById('sb-count').textContent = skus.length+' SKUs tracked';
+_sbBoot();
 </script>
 </body>
 </html>
