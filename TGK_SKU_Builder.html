@@ -143,22 +143,6 @@ select.form-input{cursor:pointer}
 .sku-table th:hover{color:var(--text2)}
 .sku-table td{border-bottom:1px solid var(--border);padding:9px 12px;font-size:12px;vertical-align:middle}
 .sku-table tbody tr:hover td{background:rgba(255,255,255,.012)}
-.sku-table tbody tr.row-checked td{background:rgba(42,191,170,.05)}
-.sku-table tbody tr.row-checked td:first-child{border-left:2px solid var(--teal)}
-/* checkbox column */
-.th-check,.td-check{width:36px;min-width:36px;padding:8px 10px !important;text-align:center}
-.row-cb{width:15px;height:15px;accent-color:var(--teal);cursor:pointer}
-/* selection action bar */
-.sel-bar{display:none;align-items:center;gap:10px;padding:8px 16px;background:rgba(42,191,170,.08);border-bottom:1px solid rgba(42,191,170,.25);flex-shrink:0}
-.sel-bar.visible{display:flex}
-.sel-bar-label{font-size:12px;font-weight:700;color:var(--teal);font-family:var(--mono)}
-.sel-bar-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;font-size:11px;font-weight:700;border-radius:var(--r);border:1px solid rgba(42,191,170,.35);background:rgba(42,191,170,.12);color:var(--teal);cursor:pointer;transition:all .12s}
-.sel-bar-btn:hover{background:rgba(42,191,170,.22)}
-.sel-bar-btn.danger{border-color:rgba(224,85,85,.3);background:rgba(224,85,85,.1);color:var(--red)}
-.sel-bar-btn.danger:hover{background:rgba(224,85,85,.2)}
-.sel-bar-sep{width:1px;height:18px;background:rgba(42,191,170,.2)}
-.sel-bar-dismiss{margin-left:auto;font-size:11px;color:var(--text3);cursor:pointer;padding:4px 8px;border-radius:var(--r);transition:all .12s}
-.sel-bar-dismiss:hover{color:var(--text2);background:var(--bg4)}
 .sku-new{color:var(--teal);font-weight:600;font-family:var(--mono);font-size:12px;white-space:nowrap}
 .sku-legacy{color:var(--text3);font-size:11px;font-family:var(--mono)}
 .sku-desc{color:var(--text2);max-width:280px;font-size:12px}
@@ -233,9 +217,7 @@ select.form-input{cursor:pointer}
         <button class="export-btn" onclick="triggerImport()">⬆ Import CSV</button>
         <input type="file" id="csv-file-input" accept=".csv" style="display:none" onchange="importCSV(event)">
         <button class="export-btn" onclick="exportCSV()">⬇ Export CSV</button>
-        <button class="export-btn" onclick="saveWithMerge()" id="sync-save-btn">☁ Save & Sync</button>
         <div class="count-badge" id="total-count">201 SKUs</div>
-        <span id="sync-badge" style="font-size:10px;font-weight:700;font-family:var(--mono);color:var(--text3)"></span>
       </div>
     </div>
 
@@ -361,24 +343,9 @@ select.form-input{cursor:pointer}
         <span id="result-count" style="font-size:11px;font-family:var(--mono);color:var(--text3);margin-left:auto"></span>
       </div>
 
-      <!-- Selection action bar — shown when rows are checked -->
-      <div class="sel-bar" id="sel-bar">
-        <span class="sel-bar-label" id="sel-bar-label">0 selected</span>
-        <div class="sel-bar-sep"></div>
-        <button class="sel-bar-btn" onclick="exportSelectedCSV()">⬇ CSV</button>
-        <button class="sel-bar-btn" onclick="exportSelectedJSON()">⬇ JSON</button>
-        <div class="sel-bar-sep"></div>
-        <button class="sel-bar-btn" onclick="selectAllVisible()">Select All Visible</button>
-        <button class="sel-bar-btn" onclick="deselectAll()">Deselect All</button>
-        <div class="sel-bar-sep"></div>
-        <button class="sel-bar-btn danger" onclick="deleteSelected()">✕ Delete Selected</button>
-        <span class="sel-bar-dismiss" onclick="deselectAll()">✕ dismiss</span>
-      </div>
-
       <table class="sku-table" id="sku-table">
         <thead>
           <tr>
-            <th class="th-check"><input type="checkbox" class="row-cb" id="select-all-cb" title="Select all visible" onchange="toggleSelectAll(this.checked)"></th>
             <th onclick="sortBy('newSku')" style="cursor:pointer">NEW SKU ↕</th>
             <th onclick="sortBy('legacy')" style="cursor:pointer">LEGACY SKU ↕</th>
             <th>DESCRIPTION</th>
@@ -401,7 +368,7 @@ select.form-input{cursor:pointer}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
         <div>
           <div class="panel">
-            <div class="panel-title">Categories</div>
+            <div class="panel-title">Categories <span style="font-size:10px;font-weight:400;color:var(--text3);margin-left:6px">— click code or name to edit</span></div>
             <div id="manage-cat-list" style="margin-bottom:14px"></div>
             <div style="display:flex;gap:8px;align-items:center">
               <input type="text" class="form-input" id="new-cat-input" placeholder="New category name..." style="flex:1">
@@ -411,7 +378,7 @@ select.form-input{cursor:pointer}
         </div>
         <div>
           <div class="panel">
-            <div class="panel-title">Sub-Categories for: <span id="manage-sub-cat-name" style="color:var(--teal)">— select a category —</span></div>
+            <div class="panel-title">Sub-Categories for: <span id="manage-sub-cat-name" style="color:var(--teal)">— select a category —</span> <span style="font-size:10px;font-weight:400;color:var(--text3);margin-left:6px">— click code or name to edit</span></div>
             <div id="manage-sub-list" style="margin-bottom:14px"><div class="empty">Select a category on the left</div></div>
             <div style="display:flex;gap:8px;align-items:center" id="add-sub-row" style="display:none">
               <input type="text" class="form-input" id="new-sub-input" placeholder="New sub-category name..." style="flex:1">
@@ -611,8 +578,7 @@ function saveSku(){
     live:builder.live,
     cat:builder.cat,
     sub:builder.sub,
-    subsub:'',
-    updated:new Date().toISOString()
+    subsub:''
   };
   skus.push(entry);
   recentlyAdded.unshift(entry);
@@ -620,18 +586,7 @@ function saveSku(){
   renderRecent();
   document.getElementById('total-count').textContent = skus.length+' SKUs';
   document.getElementById('sb-count').textContent = skus.length+' SKUs tracked';
-  // Persist locally immediately
-  try { localStorage.setItem(SK_SKUS, JSON.stringify(_skuPayload())); } catch(e) {}
-  // Push to cloud in background
-  if(_sbReady){
-    _updateSyncBadge('syncing');
-    _sbSet(SK_SKUS, _skuPayload()).then(function(ok){
-      _updateSyncBadge(ok ? 'ok' : 'offline');
-      _sbToast(ok ? '✓ Saved: '+sku : '⚠ Saved locally, cloud failed', ok);
-    }).catch(function(){ _updateSyncBadge('offline'); showNotif('Saved: '+sku); });
-  } else {
-    showNotif('Saved: '+sku);
-  }
+  showNotif('Saved: '+sku);
   resetBuilder();
   renderSidebar();
 }
@@ -755,27 +710,22 @@ function renderTable(){
   const list = getFiltered();
   document.getElementById('result-count').textContent = `${list.length} of ${skus.length}`;
   const tbody = document.getElementById('sku-tbody');
-  if(!list.length){tbody.innerHTML=`<tr><td colspan="7"><div class="empty">No results</div></td></tr>`;return;}
-  tbody.innerHTML = list.map((s,i)=>{
-    const safeId = s.newSku.replace(/-/g,'_');
-    const checked = selectedSkus.has(s.newSku);
-    return `<tr id="row-${safeId}" class="${checked?'row-checked':''}">
-      <td class="td-check"><input type="checkbox" class="row-cb" data-sku="${s.newSku}" ${checked?'checked':''} onchange="toggleRowSelect(this)"></td>
+  if(!list.length){tbody.innerHTML=`<tr><td colspan="6"><div class="empty">No results</div></td></tr>`;return;}
+  tbody.innerHTML = list.map((s,i)=>`
+    <tr id="row-${s.newSku.replace(/-/g,'_')}">
       <td><div class="sku-new">${s.newSku}</div></td>
       <td><div class="sku-legacy">${s.legacy||'<span style="color:var(--text3);font-style:italic">none</span>'}</div></td>
       <td><div class="sku-desc">${s.desc||'<span style="color:var(--text3);font-style:italic">no description</span>'}</div></td>
       <td>
         <span class="badge badge-cat">${s.cat||'—'}</span>
-        ${s.sub?`<span class="badge badge-sub">${s.sub}`:''}
+        ${s.sub?`<span class="badge badge-sub">${s.sub}</span>`:''}
       </td>
       <td>${liveBadge(s.live)}</td>
       <td>
         <button class="action-btn" onclick="openEdit('${s.newSku}')">EDIT</button>
         <button class="action-btn del" onclick="deleteSku('${s.newSku}')">DEL</button>
       </td>
-    </tr>`;
-  }).join('');
-  syncSelectAllCheckbox();
+    </tr>`).join('');
 }
 
 function liveBadge(v){
@@ -796,49 +746,26 @@ function openEdit(id){
   const s = skus.find(x=>x.newSku===id);
   if(!s) return;
   document.getElementById('modal-title').textContent = 'Edit: '+id;
-
-  // Build category options
-  const catOpts = Object.keys(TAXONOMY).map(c=>
-    `<option value="${c}" ${s.cat===c?'selected':''}>${c}</option>`
-  ).join('');
-
-  // Build sub options for current cat
-  const subOpts = s.cat && TAXONOMY[s.cat]
-    ? Object.keys(TAXONOMY[s.cat].subs).map(sub=>
-        `<option value="${sub}" ${s.sub===sub?'selected':''}>${sub}</option>`
-      ).join('')
-    : '';
-
   document.getElementById('modal-body').innerHTML = `
     <div class="form-group">
-      <label class="form-label">New SKU <span style="color:var(--text3);font-size:10px;font-weight:400">(rename will update all references)</span></label>
-      <input class="form-input" id="e-newSku" value="${s.newSku}" placeholder="e.g. TGK-0101-01">
+      <label class="form-label">New SKU</label>
+      <input class="form-input" id="e-newSku" value="${s.newSku}" readonly style="opacity:.6">
     </div>
     <div class="form-group">
       <label class="form-label">Legacy SKU</label>
-      <input class="form-input" id="e-legacy" value="${s.legacy||''}">
+      <input class="form-input" id="e-legacy" value="${s.legacy}">
     </div>
     <div class="form-group">
       <label class="form-label">Description</label>
-      <textarea class="form-input" id="e-desc" rows="3">${s.desc||''}</textarea>
+      <textarea class="form-input" id="e-desc">${s.desc}</textarea>
     </div>
     <div class="form-group">
       <label class="form-label">Category</label>
-      <select class="form-input" id="e-cat" onchange="editUpdateSubs()">
-        <option value="">— Select —</option>
-        ${catOpts}
-      </select>
+      <input class="form-input" id="e-cat" value="${s.cat}">
     </div>
     <div class="form-group">
       <label class="form-label">Sub-Category</label>
-      <select class="form-input" id="e-sub" onchange="editUpdateSubsub()">
-        <option value="">— Select —</option>
-        ${subOpts}
-      </select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Sub-Sub Category <span style="color:var(--text3);font-size:10px;font-weight:400">(optional)</span></label>
-      <input class="form-input" id="e-subsub" value="${s.subsub||''}" placeholder="e.g. Oil Change Kit">
+      <input class="form-input" id="e-sub" value="${s.sub}">
     </div>
     <div class="form-group">
       <label class="form-label">Live Status</label>
@@ -855,60 +782,17 @@ function openEdit(id){
   document.getElementById('modal-bg').classList.add('open');
 }
 
-function editUpdateSubs(){
-  const cat = document.getElementById('e-cat').value;
-  const subSel = document.getElementById('e-sub');
-  if(!cat || !TAXONOMY[cat]){ subSel.innerHTML='<option value="">— Select —</option>'; return; }
-  subSel.innerHTML = '<option value="">— Select —</option>' +
-    Object.keys(TAXONOMY[cat].subs).map(sub=>`<option value="${sub}">${sub}</option>`).join('');
-}
-
-function editUpdateSubsub(){
-  // subsub is free-text; nothing to cascade
-}
-
 function saveEdit(id){
   const s = skus.find(x=>x.newSku===id);
   if(!s) return;
-
-  const newSkuVal = document.getElementById('e-newSku').value.trim();
-
-  // Validate new SKU isn't empty
-  if(!newSkuVal){ showNotif('New SKU cannot be empty'); return; }
-
-  // If renaming, check no collision with a DIFFERENT sku
-  if(newSkuVal !== id && skus.find(x=>x.newSku===newSkuVal)){
-    showNotif('SKU '+newSkuVal+' already exists!'); return;
-  }
-
-  s.newSku   = newSkuVal;
-  s.legacy   = document.getElementById('e-legacy').value.trim();
-  s.desc     = document.getElementById('e-desc').value.trim();
-  s.cat      = document.getElementById('e-cat').value.trim();
-  s.sub      = document.getElementById('e-sub').value.trim();
-  s.subsub   = document.getElementById('e-subsub').value.trim();
-  s.live     = document.getElementById('e-live').value;
-  s.updated  = new Date().toISOString();
-
+  s.legacy = document.getElementById('e-legacy').value.trim();
+  s.desc = document.getElementById('e-desc').value.trim();
+  s.cat = document.getElementById('e-cat').value.trim();
+  s.sub = document.getElementById('e-sub').value.trim();
+  s.live = document.getElementById('e-live').value;
   closeModal();
-  resequenceTaxonomy();
-  renderSidebar();
   renderTable();
-  document.getElementById('total-count').textContent = skus.length+' SKUs';
-  document.getElementById('sb-count').textContent = skus.length+' SKUs tracked';
-
-  // Persist locally immediately
-  try { localStorage.setItem(SK_SKUS, JSON.stringify(_skuPayload())); } catch(e) {}
-  // Push to cloud in background
-  if(_sbReady){
-    _updateSyncBadge('syncing');
-    _sbSet(SK_SKUS, _skuPayload()).then(function(ok){
-      _updateSyncBadge(ok ? 'ok' : 'offline');
-      _sbToast(ok ? '✓ Saved & synced' : '⚠ Saved locally, cloud failed', ok);
-    }).catch(function(){ _updateSyncBadge('offline'); });
-  } else {
-    showNotif('Updated: '+newSkuVal);
-  }
+  showNotif('Updated: '+id);
 }
 
 function closeModal(e){
@@ -959,96 +843,6 @@ function renderStats(){
   document.getElementById('stats-content').innerHTML = html;
 }
 
-// ── SELECTION STATE ─────────────────────────────────────────────────
-let selectedSkus = new Set();
-
-function toggleRowSelect(cb){
-  const id = cb.dataset.sku;
-  const row = cb.closest('tr');
-  if(cb.checked){ selectedSkus.add(id); row.classList.add('row-checked'); }
-  else { selectedSkus.delete(id); row.classList.remove('row-checked'); }
-  syncSelectionBar();
-  syncSelectAllCheckbox();
-}
-
-function toggleSelectAll(checked){
-  const visible = getFiltered().map(s=>s.newSku);
-  if(checked){ visible.forEach(id=>selectedSkus.add(id)); }
-  else { visible.forEach(id=>selectedSkus.delete(id)); }
-  renderTable();
-  syncSelectionBar();
-}
-
-function selectAllVisible(){
-  getFiltered().forEach(s=>selectedSkus.add(s.newSku));
-  renderTable(); syncSelectionBar();
-}
-
-function deselectAll(){
-  selectedSkus.clear();
-  renderTable(); syncSelectionBar();
-}
-
-function syncSelectAllCheckbox(){
-  const cb = document.getElementById('select-all-cb');
-  if(!cb) return;
-  const visible = getFiltered().map(s=>s.newSku);
-  const allChecked = visible.length > 0 && visible.every(id=>selectedSkus.has(id));
-  const someChecked = visible.some(id=>selectedSkus.has(id));
-  cb.checked = allChecked;
-  cb.indeterminate = !allChecked && someChecked;
-}
-
-function syncSelectionBar(){
-  const bar = document.getElementById('sel-bar');
-  const lbl = document.getElementById('sel-bar-label');
-  const n = selectedSkus.size;
-  if(n > 0){
-    bar.classList.add('visible');
-    lbl.textContent = `${n} selected`;
-  } else {
-    bar.classList.remove('visible');
-  }
-}
-
-function getSelectedData(){
-  return skus.filter(s=>selectedSkus.has(s.newSku));
-}
-
-function exportSelectedCSV(){
-  const data = getSelectedData();
-  if(!data.length){ showNotif('No SKUs selected'); return; }
-  const headers = ['New SKU','Legacy SKU','Description','Category','Sub-Category','Sub-Sub Category','Live'];
-  const rows = data.map(s=>[s.newSku,s.legacy,s.desc,s.cat,s.sub,s.subsub,s.live].map(v=>`"${(v||'').replace(/"/g,'""')}"`).join(','));
-  const csv = [headers.join(','),...rows].join('\n');
-  const a = document.createElement('a');
-  a.href = 'data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
-  a.download = 'TGK_SKU_Selected_'+new Date().toISOString().slice(0,10)+'.csv';
-  a.click();
-  showNotif(`Exported ${data.length} selected SKU${data.length===1?'':'s'}`);
-}
-
-function exportSelectedJSON(){
-  const data = getSelectedData();
-  if(!data.length){ showNotif('No SKUs selected'); return; }
-  const a = document.createElement('a');
-  a.href = 'data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(data,null,2));
-  a.download = 'TGK_SKU_Selected_'+new Date().toISOString().slice(0,10)+'.json';
-  a.click();
-  showNotif(`Exported ${data.length} selected SKU${data.length===1?'':'s'} as JSON`);
-}
-
-function deleteSelected(){
-  const n = selectedSkus.size;
-  if(!n){ showNotif('No SKUs selected'); return; }
-  if(!confirm(`Delete ${n} selected SKU${n===1?'':'s'}? This cannot be undone.`)) return;
-  skus = skus.filter(s=>!selectedSkus.has(s.newSku));
-  selectedSkus.clear();
-  document.getElementById('total-count').textContent = skus.length+' SKUs';
-  renderTable(); syncSelectionBar();
-  showNotif(`Deleted ${n} SKU${n===1?'':'s'}`);
-}
-
 function exportCSV(){
   const headers = ['New SKU','Legacy SKU','Description','Category','Sub-Category','Sub-Sub Category','Live'];
   const rows = skus.map(s=>[s.newSku,s.legacy,s.desc,s.cat,s.sub,s.subsub,s.live].map(v=>`"${(v||'').replace(/"/g,'""')}"`).join(','));
@@ -1076,13 +870,13 @@ function renderManageCats(){
   const el=document.getElementById('manage-cat-list');
   const cats=Object.keys(TAXONOMY);
   if(!cats.length){el.innerHTML='<div class="empty">No categories yet</div>';return;}
-  el.innerHTML=cats.map(cat=>{
+  el.innerHTML=cats.map((cat,idx)=>{
     const skuCount=skus.filter(s=>s.cat===cat).length;
     const code=pad2(TAXONOMY[cat].num);
     const subCount=Object.keys(TAXONOMY[cat].subs).length;
     return `<div class="manage-item ${selectedManageCat===cat?'selected':''}" onclick="selectManageCat('${cat.replace(/'/g,"\\'")}')">
-      <span class="item-code">${code}</span>
-      <span class="item-name">${cat}</span>
+      <span class="item-code" title="Click to renumber" onclick="event.stopPropagation();inlineEditCatNum('${cat.replace(/'/g,"\\'")}',this)" style="cursor:pointer;text-decoration:underline dotted">${code}</span>
+      <span class="item-name" title="Click to rename" onclick="event.stopPropagation();inlineEditCatName('${cat.replace(/'/g,"\\'")}',this)" style="cursor:pointer" onmouseenter="this.style.color='var(--teal)'" onmouseleave="this.style.color=''">${cat}</span>
       <span class="item-count">${subCount} subs · ${skuCount} skus</span>
       <button class="del-btn" onclick="event.stopPropagation();deleteCat('${cat.replace(/'/g,"\\'")}')">✕</button>
     </div>`;
@@ -1113,8 +907,8 @@ function renderManageSubs(){
   listEl.innerHTML=subKeys.map(sub=>{
     const skuCount=skus.filter(s=>s.cat===selectedManageCat&&s.sub===sub).length;
     return `<div class="manage-item">
-      <span class="item-code">${pad2(subs[sub])}</span>
-      <span class="item-name">${sub}</span>
+      <span class="item-code" title="Click to renumber" onclick="inlineEditSubNum('${selectedManageCat.replace(/'/g,"\\'")}','${sub.replace(/'/g,"\\'")}',this)" style="cursor:pointer;text-decoration:underline dotted">${pad2(subs[sub])}</span>
+      <span class="item-name" title="Click to rename" onclick="inlineEditSubName('${selectedManageCat.replace(/'/g,"\\'")}','${sub.replace(/'/g,"\\'")}',this)" style="cursor:pointer" onmouseenter="this.style.color='var(--teal)'" onmouseleave="this.style.color=''">${sub}</span>
       <span class="item-count">${skuCount} skus</span>
       <button class="del-btn" onclick="deleteSub('${selectedManageCat.replace(/'/g,"\\'")}','${sub.replace(/'/g,"\\'")}')">✕</button>
     </div>`;
@@ -1178,7 +972,98 @@ function deleteSub(cat,sub){
   showNotif('Deleted: '+sub);
 }
 
-// ── CSV IMPORT ───────────────────────────────────────────────────────
+// ── RENAME / RENUMBER ────────────────────────────────────────────────
+
+function inlineEditCatName(cat, el){
+  const old = cat;
+  const input = document.createElement('input');
+  input.className = 'form-input';
+  input.value = cat;
+  input.style.cssText = 'width:140px;padding:2px 6px;font-size:12px;height:24px';
+  el.replaceWith(input);
+  input.focus(); input.select();
+  const commit = () => {
+    const newName = input.value.trim();
+    if(!newName || newName === old){ renderManageCats(); return; }
+    if(TAXONOMY[newName]){ showNotif('Name already exists'); renderManageCats(); return; }
+    // Rebuild TAXONOMY with new key preserving order
+    const newTax = {};
+    Object.keys(TAXONOMY).forEach(k => { newTax[k===old ? newName : k] = TAXONOMY[k]; });
+    TAXONOMY = newTax;
+    // Update all SKUs
+    skus.forEach(s=>{ if(s.cat===old) s.cat=newName; });
+    if(selectedManageCat===old) selectedManageCat=newName;
+    renderManageCats(); renderManageSubs(); renderSidebar();
+    showNotif(`Renamed: "${old}" → "${newName}"`);
+  };
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', e=>{ if(e.key==='Enter') input.blur(); if(e.key==='Escape'){ input.value=old; input.blur(); } });
+}
+
+function inlineEditCatNum(cat, el){
+  const old = TAXONOMY[cat].num;
+  const input = document.createElement('input');
+  input.className = 'form-input';
+  input.type = 'number'; input.min = 1; input.max = 99;
+  input.value = old;
+  input.style.cssText = 'width:48px;padding:2px 4px;font-size:12px;height:24px;text-align:center';
+  el.replaceWith(input);
+  input.focus(); input.select();
+  const commit = () => {
+    const n = parseInt(input.value);
+    if(isNaN(n)||n<1){ renderManageCats(); return; }
+    TAXONOMY[cat].num = n;
+    renderManageCats(); renderSidebar();
+    showNotif(`${cat} code set to ${pad2(n)}`);
+  };
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', e=>{ if(e.key==='Enter') input.blur(); if(e.key==='Escape'){ input.value=old; input.blur(); } });
+}
+
+function inlineEditSubName(cat, sub, el){
+  const old = sub;
+  const input = document.createElement('input');
+  input.className = 'form-input';
+  input.value = sub;
+  input.style.cssText = 'width:140px;padding:2px 6px;font-size:12px;height:24px';
+  el.replaceWith(input);
+  input.focus(); input.select();
+  const commit = () => {
+    const newName = input.value.trim();
+    if(!newName || newName === old){ renderManageSubs(); return; }
+    if(TAXONOMY[cat].subs[newName]!==undefined){ showNotif('Sub-category name already exists'); renderManageSubs(); return; }
+    const newSubs = {};
+    Object.keys(TAXONOMY[cat].subs).forEach(k => { newSubs[k===old ? newName : k] = TAXONOMY[cat].subs[k]; });
+    TAXONOMY[cat].subs = newSubs;
+    skus.forEach(s=>{ if(s.cat===cat && s.sub===old) s.sub=newName; });
+    renderManageCats(); renderManageSubs(); renderSidebar();
+    showNotif(`Renamed: "${old}" → "${newName}"`);
+  };
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', e=>{ if(e.key==='Enter') input.blur(); if(e.key==='Escape'){ input.value=old; input.blur(); } });
+}
+
+function inlineEditSubNum(cat, sub, el){
+  const old = TAXONOMY[cat].subs[sub];
+  const input = document.createElement('input');
+  input.className = 'form-input';
+  input.type = 'number'; input.min = 1; input.max = 99;
+  input.value = old;
+  input.style.cssText = 'width:48px;padding:2px 4px;font-size:12px;height:24px;text-align:center';
+  el.replaceWith(input);
+  input.focus(); input.select();
+  const commit = () => {
+    const n = parseInt(input.value);
+    if(isNaN(n)||n<1){ renderManageSubs(); return; }
+    TAXONOMY[cat].subs[sub] = n;
+    renderManageSubs();
+    showNotif(`${sub} code set to ${pad2(n)}`);
+  };
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', e=>{ if(e.key==='Enter') input.blur(); if(e.key==='Escape'){ input.value=old; input.blur(); } });
+}
+
+
 function triggerImport(){
   document.getElementById('csv-file-input').value='';
   document.getElementById('csv-file-input').click();
@@ -1295,165 +1180,12 @@ function parseCSVLine(line){
   return result;
 }
 
-// ── CLOUD SYNC (Supabase) ─────────────────────────────────────────────
-var TGK_SB_URL = 'https://piamamighqiielfztgic.supabase.co';
-var TGK_SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpYW1hbWlnaHFpaWVsZnp0Z2ljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4NjkxMzUsImV4cCI6MjA5MzQ0NTEzNX0.YwLflTw6F4cRzmY78QoAY6Zud2IHGVP5xL_yvMFxheA';
-var _sbReady = false;
-var _sbCache = null;
-var _syncInterval = null;
-const SK_SKUS = 'tgk_skus_v1';
-
-async function _sbGet(id) {
-  var res = await fetch(TGK_SB_URL + '/rest/v1/workspace?id=eq.' + encodeURIComponent(id) + '&select=data&limit=1', {
-    headers: { 'apikey': TGK_SB_KEY, 'Authorization': 'Bearer ' + TGK_SB_KEY }
-  });
-  if (!res.ok) throw new Error('Supabase ' + res.status);
-  var rows = await res.json();
-  return (rows && rows[0]) ? rows[0].data : null;
-}
-
-async function _sbSet(id, payload) {
-  var res = await fetch(TGK_SB_URL + '/rest/v1/workspace', {
-    method: 'POST',
-    headers: { 'apikey': TGK_SB_KEY, 'Authorization': 'Bearer ' + TGK_SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-    body: JSON.stringify({ id: id, data: payload, updated_at: new Date().toISOString() })
-  });
-  return res.ok;
-}
-
-function _sbToast(msg, ok) {
-  var el = document.getElementById('_sb_toast');
-  if (!el) { el = document.createElement('div'); el.id = '_sb_toast'; el.style.cssText = 'position:fixed;bottom:20px;left:20px;padding:8px 14px;border-radius:7px;font-size:11px;font-weight:700;z-index:9999;transition:opacity .4s;font-family:var(--mono);pointer-events:none'; document.body.appendChild(el); }
-  el.textContent = msg;
-  el.style.background = ok ? 'rgba(42,191,170,.9)' : 'rgba(224,85,85,.9)';
-  el.style.color = '#fff'; el.style.opacity = '1';
-  setTimeout(function(){ el.style.opacity = '0'; }, 3000);
-}
-
-function _updateSyncBadge(status) {
-  var el = document.getElementById('sync-badge');
-  if (!el) return;
-  if (status === 'syncing') { el.textContent = '↻ Syncing…'; el.style.color = 'var(--text3)'; }
-  else if (status === 'ok') { el.textContent = '✓ Synced ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); el.style.color = 'var(--teal)'; }
-  else if (status === 'offline') { el.textContent = '⚠ Offline'; el.style.color = '#f87171'; }
-}
-
-function _skuPayload() {
-  return { skus: skus, taxonomy: TAXONOMY, updated_at: new Date().toISOString() };
-}
-
-function _mergeSkuData(local, cloud) {
-  var merged = { taxonomy: JSON.parse(JSON.stringify(cloud.taxonomy || {})), skus: [...(cloud.skus || [])] };
-  Object.keys(local.taxonomy || {}).forEach(function(cat) {
-    if (!merged.taxonomy[cat]) merged.taxonomy[cat] = local.taxonomy[cat];
-    else Object.keys(local.taxonomy[cat].subs || {}).forEach(function(sub) {
-      if (merged.taxonomy[cat].subs[sub] === undefined) merged.taxonomy[cat].subs[sub] = local.taxonomy[cat].subs[sub];
-    });
-  });
-  (local.skus || []).forEach(function(ls) {
-    if (!ls.newSku) return;
-    var idx = merged.skus.findIndex(function(cs){ return cs.newSku === ls.newSku; });
-    if (idx > -1) {
-      var cloudUp = new Date(merged.skus[idx].updated || 0);
-      var localUp = new Date(ls.updated || 0);
-      if (localUp > cloudUp) merged.skus[idx] = ls;
-    } else { merged.skus.push(ls); }
-  });
-  return merged;
-}
-
-async function _sbBoot() {
-  _updateSyncBadge('syncing');
-  try {
-    var cloud = await _sbGet(SK_SKUS);
-    if (cloud && (cloud.skus || []).length > 0) {
-      var merged = _mergeSkuData({ skus: skus, taxonomy: TAXONOMY }, cloud);
-      skus = merged.skus;
-      TAXONOMY = merged.taxonomy;
-      try { localStorage.setItem(SK_SKUS, JSON.stringify({ skus: skus, taxonomy: TAXONOMY })); } catch(e) {}
-      resequenceTaxonomy();
-      renderSidebar();
-      renderTable();
-      document.getElementById('total-count').textContent = skus.length + ' SKUs';
-      document.getElementById('sb-count').textContent = skus.length + ' SKUs tracked';
-    }
-    _sbReady = true;
-    _updateSyncBadge('ok');
-    _sbToast('✓ Synced — ' + skus.length + ' SKUs', true);
-    _syncInterval = setInterval(_backgroundSync, 300000);
-  } catch(e) {
-    _updateSyncBadge('offline');
-    _sbToast('⚠ Cloud offline — local only', false);
-  }
-}
-
-async function _backgroundSync() {
-  if (!_sbReady) return;
-  try {
-    var cloud = await _sbGet(SK_SKUS);
-    if (!cloud) return;
-    var cloudCount = (cloud.skus || []).length;
-    var cloudNewest = (cloud.skus || []).reduce(function(m, s){ return (s.updated||'') > m ? (s.updated||'') : m; }, '');
-    var localNewest = skus.reduce(function(m, s){ return (s.updated||'') > m ? (s.updated||'') : m; }, '');
-    if (cloudCount !== skus.length || cloudNewest > localNewest) {
-      var merged = _mergeSkuData({ skus: skus, taxonomy: TAXONOMY }, cloud);
-      skus = merged.skus; TAXONOMY = merged.taxonomy;
-      try { localStorage.setItem(SK_SKUS, JSON.stringify({ skus: skus, taxonomy: TAXONOMY })); } catch(e) {}
-      resequenceTaxonomy(); renderSidebar(); renderTable();
-      document.getElementById('total-count').textContent = skus.length + ' SKUs';
-      document.getElementById('sb-count').textContent = skus.length + ' SKUs tracked';
-      _sbToast('↻ Updated from cloud', true);
-    }
-    _updateSyncBadge('ok');
-  } catch(e) { _updateSyncBadge('offline'); }
-}
-
-async function saveWithMerge() {
-  var btn = document.getElementById('sync-save-btn');
-  if (btn) { var orig = btn.textContent; btn.textContent = '↻ Syncing…'; }
-  _updateSyncBadge('syncing');
-  try {
-    var cloud = await _sbGet(SK_SKUS);
-    if (cloud && (cloud.skus || []).length > 0) {
-      var merged = _mergeSkuData({ skus: skus, taxonomy: TAXONOMY }, cloud);
-      skus = merged.skus; TAXONOMY = merged.taxonomy;
-    }
-    var payload = _skuPayload();
-    try { localStorage.setItem(SK_SKUS, JSON.stringify(payload)); } catch(e) {}
-    var ok = await _sbSet(SK_SKUS, payload);
-    _updateSyncBadge(ok ? 'ok' : 'offline');
-    _sbToast(ok ? '✓ Saved & synced' : '⚠ Save failed', ok);
-    resequenceTaxonomy(); renderSidebar(); renderTable();
-    document.getElementById('total-count').textContent = skus.length + ' SKUs';
-    document.getElementById('sb-count').textContent = skus.length + ' SKUs tracked';
-  } catch(e) {
-    _updateSyncBadge('offline');
-    _sbToast('⚠ Sync failed — ' + e.message, false);
-  }
-  if (btn) btn.textContent = orig;
-}
-
-// Load from localStorage as fallback before cloud boot
-// Also stamp any seed entries that lack an updated timestamp
-(function() {
-  // Stamp seed entries so merge logic can treat them as older than real edits
-  skus.forEach(function(s){ if(!s.updated) s.updated = '2024-01-01T00:00:00.000Z'; });
-  try {
-    var stored = localStorage.getItem(SK_SKUS);
-    if (stored) {
-      var parsed = JSON.parse(stored);
-      if (parsed.skus && parsed.skus.length > 0) { skus = parsed.skus; if (parsed.taxonomy) TAXONOMY = parsed.taxonomy; }
-    }
-  } catch(e) {}
-})();
-
 // ── INIT ─────────────────────────────────────────────────────────────
 renderSidebar();
 renderStep();
 renderRecent();
 document.getElementById('total-count').textContent = skus.length+' SKUs';
 document.getElementById('sb-count').textContent = skus.length+' SKUs tracked';
-_sbBoot();
 </script>
 </body>
 </html>
