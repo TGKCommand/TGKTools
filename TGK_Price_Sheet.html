@@ -133,6 +133,24 @@ tbody td.main-col{color:var(--text);font-weight:500}
 .override-retail{font-family:var(--mono);font-size:11px;color:var(--teal);flex:0 0 70px;text-align:right}
 .override-input{width:70px;text-align:center;flex-shrink:0}
 .override-result{font-family:var(--mono);font-size:11px;color:var(--green);flex:0 0 70px;text-align:right}
+
+@media print {
+  .vendor-view-header button { display:none !important; }
+  .vendor-view-wrap { padding:10px; }
+  body { background:#fff !important; color:#000 !important; }
+  table { border-collapse:collapse; width:100%; }
+  th, td { border:1px solid #ccc !important; padding:6px 10px !important; color:#000 !important; font-size:11px !important; }
+  thead { background:#eee !important; }
+  .cat-pill { background:#eee !important; color:#333 !important; border:none !important; }
+  .money-vendor { color:#000 !important; }
+  a { color:#007 !important; }
+}
+.nav-sub-item{display:flex;align-items:center;gap:8px;padding:5px 10px 5px 32px;border-radius:6px;border:none;background:none;cursor:pointer;width:100%;text-align:left;transition:background .12s;color:var(--text3);font-family:var(--font);font-size:11px;font-weight:500}
+.nav-sub-item:hover{background:var(--bg3);color:var(--text)}
+.nav-sub-item.active{background:rgba(20,184,166,.12);color:#4ade80}
+.nav-sub-dot{width:5px;height:5px;border-radius:50%;background:var(--border);flex-shrink:0}
+.nav-sub-item.active .nav-sub-dot{background:#4ade80}
+.vendor-card-collapsed .vendor-card-body{display:none}
 </style>
 </head>
 <body>
@@ -174,6 +192,12 @@ tbody td.main-col{color:var(--text);font-weight:500}
     </div>
     <div class="form-row">
       <div class="form-group">
+        <label class="form-label">Product URL (optional — shown to vendors)</label>
+        <input class="form-input" id="m-url" placeholder="https://tgkmotorsport.com/products/..."/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
         <label class="form-label">Notes (optional)</label>
         <input class="form-input" id="m-notes" placeholder="Any internal notes"/>
       </div>
@@ -204,7 +228,13 @@ tbody td.main-col{color:var(--text);font-weight:500}
     </div>
     <div style="margin-bottom:14px">
       <div class="panel-title" style="margin-bottom:8px">Per-Item Discount Overrides <span style="font-size:9px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(leave blank to use universal)</span></div>
-      <div id="override-list" style="max-height:280px;overflow-y:auto"></div>
+      <div style="margin-bottom:8px;display:flex;align-items:center;gap:8px">
+        <label class="form-label" style="margin:0;white-space:nowrap;font-size:11px">Filter by Category</label>
+        <select class="form-input" id="vm-cat-filter" style="flex:1;padding:5px 8px;font-size:12px" onchange="renderOverrideList(currentOverrides())">
+          <option value="">All Categories</option>
+        </select>
+      </div>
+      <div id="override-list" style="max-height:240px;overflow-y:auto"></div>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeVendorModal()">Cancel</button>
@@ -232,6 +262,7 @@ var editingItemId = null;
 var editingVendorId = null;
 var vendorMode = false;
 var vendorModeId = null;
+var selectedVendorId = null;
 
 // ── INIT ──────────────────────────────────────────────────────────────
 window.onload = function() {
@@ -377,11 +408,22 @@ function render() {
 function renderSidebar() {
   var cats = getCats();
   var vc = vendors.length;
+  var vendorSubs = '';
+  if (currentView === 'vendors' && vendors.length) {
+    vendorSubs = vendors.map(function(v){
+      var a = selectedVendorId === v.id ? ' active' : '';
+      return '<button class="nav-sub-item'+a+'" onclick="selectVendor(\''+v.id+'\')">'+
+        '<span class="nav-sub-dot"></span>'+
+        '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(v.name)+'</span>'+
+        '</button>';
+    }).join('');
+  }
   return '<div class="sidebar-wrap"><div class="sidebar">'+
     '<div class="sidebar-logo"><img class="logo-img" src="'+LOGO_SRC+'"/></div>'+
     '<div class="sidebar-section">Price Sheet</div>'+
     navBtn('master','📋','Master Price List',items.length)+
     navBtn('vendors','🤝','Vendor Lists',vc)+
+    vendorSubs+
     '<div class="sidebar-section">Settings</div>'+
     navBtn('categories','🏷️','Categories',cats.length)+
     '</div>'+
@@ -397,8 +439,22 @@ function navBtn(view,icon,label,count) {
     '</button>';
 }
 function switchView(v) {
-  currentView=v; searchQ=''; catFilter='';
+  currentView=v; searchQ=''; catFilter=''; selectedVendorId=null;
   render();
+}
+function selectVendor(id) {
+  selectedVendorId = id;
+  render();
+  // Scroll to vendor card after render
+  setTimeout(function(){
+    var el = document.getElementById('vcard-'+id);
+    if (el) el.scrollIntoView({behavior:'smooth', block:'start'});
+    // Also expand it if collapsed
+    var card = el;
+    if (card && card.classList.contains('vendor-card-collapsed')) {
+      card.classList.remove('vendor-card-collapsed');
+    }
+  }, 60);
 }
 function bindNav() {
   var dot = document.getElementById('sync-dot');
@@ -476,22 +532,42 @@ function renderVendors() {
         '</tr>';
     }).join('') : '<tr><td colspan="5" style="color:var(--text3);font-size:12px;padding:14px">No items in master list</td></tr>';
 
-    return '<div class="vendor-card">'+
-      '<div class="vendor-card-header">'+
+    var isSelected = selectedVendorId === v.id;
+    var collapsedClass = isSelected ? '' : ' vendor-card-collapsed';
+    var chevron = isSelected ? '▲' : '▼';
+    return '<div class="vendor-card'+collapsedClass+'" id="vcard-'+v.id+'">'+
+      '<div class="vendor-card-header" style="cursor:pointer" onclick="toggleVendorCard(\''+v.id+'\')">'+
+        '<span style="font-size:11px;color:var(--text3);margin-right:4px">'+chevron+'</span>'+
         '<span class="vendor-name">'+escHtml(v.name)+'</span>'+
         '<span class="vendor-discount-badge">'+parseFloat(v.discount||0).toFixed(1)+'% universal</span>'+
-        '<div style="margin-left:auto;display:flex;gap:6px">'+
+        '<div style="margin-left:auto;display:flex;gap:6px" onclick="event.stopPropagation()">'+
           '<button class="btn btn-teal" onclick="copyVendorLink(\''+v.id+'\')">🔗 Copy Link</button>'+
           '<button class="btn" onclick="openEditVendor(\''+v.id+'\')">Edit</button>'+
           '<button class="btn btn-danger" onclick="deleteVendor(\''+v.id+'\')">Delete</button>'+
         '</div>'+
       '</div>'+
+      '<div class="vendor-card-body">'+
       '<div class="vendor-link-box" id="vlink-'+v.id+'">'+escHtml(link)+'</div>'+
       (items.length?'<div style="margin-top:10px"><div class="tbl-wrap"><table><thead><tr><th>Name</th><th>SKU</th><th>Retail</th><th>Discount</th><th>Their Price</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>':'')+
+      '</div>'+
       '</div>';
   }).join('');
 }
 
+function toggleVendorCard(id) {
+  var card = document.getElementById('vcard-'+id);
+  if (!card) return;
+  var collapsed = card.classList.toggle('vendor-card-collapsed');
+  selectedVendorId = collapsed ? null : id;
+  // Update sidebar highlight by re-rendering sidebar only
+  var sb = document.querySelector('.sidebar-wrap');
+  if (sb) sb.outerHTML = renderSidebar();
+  // Re-bind sync after sidebar re-render
+  bindNav();
+  // Update chevron
+  var chevron = card.querySelector('.vendor-card-header span:first-child');
+  if (chevron) chevron.textContent = collapsed ? '▼' : '▲';
+}
 function copyVendorLink(vid) {
   var vendor = vendors.find(function(v){ return v.id===vid; });
   if (!vendor) return;
@@ -523,29 +599,49 @@ function renderVendorView() {
     app.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">Vendor not found. This link may be invalid or the vendor was removed.</div>';
     return;
   }
-  var rows = items.map(function(item){
+  var rows = items.filter(function(item){ return item.retail > 0; }).map(function(item){
     var price = vendorPrice(item, vendor);
-    return '<tr>'+
-      '<td class="main-col">'+escHtml(item.name||'—')+'</td>'+
-      '<td><span style="font-family:var(--mono);font-size:11px;color:var(--text3)">'+escHtml(item.sku||'—')+'</span></td>'+
-      '<td><span class="cat-pill">'+escHtml(item.category||'—')+'</span></td>'+
-      '<td><span class="money-vendor" style="font-size:14px;font-weight:700">'+fmtMoney(price)+'</span></td>'+
-      '<td class="date-small">'+fmtDate(item.updatedAt)+'</td>'+
+    var linkCell = item.url ? '<a href="'+escHtml(item.url)+'" target="_blank" style="color:#4ade80;font-size:11px;text-decoration:none;font-weight:600">View →</a>' : '<span style="color:var(--text3);font-size:11px">—</span>';
+    return '<tr style="border-bottom:1px solid var(--border)">'+
+      '<td style="padding:10px 14px;font-size:13px;color:var(--text)">'+escHtml(item.name||'—')+'</td>'+
+      '<td style="padding:10px 14px"><span style="font-family:var(--mono);font-size:11px;color:var(--text3)">'+escHtml(item.sku||'—')+'</span></td>'+
+      '<td style="padding:10px 14px"><span class="cat-pill">'+escHtml(item.category||'—')+'</span></td>'+
+      '<td style="padding:10px 14px"><span class="money-vendor" style="font-size:14px;font-weight:700">'+fmtMoney(price)+'</span></td>'+
+      '<td style="padding:10px 14px">'+linkCell+'</td>'+
       '</tr>';
   }).join('');
 
   app.innerHTML = '<div class="vendor-view-wrap">'+
     '<div class="vendor-view-header">'+
       '<img src="'+LOGO_SRC+'" style="height:40px;object-fit:contain"/>'+
-      '<div><div class="vendor-view-title">'+escHtml(vendor.name)+' — Price List</div>'+
+      '<div style="flex:1"><div class="vendor-view-title">'+escHtml(vendor.name)+' — Price List</div>'+
         '<div class="vendor-view-sub">Prices current as of '+new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})+' · For inquiries contact TGK Motorsport</div>'+
       '</div>'+
+      '<button onclick="exportVendorCSV()" style="padding:8px 14px;background:rgba(20,184,166,.15);border:1px solid rgba(20,184,166,.4);border-radius:8px;color:#4ade80;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)">⬇ Export CSV</button>'+
+      '<button onclick="window.print()" style="padding:8px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)">🖨 Print</button>'+
     '</div>'+
-    '<div class="tbl-wrap"><table>'+
-    '<thead><tr><th>Item</th><th>SKU</th><th>Category</th><th>Your Price</th><th>Last Updated</th></tr></thead>'+
+    '<div style="overflow-y:auto;max-height:calc(100vh - 120px);border-radius:10px;border:1px solid var(--border)"><table style="width:100%;border-collapse:collapse">'+
+    '<thead style="position:sticky;top:0;z-index:10;background:var(--bg2)"><tr><th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--text3);font-weight:600;border-bottom:1px solid var(--border)">Item</th><th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--text3);font-weight:600;border-bottom:1px solid var(--border)">SKU</th><th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--text3);font-weight:600;border-bottom:1px solid var(--border)">Category</th><th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--text3);font-weight:600;border-bottom:1px solid var(--border)">Your Price</th><th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--text3);font-weight:600;border-bottom:1px solid var(--border)">Link</th></tr></thead>'+
     '<tbody>'+(rows||'<tr><td colspan="5" style="color:var(--text3);padding:20px">No items available</td></tr>')+'</tbody>'+
     '</table></div>'+
     '</div>';
+}
+
+// ── VENDOR CSV EXPORT ─────────────────────────────────────────────────
+function exportVendorCSV() {
+  var vendor = vendors.find(function(v){ return v.id===vendorModeId; });
+  if (!vendor) return;
+  var rows = [['Item','SKU','Category','Your Price','Product URL']];
+  items.filter(function(i){ return i.retail > 0; }).forEach(function(item){
+    var price = vendorPrice(item, vendor);
+    rows.push([item.name||'', item.sku||'', item.category||'', price.toFixed(2), item.url||'']);
+  });
+  var csv = rows.map(function(r){ return r.map(function(c){ return '"'+String(c).replace(/"/g,'""')+'"'; }).join(','); }).join('\n');
+  var blob = new Blob([csv], {type:'text/csv'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (vendor.name||'vendor').replace(/[^a-z0-9]/gi,'_')+'_price_list.csv';
+  a.click();
 }
 
 // ── ITEM MODAL ────────────────────────────────────────────────────────
@@ -557,6 +653,7 @@ function openAddItem() {
   document.getElementById('m-cat').value = '';
   document.getElementById('m-cost').value = '';
   document.getElementById('m-retail').value = '';
+  document.getElementById('m-url').value = '';
   document.getElementById('m-notes').value = '';
   document.getElementById('item-modal').classList.remove('hidden');
   setTimeout(function(){ document.getElementById('m-name').focus(); }, 50);
@@ -571,6 +668,7 @@ function openEditItem(id) {
   document.getElementById('m-cat').value = item.category||'';
   document.getElementById('m-cost').value = item.cost||'';
   document.getElementById('m-retail').value = item.retail||'';
+  document.getElementById('m-url').value = item.url||'';
   document.getElementById('m-notes').value = item.notes||'';
   document.getElementById('item-modal').classList.remove('hidden');
 }
@@ -589,6 +687,7 @@ function saveItemModal() {
       items[idx].category = document.getElementById('m-cat').value.trim();
       items[idx].cost = cost;
       items[idx].retail = retail;
+      items[idx].url = document.getElementById('m-url').value.trim();
       items[idx].notes = document.getElementById('m-notes').value.trim();
       items[idx].updatedAt = now;
     }
@@ -601,6 +700,7 @@ function saveItemModal() {
       category: document.getElementById('m-cat').value.trim(),
       cost: cost,
       retail: retail,
+      url: document.getElementById('m-url').value.trim(),
       notes: document.getElementById('m-notes').value.trim(),
       updatedAt: now
     });
@@ -620,11 +720,26 @@ function deleteItem(id) {
 }
 
 // ── VENDOR MODAL ──────────────────────────────────────────────────────
+function populateVmCatFilter() {
+  var sel = document.getElementById('vm-cat-filter');
+  var cats = getCats();
+  sel.innerHTML = '<option value="">All Categories</option>' +
+    cats.map(function(c){ return '<option value="'+escHtml(c)+'">'+escHtml(c)+'</option>'; }).join('');
+}
+function currentOverrides() {
+  var overrides = {};
+  document.querySelectorAll('.override-input').forEach(function(inp){
+    if (inp.value !== '') overrides[inp.dataset.itemid] = parseFloat(inp.value)||0;
+  });
+  return overrides;
+}
 function openAddVendor() {
   editingVendorId = null;
   document.getElementById('vmodal-title').textContent = 'Add Vendor';
   document.getElementById('vm-name').value = '';
   document.getElementById('vm-discount').value = '';
+  populateVmCatFilter();
+  document.getElementById('vm-cat-filter').value = '';
   renderOverrideList({});
   document.getElementById('vendor-modal').classList.remove('hidden');
   setTimeout(function(){ document.getElementById('vm-name').focus(); }, 50);
@@ -636,13 +751,19 @@ function openEditVendor(id) {
   document.getElementById('vmodal-title').textContent = 'Edit Vendor: '+vendor.name;
   document.getElementById('vm-name').value = vendor.name||'';
   document.getElementById('vm-discount').value = vendor.discount||'';
+  populateVmCatFilter();
+  document.getElementById('vm-cat-filter').value = '';
   renderOverrideList(vendor.overrides||{});
   document.getElementById('vendor-modal').classList.remove('hidden');
 }
 function renderOverrideList(overrides) {
   var el = document.getElementById('override-list');
   if (!items.length) { el.innerHTML='<div style="color:var(--text3);font-size:12px;padding:8px 0">Add items to the master list first</div>'; return; }
-  el.innerHTML = items.map(function(item){
+  var catSel = document.getElementById('vm-cat-filter');
+  var catFilter = catSel ? catSel.value : '';
+  var filtered = catFilter ? items.filter(function(i){ return i.category === catFilter; }) : items;
+  if (!filtered.length) { el.innerHTML='<div style="color:var(--text3);font-size:12px;padding:8px 0">No items in this category</div>'; return; }
+  el.innerHTML = filtered.map(function(item){
     var val = (overrides[item.id]!==undefined) ? overrides[item.id] : '';
     return '<div class="override-row">'+
       '<span class="override-sku">'+escHtml(item.sku||item.id)+'</span>'+
@@ -668,11 +789,19 @@ function saveVendorModal() {
   var name = document.getElementById('vm-name').value.trim();
   if (!name) { toast('Vendor name is required'); return; }
   var discount = parseFloat(document.getElementById('vm-discount').value)||0;
-  var overrides = {};
+  // Start with existing overrides (preserves entries from other categories not currently shown)
+  var existingOverrides = {};
+  if (editingVendorId) {
+    var ev = vendors.find(function(v){ return v.id===editingVendorId; });
+    if (ev) existingOverrides = Object.assign({}, ev.overrides||{});
+  }
+  // Merge in currently rendered inputs (overwrite for visible items)
   document.querySelectorAll('.override-input').forEach(function(inp){
     var id = inp.dataset.itemid;
-    if (inp.value!=='') overrides[id] = parseFloat(inp.value)||0;
+    if (inp.value!=='') existingOverrides[id] = parseFloat(inp.value)||0;
+    else delete existingOverrides[id];
   });
+  var overrides = existingOverrides;
   var now = new Date().toISOString();
   if (editingVendorId) {
     var idx = vendors.findIndex(function(v){ return v.id===editingVendorId; });
