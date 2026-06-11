@@ -731,11 +731,44 @@ function renderVendorView() {
       '<button onclick="exportVendorCSV()" style="padding:8px 14px;background:rgba(20,184,166,.15);border:1px solid rgba(20,184,166,.4);border-radius:8px;color:#4ade80;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)">⬇ Export CSV</button>'+
       '<button onclick="window.print()" style="padding:8px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)">🖨 Print</button>'+
     '</div>'+
-    '<div style="overflow-y:auto;max-height:calc(100vh - 120px);border-radius:10px;border:1px solid var(--border)"><table style="width:100%;border-collapse:collapse">'+
+    '<div style="margin-bottom:12px;position:relative;max-width:360px">'+
+      '<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:13px;pointer-events:none">🔍</span>'+
+      '<input id="vv-search" class="form-input" placeholder="Search parts…" style="padding-left:32px;width:100%" oninput="filterVendorView(this.value)"/>'+
+    '</div>'+
+    '<div id="vv-table-wrap" style="overflow-y:auto;max-height:calc(100vh - 160px);border-radius:10px;border:1px solid var(--border)"><table style="width:100%;border-collapse:collapse">'+
     '<thead style="position:sticky;top:0;z-index:10;background:var(--bg2)"><tr><th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--text3);font-weight:600;border-bottom:1px solid var(--border)">Item</th><th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--text3);font-weight:600;border-bottom:1px solid var(--border)">SKU</th><th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--text3);font-weight:600;border-bottom:1px solid var(--border)">Category</th><th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--text3);font-weight:600;border-bottom:1px solid var(--border)">Your Price</th><th style="padding:10px 14px;text-align:left;font-size:11px;color:var(--text3);font-weight:600;border-bottom:1px solid var(--border)">Link</th></tr></thead>'+
-    '<tbody>'+(rows||'<tr><td colspan="5" style="color:var(--text3);padding:20px">No items available</td></tr>')+'</tbody>'+
+    '<tbody id="vv-tbody">'+(rows||'<tr><td colspan="5" style="color:var(--text3);padding:20px">No items available</td></tr>')+'</tbody>'+
     '</table></div>'+
     '</div>';
+}
+
+function filterVendorView(q) {
+  var tbody = document.getElementById('vv-tbody');
+  if (!tbody) return;
+  var vendor = vendors.find(function(v){ return v.id===vendorModeId; });
+  if (!vendor) return;
+  q = (q||'').toLowerCase();
+  var filtered = items.filter(function(item){ return item.retail > 0; }).filter(function(item){
+    if (!q) return true;
+    return (item.name||'').toLowerCase().includes(q) ||
+           (item.sku||'').toLowerCase().includes(q) ||
+           (item.category||'').toLowerCase().includes(q);
+  });
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="color:var(--text3);padding:20px;text-align:center">No parts match "'+escHtml(q)+'"</td></tr>';
+    return;
+  }
+  tbody.innerHTML = filtered.map(function(item){
+    var price = vendorPrice(item, vendor);
+    var linkCell = item.url ? '<a href="'+escHtml(item.url)+'" target="_blank" style="color:#4ade80;font-size:11px;text-decoration:none;font-weight:600">View →</a>' : '<span style="color:var(--text3);font-size:11px">—</span>';
+    return '<tr style="border-bottom:1px solid var(--border)">'+
+      '<td style="padding:10px 14px;font-size:13px;color:var(--text)">'+escHtml(item.name||'—')+'</td>'+
+      '<td style="padding:10px 14px"><span style="font-family:var(--mono);font-size:11px;color:var(--text3)">'+escHtml(item.sku||'—')+'</span></td>'+
+      '<td style="padding:10px 14px"><span class="cat-pill">'+escHtml(item.category||'—')+'</span></td>'+
+      '<td style="padding:10px 14px"><span class="money-vendor" style="font-size:14px;font-weight:700">'+fmtMoney(price)+'</span></td>'+
+      '<td style="padding:10px 14px">'+linkCell+'</td>'+
+      '</tr>';
+  }).join('');
 }
 
 // ── CSV TEMPLATE EXPORT ───────────────────────────────────────────────
