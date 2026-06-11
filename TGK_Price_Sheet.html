@@ -12,7 +12,7 @@
 :root{
   --bg:#111314;--bg2:#181a1c;--bg3:#1e2022;--bg4:#252729;--bg5:#2c2f31;
   --border:#2a2d30;--border2:#343739;
-  --text:#f0f0ee;--text2:#9a9a96;--text3:#5a5a56;
+  --text:#ffffff;--text2:#c8c8c4;--text3:#8a8a86;
   --teal:#2ABFAA;--teal-d:#1a8f7d;--teal-dim:rgba(42,191,170,.10);
   --orange:#E07B28;--orange-d:#c46820;--orange-dim:rgba(224,123,40,.10);
   --red:#e05555;--red-dim:rgba(224,85,85,.12);
@@ -162,6 +162,17 @@ tbody td.main-col{color:var(--text);font-weight:500}
 .lock-btn{width:100%;padding:11px;background:rgba(20,184,166,.15);border:1px solid rgba(20,184,166,.4);border-radius:8px;color:#4ade80;font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;transition:background .15s}
 .lock-btn:hover{background:rgba(20,184,166,.25)}
 .lock-error{font-size:11px;color:#f87171;margin-top:8px;min-height:16px}
+
+.import-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px}
+.import-badge{padding:2px 7px;border-radius:6px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0;margin-top:2px}
+.import-badge.new{background:rgba(74,222,128,.15);color:#4ade80;border:1px solid rgba(74,222,128,.3)}
+.import-badge.updated{background:rgba(251,146,60,.15);color:#fb923c;border:1px solid rgba(251,146,60,.3)}
+.import-badge.unchanged{background:var(--bg4);color:var(--text3);border:1px solid var(--border)}
+.import-name{flex:1;color:var(--text);font-weight:500}
+.import-change{color:var(--text3);font-size:11px;margin-top:2px}
+.import-skip{accent-color:var(--teal)}
+.access-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px}
+.access-time{color:var(--text3);font-size:11px;white-space:nowrap;font-family:var(--mono)}
 </style>
 </head>
 <body>
@@ -253,6 +264,36 @@ tbody td.main-col{color:var(--text);font-weight:500}
     </div>
   </div>
 </div>
+
+<!-- IMPORT REVIEW MODAL -->
+<div class="overlay hidden" id="import-modal">
+  <div class="modal" style="width:700px;max-width:96vw">
+    <div class="modal-title">
+      <span id="import-modal-title">Import Review</span>
+      <button class="modal-close" onclick="closeImportModal()">✕</button>
+    </div>
+    <div id="import-summary" style="margin-bottom:14px;font-size:12px;color:var(--text2)"></div>
+    <div id="import-list" style="max-height:360px;overflow-y:auto;margin-bottom:14px"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeImportModal()">Cancel</button>
+      <button class="btn btn-primary" id="import-confirm-btn" onclick="confirmImport()">Import All</button>
+    </div>
+  </div>
+</div>
+
+<!-- VENDOR ACCESS LOG MODAL -->
+<div class="overlay hidden" id="access-modal">
+  <div class="modal" style="width:620px;max-width:96vw">
+    <div class="modal-title">
+      <span id="access-modal-title">Access Log</span>
+      <button class="modal-close" onclick="document.getElementById('access-modal').classList.add('hidden')">✕</button>
+    </div>
+    <div id="access-log-list" style="max-height:420px;overflow-y:auto"></div>
+  </div>
+</div>
+
+<!-- Hidden file input for CSV import -->
+<input type="file" id="csv-file-input" accept=".csv" style="display:none" onchange="handleCsvImport(this)"/>
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────
@@ -532,7 +573,7 @@ function renderView() {
   var vc = document.getElementById('view-content');
   if (!tb||!vc) return;
   if (currentView==='master') {
-    tb.innerHTML = '<span class="topbar-title">Master Price List</span><span class="topbar-sub">'+items.length+' items</span><div class="topbar-actions"><button class="btn btn-primary" onclick="openAddItem()">＋ Add Item</button></div>';
+    tb.innerHTML = '<span class="topbar-title">Master Price List</span><span class="topbar-sub">'+items.length+' items</span><div class="topbar-actions"><button class="btn" onclick="downloadTemplate()" title="Download blank import template">📄 Template</button><button class="btn" onclick="document.getElementById(\'csv-file-input\').click()" title="Import items from CSV">⬆ Import CSV</button><button class="btn btn-primary" onclick="openAddItem()">＋ Add Item</button></div>';
     vc.innerHTML = renderMaster();
   } else if (currentView==='vendors') {
     tb.innerHTML = '<span class="topbar-title">Vendor Lists</span><span class="topbar-sub">'+vendors.length+' vendors</span><div class="topbar-actions"><button class="btn btn-primary" onclick="openAddVendor()">＋ Add Vendor</button></div>';
@@ -606,6 +647,7 @@ function renderVendors() {
         '<span class="vendor-discount-badge">'+parseFloat(v.discount||0).toFixed(1)+'% universal</span>'+
         '<div style="margin-left:auto;display:flex;gap:6px" onclick="event.stopPropagation()">'+
           '<button class="btn btn-teal" onclick="copyVendorLink(\''+v.id+'\')">🔗 Copy Link</button>'+
+          '<button class="btn" onclick="showAccessLog(\''+v.id+'\',this.dataset.name)" data-name="'+escHtml(v.name)+'">📊 Log</button>'+
           '<button class="btn" onclick="openEditVendor(\''+v.id+'\')">Edit</button>'+
           '<button class="btn btn-danger" onclick="deleteVendor(\''+v.id+'\')">Delete</button>'+
         '</div>'+
@@ -659,6 +701,11 @@ function renderCategories() {
 function renderVendorView() {
   var vendor = vendors.find(function(v){ return v.id===vendorModeId; });
   var app = document.getElementById('app');
+  // Log this access
+  if (vendor && !sessionStorage.getItem('logged_'+vendorModeId)) {
+    sessionStorage.setItem('logged_'+vendorModeId, '1');
+    logVendorAccess(vendor.id, vendor.name);
+  }
   if (!vendor) {
     app.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)">Vendor not found. This link may be invalid or the vendor was removed.</div>';
     return;
@@ -689,6 +736,210 @@ function renderVendorView() {
     '<tbody>'+(rows||'<tr><td colspan="5" style="color:var(--text3);padding:20px">No items available</td></tr>')+'</tbody>'+
     '</table></div>'+
     '</div>';
+}
+
+// ── CSV TEMPLATE EXPORT ───────────────────────────────────────────────
+function downloadTemplate() {
+  var headers = ['sku','name','category','cost','retail','url','notes'];
+  var example = [
+    'TGK-EXAMPLE-01','Example Product Name','Finished Goods','50.00','99.99','https://tgkmotorsport.com/products/example','Optional notes here'
+  ];
+  var csv = [
+    headers.join(','),
+    example.map(function(c){ return '"'+c+'"'; }).join(',')
+  ].join('\n');
+  var blob = new Blob([csv], {type:'text/csv'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'TGK_Price_Sheet_Import_Template.csv';
+  a.click();
+  toast('Template downloaded');
+}
+
+// ── CSV IMPORT ─────────────────────────────────────────────────────────
+var pendingImport = [];
+
+function handleCsvImport(input) {
+  var file = input.files[0];
+  if (!file) return;
+  input.value = '';
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var rows = parseCsv(e.target.result);
+      if (!rows.length) { toast('No data rows found in CSV'); return; }
+      reviewImport(rows);
+    } catch(err) {
+      toast('Error reading CSV: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function parseCsv(text) {
+  var lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  // Normalize headers: lowercase, trim
+  var headers = parseCsvLine(lines[0]).map(function(h){ return h.toLowerCase().trim(); });
+  var rows = [];
+  for (var i = 1; i < lines.length; i++) {
+    if (!lines[i].trim()) continue;
+    var vals = parseCsvLine(lines[i]);
+    var obj = {};
+    headers.forEach(function(h, idx){ obj[h] = (vals[idx]||'').trim(); });
+    rows.push(obj);
+  }
+  return rows;
+}
+
+function parseCsvLine(line) {
+  var result = [], cur = '', inQ = false;
+  for (var i = 0; i < line.length; i++) {
+    var c = line[i];
+    if (c === '"') {
+      if (inQ && line[i+1] === '"') { cur += '"'; i++; }
+      else inQ = !inQ;
+    } else if (c === ',' && !inQ) {
+      result.push(cur); cur = '';
+    } else {
+      cur += c;
+    }
+  }
+  result.push(cur);
+  return result;
+}
+
+function reviewImport(rows) {
+  var newItems = [], updated = [], unchanged = [];
+  var preview = rows.map(function(row) {
+    var sku = row['sku'] || row['part #'] || row['part#'] || '';
+    var name = row['name'] || row['description'] || row['item name'] || '';
+    var category = row['category'] || '';
+    var cost = parseFloat(row['cost']) || 0;
+    var retail = parseFloat(row['retail'] || row['retail price'] || row['price']) || 0;
+    var url = row['url'] || row['product url'] || row['link'] || '';
+    var notes = row['notes'] || '';
+    if (!name && !sku) return null;
+    // Find existing by SKU match
+    var existing = sku ? items.find(function(i){ return i.sku && i.sku.toLowerCase() === sku.toLowerCase(); }) : null;
+    var changes = [];
+    var status = 'new';
+    if (existing) {
+      status = 'unchanged';
+      if (existing.name !== name && name) changes.push('Name: "'+existing.name+'" → "'+name+'"');
+      if (Math.abs((existing.retail||0) - retail) > 0.001 && retail) { changes.push('Retail: '+fmtMoney(existing.retail)+' → '+fmtMoney(retail)); status = 'updated'; }
+      if (Math.abs((existing.cost||0) - cost) > 0.001 && cost) { changes.push('Cost: '+fmtMoney(existing.cost)+' → '+fmtMoney(cost)); status = 'updated'; }
+      if (existing.category !== category && category) changes.push('Category: "'+existing.category+'" → "'+category+'"');
+      if (existing.url !== url && url) changes.push('URL updated');
+      if (changes.length) status = 'updated';
+    }
+    return { sku, name, category, cost, retail, url, notes, existing, status, changes, include: true };
+  }).filter(Boolean);
+
+  pendingImport = preview;
+  var nNew = preview.filter(function(r){ return r.status==='new'; }).length;
+  var nUpd = preview.filter(function(r){ return r.status==='updated'; }).length;
+  var nSame = preview.filter(function(r){ return r.status==='unchanged'; }).length;
+
+  document.getElementById('import-modal-title').textContent = 'Import Review — ' + preview.length + ' rows';
+  document.getElementById('import-summary').innerHTML =
+    '<span style="color:#4ade80;font-weight:600">'+nNew+' new</span> &nbsp;·&nbsp; '+
+    '<span style="color:#fb923c;font-weight:600">'+nUpd+' updated</span> &nbsp;·&nbsp; '+
+    '<span style="color:var(--text3)">'+nSame+' unchanged</span>';
+
+  var listEl = document.getElementById('import-list');
+  listEl.innerHTML = preview.map(function(row, idx) {
+    var badgeCls = row.status;
+    var badgeTxt = row.status === 'new' ? 'NEW' : row.status === 'updated' ? 'UPDATED' : 'SAME';
+    return '<div class="import-row">'+
+      '<input type="checkbox" class="import-skip" checked data-idx="'+idx+'" onchange="pendingImport['+idx+'].include=this.checked"/>'+
+      '<span class="import-badge '+badgeCls+'">'+badgeTxt+'</span>'+
+      '<div style="flex:1">'+
+        '<div class="import-name">'+(row.sku?'<span style="font-family:var(--mono);color:var(--text3);margin-right:6px">'+escHtml(row.sku)+'</span>':'')+escHtml(row.name)+'</div>'+
+        (row.changes.length?'<div class="import-change">'+row.changes.map(escHtml).join(' &nbsp;|&nbsp; ')+'</div>':'')+
+      '</div>'+
+      '</div>';
+  }).join('');
+
+  document.getElementById('import-modal').classList.remove('hidden');
+}
+
+function closeImportModal() {
+  document.getElementById('import-modal').classList.add('hidden');
+  pendingImport = [];
+}
+
+function confirmImport() {
+  var now = new Date().toISOString();
+  var added = 0, updated = 0;
+  pendingImport.forEach(function(row) {
+    if (!row.include) return;
+    if (row.status === 'new') {
+      items.push({ id: uid(), sku: row.sku, name: row.name, category: row.category, cost: row.cost, retail: row.retail, url: row.url, notes: row.notes, updatedAt: now });
+      added++;
+    } else if (row.status === 'updated' && row.existing) {
+      var idx = items.findIndex(function(i){ return i.id === row.existing.id; });
+      if (idx > -1) {
+        if (row.name) items[idx].name = row.name;
+        if (row.category) items[idx].category = row.category;
+        if (row.cost) items[idx].cost = row.cost;
+        if (row.retail) items[idx].retail = row.retail;
+        if (row.url) items[idx].url = row.url;
+        if (row.notes) items[idx].notes = row.notes;
+        items[idx].updatedAt = now;
+        updated++;
+      }
+    }
+  });
+  closeImportModal();
+  saveLocal(); syncPush(); render();
+  toast(added + ' added, ' + updated + ' updated');
+}
+
+// ── VENDOR ACCESS TRACKING ─────────────────────────────────────────────
+var ACCESS_LOG_ID = 'tgk_vendor_access_log';
+
+async function logVendorAccess(vendorId, vendorName) {
+  try {
+    var existing = await sbGet(ACCESS_LOG_ID);
+    var log = (existing && existing.log) ? existing.log : [];
+    log.push({
+      vendorId: vendorId,
+      vendorName: vendorName,
+      ts: new Date().toISOString(),
+      ua: navigator.userAgent.substring(0, 80)
+    });
+    // Keep last 500 entries
+    if (log.length > 500) log = log.slice(log.length - 500);
+    await sbSet(ACCESS_LOG_ID, { log: log });
+  } catch(e) { /* silent fail */ }
+}
+
+async function showAccessLog(vendorId, vendorName) {
+  document.getElementById('access-modal-title').textContent = 'Access Log — ' + vendorName;
+  var listEl = document.getElementById('access-log-list');
+  listEl.innerHTML = '<div style="padding:20px;color:var(--text3);font-size:12px">Loading…</div>';
+  document.getElementById('access-modal').classList.remove('hidden');
+  try {
+    var data = await sbGet(ACCESS_LOG_ID);
+    var log = (data && data.log) ? data.log : [];
+    var filtered = log.filter(function(e){ return e.vendorId === vendorId; }).reverse();
+    if (!filtered.length) {
+      listEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3);font-size:12px">No accesses recorded yet for this vendor.</div>';
+      return;
+    }
+    listEl.innerHTML = filtered.map(function(e){
+      var d = new Date(e.ts);
+      var dateStr = d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      var timeStr = d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+      return '<div class="access-row">'+
+        '<div style="flex:1"><span style="color:var(--text);font-weight:500">'+dateStr+'</span> <span style="color:var(--text3)">at '+timeStr+'</span></div>'+
+        '<span class="access-time">'+escHtml((e.ua||'').substring(0,60))+'</span>'+
+        '</div>';
+    }).join('');
+  } catch(e) {
+    listEl.innerHTML = '<div style="padding:20px;color:#f87171;font-size:12px">Error loading log.</div>';
+  }
 }
 
 // ── VENDOR CSV EXPORT ─────────────────────────────────────────────────
