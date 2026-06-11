@@ -573,7 +573,7 @@ function renderView() {
   var vc = document.getElementById('view-content');
   if (!tb||!vc) return;
   if (currentView==='master') {
-    tb.innerHTML = '<span class="topbar-title">Master Price List</span><span class="topbar-sub">'+items.length+' items</span><div class="topbar-actions"><button class="btn" onclick="downloadTemplate()" title="Download blank import template">📄 Template</button><button class="btn" onclick="document.getElementById(\'csv-file-input\').click()" title="Import items from CSV">⬆ Import CSV</button><button class="btn btn-primary" onclick="openAddItem()">＋ Add Item</button></div>';
+    tb.innerHTML = '<span class="topbar-title">Master Price List</span><span class="topbar-sub">'+items.length+' items</span><div class="topbar-actions"><button class="btn" onclick="exportMasterCSV()" title="Export master list as CSV">⬇ Export CSV</button><button class="btn" onclick="downloadTemplate()" title="Download blank import template">📄 Template</button><button class="btn" onclick="document.getElementById(\'csv-file-input\').click()" title="Import items from CSV">⬆ Import CSV</button><button class="btn btn-primary" onclick="openAddItem()">＋ Add Item</button></div>';
     vc.innerHTML = renderMaster();
   } else if (currentView==='vendors') {
     tb.innerHTML = '<span class="topbar-title">Vendor Lists</span><span class="topbar-sub">'+vendors.length+' vendors</span><div class="topbar-actions"><button class="btn btn-primary" onclick="openAddVendor()">＋ Add Vendor</button></div>';
@@ -739,6 +739,25 @@ function renderVendorView() {
 }
 
 // ── CSV TEMPLATE EXPORT ───────────────────────────────────────────────
+function exportMasterCSV() {
+  var headers = ['sku','name','category','cost','retail','url','notes'];
+  var rows = [headers];
+  items.forEach(function(item){
+    rows.push([
+      item.sku||'', item.name||'', item.category||'',
+      (item.cost||0).toFixed(2), (item.retail||0).toFixed(2),
+      item.url||'', item.notes||''
+    ]);
+  });
+  var csv = rows.map(function(r){ return r.map(function(c){ return '"'+String(c).replace(/"/g,'""')+'"'; }).join(','); }).join('\n');
+  var blob = new Blob([csv], {type:'text/csv'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'TGK_Master_Price_List.csv';
+  a.click();
+  toast('Master list exported');
+}
+
 function downloadTemplate() {
   var headers = ['sku','name','category','cost','retail','url','notes'];
   var example = [
