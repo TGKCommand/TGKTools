@@ -23,7 +23,7 @@
   --r:6px;--r-lg:10px;
   --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
 }
-html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;overflow:hidden}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);font-size:15px;line-height:1.55;overflow:hidden}
 input,button,textarea,select{font-family:var(--font)}
 
 /* ── SHELL ── */
@@ -119,7 +119,7 @@ input,button,textarea,select{font-family:var(--font)}
 /* ── FORMS ── */
 .form-group{margin-bottom:12px}
 .form-label{font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text3);margin-bottom:5px;display:block}
-.form-input{width:100%;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);padding:7px 10px;font-size:12px;outline:none;transition:border-color .15s}
+.form-input{width:100%;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--r);color:var(--text);padding:8px 10px;font-size:13.5px;outline:none;transition:border-color .15s}
 .form-input:focus{border-color:var(--teal)}
 .form-input::placeholder{color:var(--text3)}
 textarea.form-input{min-height:60px;resize:vertical}
@@ -141,11 +141,11 @@ select.form-input{cursor:pointer}
 .sku-table{width:100%;border-collapse:collapse}
 .sku-table th{background:var(--bg3);border-bottom:1px solid var(--border);padding:8px 12px;text-align:left;font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--text3);text-transform:uppercase;white-space:nowrap;cursor:pointer}
 .sku-table th:hover{color:var(--text2)}
-.sku-table td{border-bottom:1px solid var(--border);padding:9px 12px;font-size:12px;vertical-align:middle}
+.sku-table td{border-bottom:1px solid var(--border);padding:10px 12px;font-size:13.5px;vertical-align:middle}
 .sku-table tbody tr:hover td{background:rgba(255,255,255,.012)}
-.sku-new{color:var(--teal);font-weight:600;font-family:var(--mono);font-size:12px;white-space:nowrap}
-.sku-legacy{color:var(--text3);font-size:11px;font-family:var(--mono)}
-.sku-desc{color:var(--text2);max-width:280px;font-size:12px}
+.sku-new{color:var(--teal);font-weight:600;font-family:var(--mono);font-size:13.5px;white-space:nowrap}
+.sku-legacy{color:#7a7a76;font-size:12.5px;font-family:var(--mono)}
+.sku-desc{color:var(--text2);max-width:280px;font-size:13.5px}
 /* ── BADGES ── */
 .badge{display:inline-flex;align-items:center;height:18px;padding:0 7px;border-radius:3px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-family:var(--mono);border:1px solid}
 .badge-live{background:var(--green-dim);color:var(--green);border-color:rgba(76,175,125,.25)}
@@ -749,7 +749,8 @@ function openEdit(id){
   document.getElementById('modal-body').innerHTML = `
     <div class="form-group">
       <label class="form-label">New SKU</label>
-      <input class="form-input" id="e-newSku" value="${s.newSku}" readonly style="opacity:.6">
+      <input class="form-input" id="e-newSku" value="${s.newSku}">
+      <div style="font-size:10px;color:var(--text3);margin-top:4px">Changing this will update the SKU everywhere it's referenced.</div>
     </div>
     <div class="form-group">
       <label class="form-label">Legacy SKU</label>
@@ -785,6 +786,13 @@ function openEdit(id){
 function saveEdit(id){
   const s = skus.find(x=>x.newSku===id);
   if(!s) return;
+  const newVal = document.getElementById('e-newSku').value.trim();
+  if(!newVal){ showNotif('New SKU cannot be empty'); return; }
+  if(newVal !== s.newSku && skus.find(x=>x.newSku===newVal)){
+    showNotif('SKU '+newVal+' already exists!');
+    return;
+  }
+  s.newSku = newVal;
   s.legacy = document.getElementById('e-legacy').value.trim();
   s.desc = document.getElementById('e-desc').value.trim();
   s.cat = document.getElementById('e-cat').value.trim();
@@ -792,7 +800,7 @@ function saveEdit(id){
   s.live = document.getElementById('e-live').value;
   closeModal();
   renderTable();
-  showNotif('Updated: '+id);
+  showNotif('Updated: '+s.newSku);
 }
 
 function closeModal(e){
