@@ -7044,7 +7044,8 @@ function renderDealers(){
     <table><thead><tr><th>Dealer</th><th>Contact</th><th>Discount</th><th>Status</th><th style="text-align:right">Actions</th></tr></thead><tbody>
     ${list.map(d=>{
       const plToken=d.price_list_token||'';
-      const url=plToken?(portalBase+'/?d='+plToken):(portalBase+'/?dealer='+d.id);
+      const url=plToken?(portalBase+'/?d='+plToken):'';
+      const staffUrl=plToken?(url+'&staff=1'):'';
       const visits=S.dealerVisitCounts[d.id]||0;
       return `<tr>
         <td class="main-col" style="cursor:pointer" onclick="openDealerDetail('${d.id}')"><span style="color:var(--teal);text-decoration:underline;text-underline-offset:2px">${escHtml(d.name)}</span>${d.billing_required?'<span style="font-size:var(--t-xs);background:var(--teal-dim);color:var(--teal);padding:1px 5px;border-radius:var(--r-sm);margin-left:6px;font-weight:700;vertical-align:middle">BILLING</span>':''}</td>
@@ -7054,8 +7055,10 @@ function renderDealers(){
         <td><span class="pill ${d.status==='Active'?'pill-teal':'pill-muted'}">${d.status}</span></td>
         <td style="text-align:right">
           <div style="display:flex;gap:4px;align-items:center;justify-content:flex-end;flex-wrap:nowrap">
-            <a href="${url}" target="_blank" class="btn btn-sm btn-teal" style="text-decoration:none;white-space:nowrap" title="Open dealer price list"><span class="ic ic-doc"></span>View</a>
-            <button class="action-btn" onclick="copyDealerLink('${d.id}')" title="Copy link"><span class="ic ic-link"></span></button>
+            ${plToken
+              ?`<a href="${staffUrl}" target="_blank" class="btn btn-sm btn-teal" style="text-decoration:none;white-space:nowrap" title="Preview as staff — does not count as a dealer visit"><span class="ic ic-doc"></span>View</a>
+                 <button class="action-btn" onclick="copyDealerLink('${d.id}')" title="Copy link to send to dealer"><span class="ic ic-link"></span></button>`
+              :`<button class="btn btn-sm" style="color:var(--red);border-color:rgba(220,38,38,.3);white-space:nowrap" onclick="backfillDealerTokens()" title="This dealer has no price-list link yet"><span class="ic ic-alert"></span>No link</button>`}
             <button class="action-btn" onclick='showDealerLog("${d.id}","${escHtml(d.name)}")' title="${visits} visit${visits!==1?'s':''} — view log" ${visits>0?'style="color:var(--teal);font-weight:700"':''}><span class="ic ic-chart"></span>${visits>0?' '+visits:''}</button>
             <button class="action-btn" onclick='openModal("editDealer",${JSON.stringify(d)})'>Edit</button>
             <button class="action-btn del" onclick="deleteDealer('${d.id}')">×</button>
@@ -7191,7 +7194,11 @@ async function saveDealerPortalStoreUrl(){
 function copyDealerLink(id){
   var dealer=S.dealers.find(function(d){return d.id===id;});
   var token=dealer&&dealer.price_list_token;
-  var url=token?('https://prices.tgkmotorsport.com/?d='+token):('https://prices.tgkmotorsport.com/?dealer='+id);
+  // No id-based fallback: the live portal (a separate deployment at prices.tgkmotorsport.com)
+  // only ever reads '?d=<token>'. A '?dealer=<id>' link isn't a degraded version of the real
+  // one, it's a broken one -- the dealer would land on a plain error screen. Refuse to copy that.
+  if(!token){toast('This dealer has no price-list link yet — use Generate Missing Links');return;}
+  var url='https://prices.tgkmotorsport.com/?d='+token;
   navigator.clipboard.writeText(url).then(function(){toast('\u2713 Price list link copied!');}).catch(function(){toast(url);});
 }
 
@@ -13499,10 +13506,34 @@ async function submitSale(){
     }catch(e){ toast('Order saved, SS unreachable: '+e.message,5000); }
   }
 }
+async function backfillDealerTokens(){
+  const missing=S.dealers.filter(d=>!d.price_list_token);
+  if(!missing.length){toast('Every dealer already has a link');return;}
+  if(!confirm('Generate price-list links for '+missing.length+' dealer(s) that don\'t have one yet?'))return;
+  let ok=0,fail=0;
+  for(const d of missing){
+    const tokenV=genDealerToken();
+    const{error}=await db.from('dealers').update({price_list_token:tokenV}).eq('id',d.id);
+    if(error){fail++;console.warn('[TGK] token backfill failed for',d.name,error.message);continue;}
+    d.price_list_token=tokenV;ok++;
+  }
+  S.dealers=[...S.dealers];
+  toast(fail?('Generated '+ok+' link(s) -- '+fail+' failed, see console'):('\u2713 Generated '+ok+' link'+(ok!==1?'s':'')));
+  render();
+}
+function genDealerToken(){
+  try{return (crypto.randomUUID?crypto.randomUUID():(crypto.getRandomValues(new Uint8Array(16)).reduce((s,b)=>s+b.toString(16).padStart(2,'0'),''))).replace(/-/g,'');}
+  catch(e){return Date.now().toString(36)+Math.random().toString(36).slice(2,10)+Math.random().toString(36).slice(2,10);}
+}
 async function submitDealer(eid){
   const name=$('m-name').value.trim();if(!name){toast('Name required');return;}
   const _tv=$('m-disc').value;const _rawPct=_tv==='custom'?parseFloat($('m-disc-custom')?.value||0)||0:parseFloat(_tv)||20;
   const payload={name,contact_name:$('m-contact').value.trim(),email:$('m-email').value.trim(),discount_pct:_rawPct/100,status:$('m-status').value,notes:$('m-notes').value,billing_required:!!$('m-billing')?.checked,po_code_prefix:($('m-po-prefix')?.value||'').trim().toLowerCase()||null};
+  // No client-side token assignment on insert: the dealers table already defaults
+  // price_list_token to gen_random_uuid()::text at the database level, confirmed against the
+  // live schema. Setting it here too would just duplicate that, for no benefit. genDealerToken()
+  // is still used below by backfillDealerTokens() — the DB default only fires on INSERT, and the
+  // column is nullable, so an UPDATE that ever clears it needs a client-side value to repair it.
   let error,data;
   if(eid){({error}=await db.from('dealers').update(payload).eq('id',eid));}
   else{({data,error}=await db.from('dealers').insert(payload).select().single());}
