@@ -1094,6 +1094,51 @@ body.lt-open #lt-subnav .nav-item.active{background:rgba(22,185,168,.14);color:#
 #lt-subnav .nav-label{flex:1}
 #lt-subnav .nav-count{font-family:var(--mono);font-size:10px;color:#6b767e;background:rgba(255,255,255,.05);padding:1px 6px;border-radius:9px}
 #lt-subnav .lt-subnav-meta{font-size:10.5px;color:#6b767e;padding:4px 9px 0}
+
+/* ===== ERP skin layer for the Lead Tracker (mirrors ERP "carbon + machined" layer) ===== */
+#lt-app{--r:4px;--r-lg:6px;--r-sm:4px;--r-md:8px;--cb-p:0 0,0 0,0 0,0 0;background:transparent}
+#lt-app .lt-main,#lt-app .content{background:transparent}
+/* one header: Notes' nameplate carries the title; the tracker bar becomes a toolbar */
+#lt-app .topbar{height:auto;min-height:0;background:transparent;border-bottom:none;padding:14px 24px 0}
+#lt-app .topbar::after{content:none}
+#lt-app .lt-brand-divider{display:none}
+#lt-app .topbar-right{margin-left:0;width:100%;justify-content:flex-end}
+/* KPI row = ERP carbon instrument cluster */
+#lt-app .stats-row{gap:0;border-radius:var(--r-lg);overflow:hidden;background-color:var(--cb-c);background-image:var(--cb-i);background-size:var(--cb-s);background-position:var(--cb-p);box-shadow:0 3px 12px rgba(17,24,39,.32),inset 0 1px 0 rgba(255,255,255,.16),inset 0 -1px 0 rgba(0,0,0,.55)}
+#lt-app .stat-card{background:transparent;border:none;border-radius:0;border-left:1px solid rgba(255,255,255,.22);padding:16px 18px}
+#lt-app .stat-card:first-child{border-left:none}
+#lt-app .stat-label{font-size:10px;letter-spacing:.12em;color:#E4E9EC;text-shadow:0 1px 2px rgba(0,0,0,.75)}
+#lt-app .stat-value{font-family:var(--mono);font-size:27px;font-weight:600;letter-spacing:-.01em;color:#EDF1F0;text-shadow:0 1px 3px rgba(0,0,0,.75)}
+#lt-app .stat-value.teal{color:#2BC7B1}
+/* tables = ERP carbon gauge-panel headers */
+#lt-app .lead-table thead,#lt-app .people-table thead{background-color:var(--cb-c);background-image:var(--cb-i);background-size:100% 100%,100% 100%,100% 100%,auto 140px;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+#lt-app .lead-table th,#lt-app .people-table th{background:transparent;color:#E8EDF0;border-bottom:2px solid rgba(13,148,136,.6);text-shadow:0 1px 2px rgba(0,0,0,.75)}
+#lt-app tbody tr:hover td{background:rgba(13,148,136,.05)}
+/* white plates ringed by hairlines */
+#lt-app .product-card{background:rgba(255,255,255,.78);border-color:transparent;box-shadow:0 1px 2px rgba(14,20,24,.05),0 0 0 1px var(--border)}
+#lt-app .product-card:hover{box-shadow:0 1px 2px rgba(14,20,24,.05),0 0 0 1px var(--border2)}
+/* machined buttons / inputs / modals */
+#lt-app .btn{background:var(--bg);border-color:var(--border2)}
+#lt-app .btn:hover{background:#F2F4F6;transform:translateY(-1px)}
+#lt-app .btn-orange{background:var(--orange);border-color:var(--orange);color:#fff}
+#lt-app .btn-orange:hover{background:var(--orange-d);border-color:var(--orange-d)}
+#lt-app .btn-teal{background:var(--teal-dim);border-color:rgba(13,148,136,.22);color:var(--teal)}
+#lt-app .btn-red{background:var(--red-dim);border-color:rgba(220,38,38,.2);color:var(--red)}
+#lt-app .field-input{background:var(--bg);border-color:var(--border2)}
+#lt-app .modal-bg{background:rgba(0,0,0,.45);backdrop-filter:blur(4px)}
+#lt-app .modal,#lt-app .modal-header{background:var(--bg)}
+#lt-app .modal{border-color:transparent;box-shadow:0 16px 48px rgba(14,20,24,.16),0 0 0 1px var(--border2)}
+#lt-app .modal-footer{background:var(--bg2)}
+/* dark: same structure, Notes dark surfaces */
+body.dark #lt-app .product-card{background:var(--bg2)}
+body.dark #lt-app .btn{background:var(--bg3)}
+body.dark #lt-app .btn:hover{background:var(--bg4)}
+body.dark #lt-app .btn-orange{background:var(--orange)}
+body.dark #lt-app .btn-teal{background:var(--teal-dim)}
+body.dark #lt-app .btn-red{background:var(--red-dim)}
+body.dark #lt-app .field-input{background:var(--bg3)}
+body.dark #lt-app .modal,body.dark #lt-app .modal-header{background:var(--bg2)}
+body.dark #lt-app .modal-footer{background:var(--bg3)}
 </style>
 </head>
 <body>
@@ -1350,7 +1395,7 @@ body.lt-open #lt-subnav .nav-item.active{background:rgba(22,185,168,.14);color:#
 <div id="toast"></div>
 
 <script>
-const TGK_NOTES_VERSION='v1.71';
+const TGK_NOTES_VERSION='v1.72';
 const SUPABASE_URL="https://piamamighqiielfztgic.supabase.co";
 const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBpYW1hbWlnaHFpaWVsZnp0Z2ljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4NjkxMzUsImV4cCI6MjA5MzQ0NTEzNX0.YwLflTw6F4cRzmY78QoAY6Zud2IHGVP5xL_yvMFxheA";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
@@ -1375,6 +1420,11 @@ async function doLogin(){
 }
 async function doLogout(){await sb.auth.signOut();location.reload();}
 async function afterLogin(user){
+  // Idempotent: the saved-session check below and a Command Center hand-off can both land
+  // within the same second. Running the whole boot twice would double every poller.
+  var _em=String((user&&user.email)||'').toLowerCase();
+  if(S._bootedAs===_em)return;
+  S._bootedAs=_em;
   S.user=user;
   $('gate').style.display='none';
   $('app').style.display='block';
@@ -1390,6 +1440,38 @@ async function afterLogin(user){
   if(window.LT)LT.boot();
   await loadPages();
 }
+// [SSO] Accept a session handed down by the Command Center shell - same protocol,
+// origin check and identity rules as the ERP. Registered at parse time so it is already
+// listening when the Command Center posts (~300ms after the iframe loads).
+window.addEventListener('message',async function(event){
+  if(event.origin!=='https://command.tgkmotorsport.com')return;
+  var d=event.data;
+  if(d&&d.source==='TGK_CC'&&d.type==='SIGN_OUT'){
+    // The Command Center already confirmed; this is the follow-through, no second prompt.
+    try{await sb.auth.signOut();}catch(e){console.warn('[SSO] remote sign-out failed:',e);}
+    location.reload();return;
+  }
+  if(!d||d.source!=='TGK_CC'||d.type!=='AUTH_TOKEN'||!d.access_token)return;
+  try{
+    var cur=await sb.auth.getSession();
+    var curEmail=cur&&cur.data&&cur.data.session&&cur.data.session.user?String(cur.data.session.user.email||'').toLowerCase():null;
+    var newEmail=d.email?String(d.email).toLowerCase():null;
+    if(curEmail&&newEmail&&curEmail===newEmail){
+      if(!S.user)await afterLogin(cur.data.session.user);   // same person, gate still up
+      return;
+    }
+    var res=await sb.auth.setSession({access_token:d.access_token,refresh_token:d.refresh_token||''});
+    if(res&&res.error){console.warn('[SSO] setSession failed:',res.error.message);return;}
+    var got=await sb.auth.getSession();
+    var sess=got&&got.data?got.data.session:null;
+    if(!sess)return;
+    // A different person while Notes was already open: reload so no state (pages, drafts,
+    // tracker data, realtime channels) from the previous identity survives the switch.
+    if(S.user&&S._bootedAs&&S._bootedAs!==String(sess.user.email||'').toLowerCase()){location.reload();return;}
+    await afterLogin(sess.user);
+    console.log('[SSO] signed in from Command Center as',sess.user&&sess.user.email);
+  }catch(e){console.warn('[SSO] token accept failed:',e);}
+});
 (async()=>{
   const{data}=await sb.auth.getSession();
   if(data&&data.session)await afterLogin(data.session.user);
@@ -1639,6 +1721,7 @@ function openPage(id,viaNav){
   var _lt=$('lt-nav');if(_lt)_lt.classList.remove('on');
   document.body.classList.remove('lt-open');
   var _tt=document.querySelector('.tb-tt');if(_tt)_tt.textContent='Notes';
+  var _eb=document.querySelector('.tb-eb');if(_eb&&_ltEbDefault!==null)_eb.innerHTML=_ltEbDefault;
   $('doc').style.display='';
   if(!viaNav&&S.activeId&&S.activeId!==id){S.navBack.push(S.activeId);S.navFwd=[];}
   S.activeId=id;
@@ -5663,10 +5746,23 @@ function openLeadTracker(then){
   var lt=$('lt-nav');if(lt)lt.classList.add('on');
   document.body.classList.add('lt-open');
   var ttEl=document.querySelector('.tb-tt');if(ttEl)ttEl.textContent='Lead Tracker';
+  ltSyncEyebrow();
   if(window.LT)LT.boot();
   renderTree();
   if(typeof then==='function')then();
 }
+var _ltEbDefault=null;
+function ltSyncEyebrow(){
+  var eb=document.querySelector('.tb-eb'),t=$('topbar-title');
+  if(!eb)return;
+  if(_ltEbDefault===null)_ltEbDefault=eb.innerHTML;
+  eb.textContent='LEAD TRACKER \u2014 '+((t&&t.textContent)||'By Product').toUpperCase();
+}
+(function(){
+  // the tracker's switchView() writes its view name into #topbar-title; mirror it into the header
+  var t=document.getElementById('topbar-title');
+  if(t&&window.MutationObserver)new MutationObserver(function(){ if(S.pinnedView==='leadtracker')ltSyncEyebrow(); }).observe(t,{childList:true,characterData:true,subtree:true});
+})();
 function ltOpenProduct(pid){ openLeadTracker(function(){ if(window.LT)LT.openProduct(pid); }); }
 function ltOpenLead(lid){ openLeadTracker(function(){ if(window.LT)LT.openLead(lid); }); }
 window.ltOpenProduct=ltOpenProduct;window.ltOpenLead=ltOpenLead;window.openLeadTracker=openLeadTracker;
